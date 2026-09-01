@@ -155,8 +155,10 @@ h2 {
 
 .tag.opening, .tag.race { background: var(--cyan); color: var(--ink); }
 .tag.middle, .tag.final { background: var(--yellow); color: var(--ink); }
-.tag.advanced { background: var(--pink); }
+.tag.advanced, .tag.hunt { background: var(--pink); }
 .tag.hardest, .tag.survival { background: var(--purple); }
+.tag.logic, .tag.team { background: var(--lime); color: var(--ink); }
+.tag.unknown { background: #ffffff1f; color: var(--muted); }
 
 .lbl {
   font: 600 12px/1 "Barlow Condensed", sans-serif;
@@ -425,10 +427,11 @@ h2 {
 .doc h2:first-child { margin-top: 0; }
 .doc p { margin: 0 0 0.8rem; line-height: 1.6; color: #ffffffdb; }
 
+.doc .scroll { overflow-x: auto; margin: 0 0 1.2rem; }
+
 .doc table {
   width: 100%;
   border-collapse: collapse;
-  margin: 0 0 1.2rem;
   background: #00000026;
   border-radius: 14px;
   overflow: hidden;
@@ -485,12 +488,41 @@ footer .it .name { font-family: "Bebas Neue", sans-serif; font-size: 21px; lette
   .status .right { text-align: center; }
 }
 
+/* Narrow enough that the wide rows fold onto a second line rather than drop a column. */
 @media (max-width: 640px) {
   .podium { grid-template-columns: 1fr; }
-  .row { grid-template-columns: 2.4rem 1fr auto; }
-  .row .stats { display: none; }
-  .rnd { grid-template-columns: 1.5rem 1fr auto; }
-  .rnd .type { display: none; }
-  .o { grid-template-columns: 2.2rem 1fr auto; }
-  .o .limits { display: none; }
+  /* The cards are ordered 2-1-3 so the winner sits centre stage; stacked, they read top down. */
+  .p1 { order: 1; }
+  .p2 { order: 2; }
+  .p3 { order: 3; }
+
+  .row {
+    grid-template-columns: 2.4rem 1fr auto;
+    grid-template-areas: "rk who pts" "rk stats stats";
+    row-gap: 0.5rem;
+  }
+  .row .rk { grid-area: rk; }
+  .row .who { grid-area: who; }
+  .row .stats { grid-area: stats; }
+  .row .pts { grid-area: pts; }
+
+  .rnd {
+    grid-template-columns: 1.5rem 1fr auto;
+    grid-template-areas: "i map type" "i winner winner";
+    row-gap: 0.2rem;
+  }
+  .rnd .i { grid-area: i; }
+  .rnd .map { grid-area: map; }
+  .rnd .type { grid-area: type; }
+  .rnd .winner { grid-area: winner; }
+
+  .o {
+    grid-template-columns: 2.2rem 1fr auto;
+    grid-template-areas: "n nm state" "n limits state";
+    row-gap: 0.2rem;
+  }
+  .o .n { grid-area: n; }
+  .o .nm { grid-area: nm; }
+  .o .limits { grid-area: limits; }
+  .o .state { grid-area: state; }
 }

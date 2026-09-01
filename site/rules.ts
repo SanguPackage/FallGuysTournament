@@ -30,7 +30,7 @@ function renderTable(rows: string[]): string {
   const lines = body
     .map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`)
     .join("");
-  return `<table class="doc"><thead><tr>${head}</tr></thead><tbody>${lines}</tbody></table>`;
+  return `<div class="scroll"><table class="doc"><thead><tr>${head}</tr></thead><tbody>${lines}</tbody></table></div>`;
 }
 
 /** Renders the subset of Markdown `docs/rules.md` uses: sections, paragraphs and tables. */

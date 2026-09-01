@@ -29,6 +29,12 @@ test("markdown tables are marked so prose tables can be styled apart from the le
   expect(renderMarkdown("| A | B |\n|---|---|\n| 1 | 2 |\n")).toContain(`<table class="doc">`);
 });
 
+test("a table is wrapped so a five-column table can scroll on a phone", () => {
+  const html = renderMarkdown("| A | B |\n|---|---|\n| 1 | 2 |\n");
+  expect(html).toContain(`<div class="scroll"><table class="doc">`);
+  expect(html).toContain("</table></div>");
+});
+
 test("markup in the source is escaped", () => {
   expect(renderMarkdown("<script>alert(1)</script>\n")).not.toContain("<script>");
 });
