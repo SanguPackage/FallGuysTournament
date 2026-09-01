@@ -1,0 +1,64 @@
+import { expect, test } from "bun:test";
+import { parseShowOrder, renderMarkdown, renderShowOrder } from "./rules";
+
+test("headings render at their level", () => {
+  const html = renderMarkdown("# Rules\n\n## 1. Registration\n");
+  expect(html).toContain("<h1>Rules</h1>");
+  expect(html).toContain("<h2>1. Registration</h2>");
+});
+
+test("a paragraph wrapped over several lines becomes one paragraph", () => {
+  const html = renderMarkdown("2.1 The tournament is played\nas a solo custom lobby.\n");
+  expect(html).toContain("<p>2.1 The tournament is played as a solo custom lobby.</p>");
+});
+
+test("blank lines separate paragraphs", () => {
+  const html = renderMarkdown("First.\n\nSecond.\n");
+  expect(html).toContain("<p>First.</p>");
+  expect(html).toContain("<p>Second.</p>");
+});
+
+test("a table renders a header row and body rows, without the divider", () => {
+  const html = renderMarkdown("| A | B |\n|---|---|\n| 1 | 2 |\n");
+  expect(html).toContain("<th>A</th>");
+  expect(html).toContain("<td>1</td>");
+  expect(html).not.toContain("---");
+});
+
+test("markdown tables are marked so prose tables can be styled apart from the leaderboard", () => {
+  expect(renderMarkdown("| A | B |\n|---|---|\n| 1 | 2 |\n")).toContain(`<table class="doc">`);
+});
+
+test("markup in the source is escaped", () => {
+  expect(renderMarkdown("<script>alert(1)</script>\n")).not.toContain("<script>");
+});
+
+test("the show order comes from the table headed # / Show / Tier", () => {
+  const shows = parseShowOrder(SAMPLE);
+  expect(shows).toEqual([
+    { position: 1, show: "Solos", tier: "Opening" },
+    { position: 2, show: "Roll Call", tier: "Advanced" },
+  ]);
+});
+
+test("the scoring table is not mistaken for the show order", () => {
+  expect(parseShowOrder("| Achievement | Points |\n|---|---|\n| Winning | 5 |\n")).toEqual([]);
+});
+
+test("the show order renders in order with its tiers", () => {
+  const html = renderShowOrder(parseShowOrder(SAMPLE));
+  expect(html.indexOf("Solos")).toBeLessThan(html.indexOf("Roll Call"));
+  expect(html).toContain("Advanced");
+});
+
+const SAMPLE = `## 2. Format
+
+| #  | Show      | Tier     |
+|----|-----------|----------|
+| 1  | Solos     | Opening  |
+| 2  | Roll Call | Advanced |
+
+| Achievement | Points |
+|-------------|--------|
+| Winning     | 5      |
+`;

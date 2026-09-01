@@ -1,0 +1,68 @@
+:root {
+  color-scheme: light dark;
+  --bg: #12121a;
+  --fg: #f2f2f7;
+  --muted: #9a9ab0;
+  --accent: #ffcf3f;
+  --line: #2a2a3a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 2rem 1rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.5 system-ui, sans-serif;
+}
+
+main { max-width: 46rem; margin: 0 auto; }
+
+h1 { margin: 0; font-size: 1.75rem; }
+
+.subtitle { margin: 0.25rem 0 2rem; color: var(--muted); }
+
+table { width: 100%; border-collapse: collapse; }
+
+th, td {
+  padding: 0.6rem 0.5rem;
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+}
+
+th:nth-child(2), td.player { text-align: left; }
+
+th { font-size: 0.8rem; text-transform: uppercase; color: var(--muted); }
+
+td.rank { width: 2.5rem; text-align: left; color: var(--muted); }
+
+td.points { font-weight: 700; color: var(--accent); }
+
+.fom { display: block; }
+
+.ingame { display: block; font-size: 0.8rem; color: var(--muted); }
+
+tbody tr:first-child td.rank,
+tbody tr:first-child .fom { color: var(--accent); }
+
+.empty { color: var(--muted); }
+
+nav {
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+nav a { color: var(--muted); }
+
+nav [aria-current] { color: var(--accent); font-weight: 700; }
+
+h2 { margin: 2rem 0 0.75rem; font-size: 1.15rem; }
+
+p { margin: 0 0 0.75rem; }
+
+td.tier { color: var(--muted); }
+
+.doc th, .doc td { text-align: left; }
