@@ -38,6 +38,9 @@ let selection: Selection = { slot: "all" };
 let selectedShow = 0;
 /** The saved show reopened for editing, if any. Otherwise the next unrecorded show is the form. */
 let editing: number | null = null;
+/** Captures blown up to full size, by file, so a rebuild does not undo what is being read. */
+const zoomed = new Set<string>();
+let panelShowing = "";
 const drafts = new Map<number, ShowDraft>();
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -183,6 +186,8 @@ function slotKey(showIndex: number, slot: Selection): string {
 function selectable(node: HTMLElement, showIndex: number, slot: Selection): HTMLElement {
   node.dataset.slotKey = slotKey(showIndex, slot);
   const select = () => {
+    // Tabbing into a field of the row already on show must not throw away the zoom being read.
+    if (slotKey(showIndex, slot) === slotKey(selectedShow, selection)) return;
     selection = slot;
     selectedShow = showIndex;
     renderShots();
@@ -216,12 +221,14 @@ function shotImages(shots: PlacedShot[]): Node[] {
       src: `/api/shot?f=${encodeURIComponent(shot.file)}`,
       alt: shot.file,
     });
+    if (zoomed.has(shot.file)) image.classList.add("full");
     image.addEventListener("click", (event) => {
       const before = image.getBoundingClientRect();
       const across = (event.clientX - before.left) / before.width;
       const down = (event.clientY - before.top) / before.height;
 
-      image.classList.toggle("full");
+      if (image.classList.toggle("full")) zoomed.add(shot.file);
+      else zoomed.delete(shot.file);
       if (!image.classList.contains("full")) return;
 
       // The panel is the scroller, so the point clicked is put in the middle of it.
@@ -254,7 +261,10 @@ function catchAll(label: string, shots: PlacedShot[]): HTMLElement {
 }
 
 function renderShots(): void {
-  const target = document.querySelector("#shots")!;
+  const target = document.querySelector<HTMLElement>("#shots")!;
+  const showing = slotKey(selectedShow, selection);
+  const { scrollTop, scrollLeft } = target;
+
   if (!state.shotDir) {
     target.replaceChildren(
       el("h2", {}, ["Screenshots"]),
@@ -276,6 +286,13 @@ function renderShots(): void {
     ),
     catchAll("Every screenshot this month", state.shots),
   );
+
+  // Only the same slot keeps its place; a different one is meant to be read from the top.
+  if (showing === panelShowing) {
+    target.scrollTop = scrollTop;
+    target.scrollLeft = scrollLeft;
+  }
+  panelShowing = showing;
 }
 
 function nameInput(key: string, value: string, onChange: (value: string) => void): HTMLInputElement {
