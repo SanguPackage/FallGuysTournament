@@ -350,10 +350,6 @@ function renderShots(): void {
     el("h2", {}, [`Show ${selectedShow + 1} · ${SLOT_LABELS[selection.slot]}`]),
     ...shotImages(shotsForSlot(state.shots, selectedShow, selection)),
     catchAll(
-      SLOT_LABELS.show,
-      shotsForSlot(state.shots, selectedShow, { slot: "show" }),
-    ),
-    catchAll(
       SLOT_LABELS.unmatched,
       shotsForSlot(state.shots, selectedShow, { slot: "unmatched" }),
     ),
