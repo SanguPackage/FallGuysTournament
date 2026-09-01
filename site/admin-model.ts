@@ -40,13 +40,19 @@ export function syncDraft(draft: ShowDraft, parsed: ParsedShow): void {
     if (entry && !entry.typeEdited) entry.type = round.type;
   });
 
-  const final = parsed.rounds.at(-1);
-  const finalists = final?.present.length ?? 0;
-  while (draft.finalists.length < finalists) draft.finalists.push("");
+  // parseLog calls the last round a final, but mid-show that is only the round being played.
+  const last = parsed.rounds.at(-1);
+  const final = last?.type === "final" || parsed.winnerId !== undefined ? last : undefined;
 
+  fit(draft.finalists, final?.present.length ?? 0);
   // Whoever succeeded in the final won it, however many that turns out to be.
-  const won = Math.max(final?.qualified.length ?? 0, parsed.winnerId === undefined ? 0 : 1);
-  while (draft.winners.length < won) draft.winners.push("");
+  fit(draft.winners, Math.max(final?.qualified.length ?? 0, parsed.winnerId === undefined ? 0 : 1));
+}
+
+/** Grows to what the log now says, and gives back only slots nobody has typed into. */
+function fit(names: string[], wanted: number): void {
+  while (names.length > wanted && names.at(-1) === "") names.pop();
+  while (names.length < wanted) names.push("");
 }
 
 /** Reopens a show already in event.json, so blanks left at save time can still be filled in. */

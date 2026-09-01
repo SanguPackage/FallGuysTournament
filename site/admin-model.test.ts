@@ -11,7 +11,7 @@ import {
   missingFrom,
   validate,
 } from "./admin-model";
-import type { Players, TournamentEvent } from "../src/types";
+import type { Players, RoundType, TournamentEvent } from "../src/types";
 import type { ParsedShow } from "../src/log";
 import { identify } from "../src/rounds";
 
@@ -486,4 +486,45 @@ test("a win the server announced with nobody qualifying still gets a slot", () =
   });
 
   expect(draft.winners).toEqual([""]);
+});
+
+const midShow = (rounds: ParsedShow["rounds"]): ParsedShow => ({
+  showId: "classic_solo_main_show",
+  rounds,
+  winnerId: undefined,
+});
+
+const playing = (id: string, type: RoundType, present: number[], qualified: number[] = []) => ({
+  id,
+  name: id,
+  type,
+  isFinal: type === "final",
+  timedOut: false,
+  present,
+  qualified,
+  eliminated: [],
+});
+
+test("a round still being played opens no finalist slots", () => {
+  const draft = draftFor(midShow([playing("wall_guys", "race", [1, 2, 3, 4, 5])]), "Solos 1");
+  expect(draft.finalists).toEqual([]);
+  expect(draft.winners).toEqual([]);
+});
+
+test("the slots follow the final's field as the log fills it in", () => {
+  const draft = draftFor(midShow([playing("wall_guys", "race", [1, 2, 3, 4, 5])]), "Solos 1");
+
+  syncDraft(draft, midShow([playing("wall_guys", "race", [1, 2, 3, 4, 5]), playing("hex", "final", [1, 2])]));
+  expect(draft.finalists).toEqual(["", ""]);
+
+  syncDraft(draft, midShow([playing("wall_guys", "race", [1, 2, 3, 4, 5]), playing("hex", "final", [1, 2, 3])]));
+  expect(draft.finalists).toEqual(["", "", ""]);
+});
+
+test("slots that shrink give back only the ones nobody typed into", () => {
+  const draft = draftFor(midShow([playing("hex", "final", [1, 2, 3, 4])]), "Solos 1");
+  draft.finalists[0] = "oopman";
+
+  syncDraft(draft, midShow([playing("hex", "final", [1, 2])]));
+  expect(draft.finalists).toEqual(["oopman", ""]);
 });
