@@ -3,3 +3,4 @@ dist/
 
 # Raw Player.log files contain the local client public IP address
 data/logs/*.log
+.playwright-mcp/

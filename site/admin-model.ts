@@ -1,5 +1,5 @@
 import type { ParsedShow } from "../src/log";
-import type { Round, RoundType, Show } from "../src/types";
+import type { Round, RoundType, Show, TournamentEvent } from "../src/types";
 
 export interface RoundDraft {
   map: string;
@@ -75,4 +75,10 @@ export function validate(draft: ShowDraft, registered: string[]): string[] {
   }
 
   return [...new Set(problems)];
+}
+
+/** What the publish box starts out saying, so the history reads consistently without typing. */
+export function defaultMessage(event: TournamentEvent): string {
+  const last = event.shows.at(-1);
+  return last ? `data: record show ${event.shows.length} — ${last.name}` : "data: update players";
 }

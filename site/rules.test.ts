@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
 import { parseShowOrder, renderMarkdown, renderShowOrder } from "./rules";
 
-test("headings render at their level", () => {
+test("section headings render, and the document title is left to the page", () => {
   const html = renderMarkdown("# Rules\n\n## 1. Registration\n");
-  expect(html).toContain("<h1>Rules</h1>");
+  expect(html).not.toContain("<h1>");
   expect(html).toContain("<h2>1. Registration</h2>");
 });
 
@@ -51,6 +51,19 @@ test("the show order renders in order with its tiers", () => {
   expect(html).toContain("Advanced");
 });
 
+test("before anything is played every show is upcoming", () => {
+  const html = renderShowOrder(parseShowOrder(SAMPLE));
+  expect(html).not.toContain("Playing now");
+  expect(html).not.toContain("Played");
+});
+
+test("the show being played is marked, and the ones before it are done", () => {
+  const html = renderShowOrder(parseShowOrder(SAMPLE), 1);
+  expect(html).toMatch(/class="o done"[\s\S]*?Solos/);
+  expect(html).toMatch(/class="o now"[\s\S]*?Roll Call/);
+  expect(html).toContain("Playing now");
+});
+
 const SAMPLE = `## 2. Format
 
 | #  | Show      | Tier     | Min | Max |
@@ -65,8 +78,7 @@ const SAMPLE = `## 2. Format
 
 test("the show order renders each show's player limits", () => {
   const html = renderShowOrder(parseShowOrder(SAMPLE));
-  expect(html).toContain("<td>2</td>");
-  expect(html).toContain("<td>32</td>");
+  expect(html).toContain("2–32 players");
 });
 
 test("the rules table and the fetched wiki limits agree", async () => {

@@ -1,13 +1,20 @@
 import { rm } from "node:fs/promises";
-import { nav, page } from "../site/page";
+import { liveStatus } from "../src/live";
+import { score } from "../src/scoring";
+import type { Players, TournamentEvent } from "../src/types";
+import type { LivePage } from "../site/page";
+import { page } from "../site/page";
+import { renderField, renderPodium, renderStandings, renderStatus } from "../site/render";
+import { renderResults } from "../site/results";
 import { parseShowOrder, renderMarkdown, renderShowOrder } from "../site/rules";
 
 const OUT = "dist";
+const TITLE = "FOM Fall Guys Tournament";
 
 await rm(OUT, { recursive: true, force: true });
 
 const result = await Bun.build({
-  entrypoints: ["site/main.ts", "site/results.ts"],
+  entrypoints: ["site/main.ts"],
   outdir: OUT,
   minify: true,
   target: "browser",
@@ -28,29 +35,61 @@ for (const [from, to] of [
 }
 
 const rules = await Bun.file("docs/rules.md").text();
+const order = parseShowOrder(rules);
+const event = (await Bun.file("data/event.json").json()) as TournamentEvent;
+const players = (await Bun.file("data/players.json").json()) as Players;
+const rows = score(event, players);
+const status = liveStatus(event, order);
 
-await Bun.write(
-  `${OUT}/index.html`,
-  (await Bun.file("site/index.html").text()).replace("<!--nav-->", nav("index.html")),
-);
-await Bun.write(
-  `${OUT}/results.html`,
-  (await Bun.file("site/results.html").text()).replace("<!--nav-->", nav("results.html")),
-);
-await Bun.write(
-  `${OUT}/rules.html`,
-  page({ title: "Rules — FOM Fall Guys Tournament", current: "rules.html", body: renderMarkdown(rules) }),
-);
-await Bun.write(
-  `${OUT}/shows.html`,
-  page({
-    title: "Show order — FOM Fall Guys Tournament",
-    current: "shows.html",
-    body: `<h1>Show order</h1>
-<p class="subtitle">Played top to bottom, working up from the gentlest to the hardest. A show
-the number of players present cannot support is skipped.</p>
-${renderShowOrder(parseShowOrder(rules))}`,
-  }),
-);
+await Bun.write(`${OUT}/order.json`, JSON.stringify(order));
+
+/** Pre-rendered so the board reads correctly before the first poll, and without JavaScript at all. */
+const data = (body: string): string => `      <div id="data">${body}</div>`;
+
+const PAGES: { file: string; heading: string; title: string; live?: LivePage; body: string }[] = [
+  {
+    file: "index.html",
+    heading: TITLE,
+    title: TITLE,
+    live: "dashboard",
+    body: data(renderStatus(status, order) + renderPodium(rows) + renderField(rows)),
+  },
+  {
+    file: "standings.html",
+    heading: "Standings",
+    title: `Standings — ${TITLE}`,
+    live: "standings",
+    body: `      <p class="lead">Every player, every point. Races won, finals reached and finals won
+      are the tiebreakers, in that order.</p>
+${data(renderStandings(rows))}`,
+  },
+  {
+    file: "results.html",
+    heading: "Results",
+    title: `Results — ${TITLE}`,
+    live: "results",
+    body: `      <p class="lead">Every show as it happened, newest first.</p>
+${data(renderResults(event.shows))}`,
+  },
+  {
+    file: "rules.html",
+    heading: "Rules",
+    title: `Rules — ${TITLE}`,
+    body: `      <div class="doc">${renderMarkdown(rules)}</div>`,
+  },
+  {
+    file: "shows.html",
+    heading: "Show order",
+    title: `Show order — ${TITLE}`,
+    live: "shows",
+    body: `      <p class="lead">Played top to bottom, working up from the gentlest to the hardest. A
+      show the number of players present cannot support is skipped.</p>
+${data(renderShowOrder(order, status.orderIndex))}`,
+  },
+];
+
+for (const { file, heading, title, live, body } of PAGES) {
+  await Bun.write(`${OUT}/${file}`, page({ event: event.name, title, heading, current: file, body, live }));
+}
 
 console.log(`Built ${OUT}/`);

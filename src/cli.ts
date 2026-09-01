@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-import { $ } from "bun";
 import {
   addPenalty,
   addRound,
@@ -10,6 +9,7 @@ import {
   ValidationError,
 } from "./event";
 import { score } from "./scoring";
+import { publish } from "./publish";
 import { playableAt } from "./shows";
 import { parseShowOrder } from "../site/rules";
 import { loadEvent, loadPlayers, saveEvent } from "./storage";
@@ -43,19 +43,7 @@ async function commit(message: string, noCommit: boolean): Promise<void> {
     console.log("Saved without committing.");
     return;
   }
-  await $`git add data/event.json`.quiet();
-  await $`git commit -m ${message}`.quiet();
-  const remotes = (await $`git remote`.text()).trim();
-  if (!remotes) {
-    console.log("Committed. No git remote configured, so nothing was pushed.");
-    return;
-  }
-  try {
-    await $`git push`.quiet();
-    console.log("Committed and pushed.");
-  } catch {
-    console.log("Committed, but the push failed. Push manually when you have a connection.");
-  }
+  console.log((await publish(message)).message);
 }
 
 function printBoard(rows: LeaderboardRow[]): void {

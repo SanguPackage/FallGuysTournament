@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { draftFor, toShow, validate } from "./admin-model";
+import { defaultMessage, draftFor, toShow, validate } from "./admin-model";
 import type { ParsedShow } from "../src/log";
 
 const parsed: ParsedShow = {
@@ -113,4 +113,24 @@ test("blanks are dropped from the saved show", () => {
   const draft = complete();
   draft.finalists = ["oopman", "", "f1xel"];
   expect(toShow(draft).finalists).toEqual(["oopman", "f1xel"]);
+});
+
+test("with no shows recorded the commit message is about the players", () => {
+  expect(defaultMessage({ name: "FOM", date: "d", shows: [], penalties: [] })).toBe(
+    "data: update players",
+  );
+});
+
+test("the commit message names the show just recorded", () => {
+  expect(
+    defaultMessage({
+      name: "FOM",
+      date: "d",
+      shows: [
+        { name: "Solos", rounds: [] },
+        { name: "Roll Call", rounds: [] },
+      ],
+      penalties: [],
+    }),
+  ).toBe("data: record show 2 — Roll Call");
 });

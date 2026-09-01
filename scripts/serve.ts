@@ -1,4 +1,5 @@
 import { parseLog } from "../src/log";
+import { publish } from "../src/publish";
 import { EVENT_PATH, PLAYERS_PATH } from "../src/storage";
 
 const SHOWS_PATH = "data/shows.json";
@@ -55,10 +56,22 @@ const server = Bun.serve({
       return writeJson(EVENT_PATH, request);
     }
 
+    if (request.method === "POST" && pathname === "/api/publish") {
+      const { message } = (await request.json()) as { message?: string };
+      try {
+        return json(await publish(message ?? ""));
+      } catch (error) {
+        return json({ committed: false, pushed: false, message: String(error) }, 400);
+      }
+    }
+
     if (pathname === "/admin" || pathname === "/admin.html") {
       return new Response(Bun.file("site/admin.html"), {
         headers: { "content-type": "text/html" },
       });
+    }
+    if (pathname === "/admin.css") {
+      return new Response(Bun.file("site/admin.css"), { headers: { "content-type": "text/css" } });
     }
     if (pathname === "/admin.js") {
       const built = await Bun.build({ entrypoints: ["site/admin.ts"], target: "browser" });

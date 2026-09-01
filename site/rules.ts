@@ -33,7 +33,7 @@ function renderTable(rows: string[]): string {
   return `<table class="doc"><thead><tr>${head}</tr></thead><tbody>${lines}</tbody></table>`;
 }
 
-/** Renders the subset of Markdown `docs/rules.md` uses: headings, paragraphs and tables. */
+/** Renders the subset of Markdown `docs/rules.md` uses: sections, paragraphs and tables. */
 export function renderMarkdown(markdown: string): string {
   const out: string[] = [];
   let paragraph: string[] = [];
@@ -62,7 +62,6 @@ export function renderMarkdown(markdown: string): string {
       out.push(`<h2>${escapeHtml(line.slice(3))}</h2>`);
     } else if (line.startsWith("# ")) {
       flush();
-      out.push(`<h1>${escapeHtml(line.slice(2))}</h1>`);
     } else {
       if (table.length > 0) flush();
       paragraph.push(line);
@@ -95,25 +94,20 @@ export function parseShowOrder(markdown: string): ShowInOrder[] {
   return shows;
 }
 
-export function renderShowOrder(shows: ShowInOrder[]): string {
-  const body = shows
-    .map(
-      (show) => `
-      <tr>
-        <td class="rank">${show.position}</td>
-        <td class="player">${escapeHtml(show.show)}</td>
-        <td class="tier">${escapeHtml(show.tier)}</td>
-        <td>${show.min}</td>
-        <td>${show.max}</td>
-      </tr>`,
-    )
+export function renderShowOrder(shows: ShowInOrder[], currentIndex = -1): string {
+  const rows = shows
+    .map((show, index) => {
+      const state = index < currentIndex ? "o done" : index === currentIndex ? "o now" : "o";
+      const label = index < currentIndex ? "Played" : index === currentIndex ? "Playing now" : "";
+      return `
+      <div class="${state}">
+        <span class="n">${show.position}</span>
+        <span class="nm">${escapeHtml(show.show)} <span class="tag ${show.tier.toLowerCase()}">${escapeHtml(show.tier)}</span></span>
+        <span class="limits">${show.min}\u2013${show.max} players</span>
+        <span class="state">${label}</span>
+      </div>`;
+    })
     .join("");
 
-  return `
-    <table>
-      <thead>
-        <tr><th>#</th><th>Show</th><th>Tier</th><th>Min</th><th>Max</th></tr>
-      </thead>
-      <tbody>${body}</tbody>
-    </table>`;
+  return `<div class="orderlist">${rows}</div>`;
 }

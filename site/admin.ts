@@ -1,6 +1,6 @@
 import type { ParsedShow } from "../src/log";
 import type { Players, TournamentEvent } from "../src/types";
-import { draftFor, toShow, validate, type ShowDraft } from "./admin-model";
+import { defaultMessage, draftFor, toShow, validate, type ShowDraft } from "./admin-model";
 
 interface State {
   players: Players;
@@ -268,10 +268,16 @@ function renderShows(): void {
   );
 }
 
+function renderPublish(): void {
+  const input = document.querySelector<HTMLInputElement>("#publish-message")!;
+  if (!input.dataset.edited) input.value = defaultMessage(state.event);
+}
+
 function render(): void {
   refreshDatalists();
   renderPlayers();
   renderShows();
+  renderPublish();
 }
 
 async function main(): Promise<void> {
@@ -296,6 +302,34 @@ async function main(): Promise<void> {
       status("players-status", "Saved.");
     } catch (error) {
       status("players-status", `Could not save: ${error}`, false);
+    }
+  });
+
+  const message = document.querySelector<HTMLInputElement>("#publish-message")!;
+  message.addEventListener("input", () => {
+    message.dataset.edited = "yes";
+  });
+
+  const publish = document.querySelector<HTMLButtonElement>("#publish")!;
+  publish.addEventListener("click", async () => {
+    publish.disabled = true;
+    status("publish-status", "Publishing…");
+    try {
+      const response = await fetch("/api/publish", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ message: message.value }),
+      });
+      const result = (await response.json()) as { pushed: boolean; message: string };
+      status("publish-status", result.message, result.pushed);
+      if (result.pushed) {
+        delete message.dataset.edited;
+        renderPublish();
+      }
+    } catch (error) {
+      status("publish-status", `Could not publish: ${error}`, false);
+    } finally {
+      publish.disabled = false;
     }
   });
 

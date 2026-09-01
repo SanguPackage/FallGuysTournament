@@ -1,0 +1,124 @@
+/* The admin runs locally and is never published, so it carries its own styling rather than
+   riding on the public stylesheet. */
+
+:root {
+  color-scheme: dark;
+  --bg: #12121a;
+  --fg: #f2f2f7;
+  --muted: #9a9ab0;
+  --accent: #ffd23f;
+  --bad: #ff8f8f;
+  --line: #2a2a3a;
+  --field: #1b1b26;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 2rem 1rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.5 system-ui, sans-serif;
+}
+
+main { max-width: 60rem; margin: 0 auto; }
+
+h1 { margin: 0; font-size: 1.75rem; }
+
+h2 { margin: 0 0 0.75rem; font-size: 1.15rem; }
+
+.subtitle { margin: 0.25rem 0 2rem; color: var(--muted); }
+
+.empty, .hint { color: var(--muted); font-size: 0.85rem; }
+
+nav { display: flex; gap: 1.25rem; margin-bottom: 1.5rem; font-size: 0.9rem; }
+nav a { color: var(--muted); }
+nav [aria-current] { color: var(--accent); font-weight: 700; }
+
+section { margin: 2rem 0; }
+
+input[type="text"],
+select {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.3rem;
+  background: var(--field);
+  color: var(--fg);
+  font: inherit;
+  min-width: 0;
+}
+
+input[type="text"]:focus,
+select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+button {
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.3rem;
+  background: var(--field);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+button:hover { border-color: var(--muted); }
+button:disabled { opacity: 0.5; cursor: default; }
+button.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
+button.danger { color: var(--bad); }
+
+.player-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 6rem 5rem;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.2rem 0;
+}
+
+.player-row.head {
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.admin-flag { display: flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--muted); }
+
+.actions { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.9rem; flex-wrap: wrap; }
+
+.status { font-size: 0.85rem; }
+.status.ok { color: var(--accent); }
+.status.bad { color: var(--bad); }
+
+.show-form,
+.show-done,
+.publish {
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.show-done { display: flex; gap: 0.75rem; align-items: baseline; color: var(--muted); }
+.show-done.waiting { opacity: 0.6; }
+
+.show-head { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.75rem; }
+.show-name { flex: 1 1 14rem; }
+.show-number { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
+
+.rounds { margin: 0; padding-left: 1.2rem; }
+.rounds li { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; padding: 0.2rem 0; }
+.rounds .round-number { color: var(--muted); font-size: 0.85rem; }
+
+.map-input { flex: 1 1 16rem; }
+
+.field { margin-top: 0.9rem; }
+.field label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.35rem; }
+
+.names { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.names input { width: 10rem; }
+
+.problems { margin: 0.75rem 0 0; padding-left: 1.2rem; color: var(--bad); font-size: 0.9rem; }
+
+.publish { margin-top: 0; }
+.publish input { width: 100%; }

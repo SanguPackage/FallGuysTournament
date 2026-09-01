@@ -8,12 +8,13 @@
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%F0%9F%91%91%3C/text%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="/admin.css" />
   </head>
   <body class="admin">
     <main>
       <nav>
-        <a href="/index.html">Standings</a>
+        <a href="/index.html">Dashboard</a>
+        <a href="/standings.html">Standings</a>
         <a href="/results.html">Results</a>
         <span aria-current="page">Admin</span>
       </nav>
@@ -33,6 +34,23 @@
       <section>
         <h2>Shows</h2>
         <div id="shows"></div>
+      </section>
+
+      <section>
+        <h2>Publish</h2>
+        <div class="publish">
+          <div class="field">
+            <label for="publish-message">Commit message</label>
+            <input id="publish-message" type="text" />
+          </div>
+          <div class="actions">
+            <button id="publish" type="button" class="primary">Commit &amp; push</button>
+            <span id="publish-status" class="status"></span>
+          </div>
+          <p class="hint">
+            Commits everything under <code>data/</code> and pushes, which rebuilds the public site.
+          </p>
+        </div>
       </section>
 
       <datalist id="registered"></datalist>
