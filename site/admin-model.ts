@@ -88,21 +88,22 @@ export function toShow(draft: ShowDraft): Show {
 
 /** What still has to be typed into a show, for the collapsed rows that have no fields on show. */
 export function missingFrom(show: Show | undefined, parsed: ParsedShow): string[] {
-  if (!show) return ["not recorded"];
+  // An unrecorded show is every gap at once, so it reads the same as one saved empty.
+  const entered = show ?? { name: "", rounds: [], finalists: [], winners: [] };
 
   const gaps: string[] = [];
-  if (!show.name.trim()) gaps.push("name");
+  if (!entered.name.trim()) gaps.push("name");
 
-  const races = show.rounds
+  const races = entered.rounds
     .map((round, index) => (round.type === "race" && !round.first ? index + 1 : 0))
     .filter(Boolean);
   if (races.length > 0) gaps.push(`first place in round ${races.join(", ")}`);
 
-  const behind = parsed.rounds.length - show.rounds.length;
+  const behind = parsed.rounds.length - entered.rounds.length;
   if (behind > 0) gaps.push(`${behind} round${behind === 1 ? "" : "s"} not entered`);
 
-  if ((show.finalists ?? []).length === 0) gaps.push("finalists");
-  if ((show.winners ?? []).length === 0) gaps.push("winners");
+  if ((entered.finalists ?? []).length === 0) gaps.push("finalists");
+  if ((entered.winners ?? []).length === 0) gaps.push("winners");
 
   return gaps;
 }

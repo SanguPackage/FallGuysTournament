@@ -143,10 +143,12 @@ button.danger { color: var(--bad); }
 
 .gaps { color: var(--accent); font-size: 0.85rem; }
 
-.show-done { cursor: pointer; display: flex; gap: 0.75rem; align-items: baseline; color: var(--muted); }
+.show-done { cursor: pointer; color: var(--muted); }
 .show-done.waiting { opacity: 0.6; }
 
-.show-head { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.75rem; }
+.show-head { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+.show-form .show-head { border-bottom: 1px solid var(--line); padding-bottom: 0.75rem; margin-bottom: 0.9rem; }
+.show-head .push { margin-left: auto; }
 .show-name { flex: 1 1 14rem; }
 .show-number { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
 

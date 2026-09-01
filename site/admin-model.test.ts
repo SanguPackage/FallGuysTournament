@@ -362,7 +362,12 @@ const played: ParsedShow = {
 };
 
 test("a show nobody has recorded yet is missing everything", () => {
-  expect(missingFrom(undefined, played)).toEqual(["not recorded"]);
+  expect(missingFrom(undefined, played)).toEqual([
+    "name",
+    "2 rounds not entered",
+    "finalists",
+    "winners",
+  ]);
 });
 
 test("the gaps in a half-filled show are named one by one", () => {

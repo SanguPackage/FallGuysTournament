@@ -472,7 +472,7 @@ function renderShows(): void {
     const gaps = missingFrom(show, parsed);
     if (gaps.length > 0) cells.push(el("span", { class: "gaps" }, [`needs ${gaps.join(", ")}`]));
 
-    const edit = el("button", { type: "button" }, ["Edit"]);
+    const edit = el("button", { type: "button", class: "push" }, ["Edit"]);
     edit.addEventListener("click", (event) => {
       event.stopPropagation();
       editing = index;
@@ -481,7 +481,9 @@ function renderShows(): void {
     cells.push(edit);
 
     return selectable(
-      el("div", { class: show ? "show-done" : "show-done waiting" }, cells),
+      el("div", { class: show ? "show-done" : "show-done waiting" }, [
+        el("div", { class: "show-head" }, cells),
+      ]),
       index,
       { slot: "all" },
     );
