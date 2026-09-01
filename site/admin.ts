@@ -8,6 +8,7 @@ import {
   suggestShowName,
   syncDraft,
   toShow,
+  validate,
   type ShowDraft,
 } from "./admin-model";
 import type { ShowInOrder } from "./rules";
@@ -209,7 +210,6 @@ function shotImages(shots: PlacedShot[]): Node[] {
     const image = el("img", {
       src: `/api/shot?f=${encodeURIComponent(shot.file)}`,
       alt: shot.file,
-      loading: "lazy",
     });
     image.addEventListener("click", () => image.classList.toggle("full"));
     return [el("p", { class: "shot-time" }, [clock(shot.takenAt)]), image];
@@ -378,7 +378,9 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
     saved ? "Update show" : "Save show",
   ]);
   saveButton.addEventListener("click", async () => {
-    problems.replaceChildren();
+    const found = validate(draft);
+    problems.replaceChildren(...found.map((problem) => el("li", {}, [problem])));
+    if (found.length > 0) return;
     const before = state.event.shows[index];
     state.event.shows[index] = toShow(draft);
     try {
