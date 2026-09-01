@@ -59,17 +59,14 @@ const PAGES: { file: string; heading: string; title: string; live?: LivePage; bo
     heading: "Standings",
     title: `Standings — ${TITLE}`,
     live: "standings",
-    body: `      <p class="lead">Every player, every point. Races won, finals reached and finals won
-      are the tiebreakers, in that order.</p>
-${data(renderStandings(rows))}`,
+    body: data(renderStandings(rows)),
   },
   {
     file: "results.html",
     heading: "Results",
     title: `Results — ${TITLE}`,
     live: "results",
-    body: `      <p class="lead">Every show as it happened, newest first.</p>
-${data(renderResults(event.shows))}`,
+    body: data(renderResults(event.shows)),
   },
   {
     file: "rules.html",
@@ -82,8 +79,7 @@ ${data(renderResults(event.shows))}`,
     heading: "Show order",
     title: `Show order — ${TITLE}`,
     live: "shows",
-    body: `      <p class="lead">Played top to bottom, working up from the gentlest to the hardest. A
-      show the number of players present cannot support is skipped.</p>
+    body: `      <p class="lead">A show the number of players present cannot support is skipped.</p>
 ${data(renderShowOrder(order, status.orderIndex))}`,
   },
 ];
