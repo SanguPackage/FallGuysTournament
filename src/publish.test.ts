@@ -72,3 +72,27 @@ test("a message is required, so the history never gets an empty subject", async 
   expect(publish("  ", g)).rejects.toThrow("message");
   expect(calls).toEqual([]);
 });
+
+test("data that would break the board is never committed, let alone pushed", async () => {
+  const { git: g, calls } = git();
+  const result = await publish("data: record Solos", g, async () => [
+    { file: "event.json", problem: "shows is not an array" },
+  ]);
+  expect(result).toEqual({
+    committed: false,
+    pushed: false,
+    message: "Not published — event.json: shows is not an array",
+  });
+  expect(calls).toEqual([]);
+});
+
+test("every problem is named, so one fix at a time is not needed", async () => {
+  const { git: g } = git();
+  const result = await publish("data: record Solos", g, async () => [
+    { file: "event.json", problem: "is not valid JSON" },
+    { file: "players.json", problem: "players[0].fom is not a string" },
+  ]);
+  expect(result.message).toBe(
+    "Not published — event.json: is not valid JSON; players.json: players[0].fom is not a string",
+  );
+});

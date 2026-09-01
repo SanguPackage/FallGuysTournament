@@ -1,21 +1,10 @@
 import type { ParsedShow } from "../src/log";
 import { score } from "../src/scoring";
+import { SCORES_FIRST } from "../src/rounds";
+
+export { ROUND_TYPES, SCORES_FIRST } from "../src/rounds";
 import type { Players, Round, RoundType, Show, TournamentEvent } from "../src/types";
 import type { ShowInOrder } from "./rules";
-
-/** Offered in the admin's type dropdown, in the order a round is most likely to need correcting. */
-export const ROUND_TYPES: readonly RoundType[] = [
-  "race",
-  "hunt",
-  "survival",
-  "logic",
-  "team",
-  "final",
-  "unknown",
-];
-
-/** The round types the game qualifies players from one at a time, so a first can be recorded. */
-export const SCORES_FIRST = new Set<RoundType>(["race", "hunt"]);
 
 export interface RoundDraft {
   map: string;

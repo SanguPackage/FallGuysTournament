@@ -1,4 +1,5 @@
 import { $ } from "bun";
+import { checkData, type DataProblem } from "./data-check";
 
 /** The git commands publishing needs, so the decisions around them can be tested without a repo. */
 export interface Git {
@@ -26,9 +27,20 @@ export const realGit: Git = {
   push: async () => void (await $`git push`.quiet()),
 };
 
-export async function publish(message: string, git: Git = realGit): Promise<PublishResult> {
+export async function publish(
+  message: string,
+  git: Git = realGit,
+  check: () => Promise<DataProblem[]> = () => checkData(DATA),
+): Promise<PublishResult> {
   const subject = message.trim();
   if (!subject) throw new Error("A commit message is required.");
+
+  // Once pushed the board serves this to everyone watching, and there is no step after it.
+  const problems = await check();
+  if (problems.length > 0) {
+    const named = problems.map(({ file, problem }) => `${file}: ${problem}`).join("; ");
+    return { committed: false, pushed: false, message: `Not published — ${named}` };
+  }
 
   await git.add([DATA]);
   if (!(await git.staged([DATA]))) {

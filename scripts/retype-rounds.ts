@@ -3,8 +3,7 @@
  * round table existed carry the id as their name and `race` as their type, which scores a
  * first place on rounds that never had one.
  */
-import { SCORES_FIRST } from "../site/admin-model";
-import { identify } from "../src/rounds";
+import { identify, SCORES_FIRST } from "../src/rounds";
 import { EVENT_PATH } from "../src/storage";
 import type { TournamentEvent } from "../src/types";
 

@@ -1,6 +1,20 @@
 import book from "../data/rounds.json";
 import type { RoundType } from "./types";
 
+/** Offered in the admin's type dropdown, in the order a round is most likely to need correcting. */
+export const ROUND_TYPES: readonly RoundType[] = [
+  "race",
+  "hunt",
+  "survival",
+  "logic",
+  "team",
+  "final",
+  "unknown",
+];
+
+/** The round types the game qualifies players from one at a time, so a first can be recorded. */
+export const SCORES_FIRST = new Set<RoundType>(["race", "hunt"]);
+
 export interface RoundInfo {
   name: string;
   type: RoundType;
