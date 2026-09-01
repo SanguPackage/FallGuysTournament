@@ -141,3 +141,36 @@ test("a show with no final recorded yet scores only its race rounds", () => {
   const rows = score(event, players);
   expect(pointsFor(rows, "Alpha")).toBe(3);
 });
+
+test("a penalty subtracts from a player's total", () => {
+  const event = emptyEvent();
+  event.shows.push({
+    name: "Solos",
+    rounds: [{ map: "Dizzy Heights", type: "race", first: "Alpha" }],
+  });
+  event.penalties.push({ ingame: "Alpha", points: -2, reason: "collaboration" });
+  const rows = score(event, players);
+  expect(pointsFor(rows, "Alpha")).toBe(1);
+  expect(rows.find((r) => r.ingame === "Alpha")!.penaltyPoints).toBe(-2);
+});
+
+test("penalties can push a total below zero", () => {
+  const event = emptyEvent();
+  event.penalties.push({ ingame: "Alpha", points: -4, reason: "collaboration" });
+  const rows = score(event, players);
+  expect(pointsFor(rows, "Alpha")).toBe(-4);
+});
+
+test("results for unregistered in-game names are ignored", () => {
+  const event = emptyEvent();
+  event.shows.push({
+    name: "Solos",
+    finalists: ["Ghost", "Alpha"],
+    winners: ["Ghost"],
+    rounds: [{ map: "Dizzy Heights", type: "race", first: "Ghost" }],
+  });
+  event.penalties.push({ ingame: "Ghost", points: -2, reason: "collaboration" });
+  const rows = score(event, players);
+  expect(rows.map((r) => r.ingame).sort()).toEqual(["Alpha", "Bravo", "Charlie"]);
+  expect(pointsFor(rows, "Alpha")).toBe(1);
+});

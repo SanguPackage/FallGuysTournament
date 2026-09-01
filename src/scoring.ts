@@ -46,5 +46,12 @@ export function score(event: TournamentEvent, players: Players): LeaderboardRow[
     }
   }
 
+  for (const penalty of event.penalties) {
+    const row = rows.get(penalty.ingame);
+    if (!row) continue;
+    row.penaltyPoints += penalty.points;
+    row.points += penalty.points;
+  }
+
   return [...rows.values()];
 }
