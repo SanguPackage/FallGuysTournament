@@ -2,12 +2,14 @@ import { expect, test } from "bun:test";
 import {
   defaultMessage,
   draftFor,
+  namesByPoints,
   namesInShows,
   suggestShowName,
   syncDraft,
   toShow,
   validate,
 } from "./admin-model";
+import type { Players, TournamentEvent } from "../src/types";
 import type { ShowInOrder } from "./rules";
 import type { ParsedShow } from "../src/log";
 
@@ -261,4 +263,69 @@ test("names already entered in a show are offered again", () => {
 
 test("no shows played yet means nothing to offer", () => {
   expect(namesInShows({ name: "FOM", date: "d", shows: [], penalties: [] })).toEqual([]);
+});
+
+const scored: TournamentEvent = {
+  name: "FOM",
+  date: "d",
+  shows: [
+    {
+      name: "Solos",
+      rounds: [
+        { map: "m", type: "race", first: "Bravo" },
+        { map: "n", type: "final" },
+      ],
+      finalists: ["Bravo", "Alpha", "Delta"],
+      winners: ["Alpha"],
+    },
+  ],
+  penalties: [],
+};
+
+const roster: Players = {
+  players: [
+    { fom: "A", ingame: "Alpha" },
+    { fom: "B", ingame: "Bravo" },
+    { fom: "C", ingame: "Charlie" },
+    { fom: "D", ingame: "Delta" },
+    { fom: "Ref", ingame: "Referee", admin: true },
+  ],
+};
+
+test("the name list leads with whoever has the most points", () => {
+  // Alpha 1 final + 5 win = 6, Bravo 3 race + 1 final = 4, Delta 1 final = 1
+  expect(namesByPoints(scored, roster).slice(0, 3)).toEqual(["Alpha", "Bravo", "Delta"]);
+});
+
+test("players level on points are listed alphabetically", () => {
+  expect(namesByPoints(scored, roster).slice(3)).toEqual(["Charlie"]);
+});
+
+test("the admin runs the event rather than playing, so they are never offered", () => {
+  expect(namesByPoints(scored, roster)).not.toContain("Referee");
+});
+
+test("an admin name that found its way into a show is still kept out", () => {
+  const withAdmin: TournamentEvent = {
+    ...scored,
+    shows: [{ ...scored.shows[0]!, rounds: [{ map: "m", type: "race", first: "Referee" }] }],
+  };
+  expect(namesByPoints(withAdmin, roster)).not.toContain("Referee");
+});
+
+test("a name typed into a show but never registered is still offered", () => {
+  const withGuest: TournamentEvent = {
+    ...scored,
+    shows: [{ ...scored.shows[0]!, rounds: [{ map: "m", type: "race", first: "Zulu" }] }],
+  };
+  expect(namesByPoints(withGuest, roster)).toContain("Zulu");
+});
+
+test("with nothing played the list is alphabetical", () => {
+  expect(namesByPoints({ name: "FOM", date: "d", shows: [], penalties: [] }, roster)).toEqual([
+    "Alpha",
+    "Bravo",
+    "Charlie",
+    "Delta",
+  ]);
 });

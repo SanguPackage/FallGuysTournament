@@ -1,5 +1,6 @@
 import type { ParsedShow } from "../src/log";
-import type { Round, RoundType, Show, TournamentEvent } from "../src/types";
+import { score } from "../src/scoring";
+import type { Players, Round, RoundType, Show, TournamentEvent } from "../src/types";
 import type { ShowInOrder } from "./rules";
 
 export interface RoundDraft {
@@ -111,4 +112,28 @@ export function namesInShows(event: TournamentEvent): string[] {
     ...(show.winners ?? []),
   ]);
   return [...new Set(names.filter((name): name is string => !!name))].sort();
+}
+
+/**
+ * Every known name, best scorer first. The people most likely to be typed next are the ones
+ * already winning, so they sit at the top of the dropdown.
+ */
+export function namesByPoints(event: TournamentEvent, players: Players): string[] {
+  const competing: string[] = [];
+  const admins = new Set<string>();
+  for (const player of players.players) {
+    if (!player.ingame) continue;
+    if (player.admin) admins.add(player.ingame);
+    else competing.push(player.ingame);
+  }
+
+  const points = new Map(
+    score(event, players)
+      .filter((row) => row.ingame)
+      .map((row) => [row.ingame!, row.points]),
+  );
+
+  return [...new Set([...competing, ...namesInShows(event)])]
+    .filter((name) => !admins.has(name))
+    .sort((a, b) => (points.get(b) ?? 0) - (points.get(a) ?? 0) || a.localeCompare(b));
 }

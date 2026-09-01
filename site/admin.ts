@@ -3,7 +3,7 @@ import type { Players, TournamentEvent } from "../src/types";
 import {
   defaultMessage,
   draftFor,
-  namesInShows,
+  namesByPoints,
   suggestShowName,
   syncDraft,
   toShow,
@@ -74,13 +74,17 @@ async function save(path: string, body: unknown): Promise<void> {
   if (!response.ok) throw new Error(await response.text());
 }
 
+/** Names a round may be scored against. Admins do not compete, so entering one is a mistake. */
 function registeredNames(): string[] {
-  return state.players.players.map((player) => player.ingame).filter((n): n is string => !!n);
+  return state.players.players
+    .filter((player) => !player.admin)
+    .map((player) => player.ingame)
+    .filter((name): name is string => !!name);
 }
 
-/** Anyone already known: registered in players.json, or typed into a show that was saved. */
+/** Anyone who can be scored, best first: the admin runs the event and is never a name to type. */
 function knownNames(): string[] {
-  return [...new Set([...registeredNames(), ...namesInShows(state.event)])].sort();
+  return namesByPoints(state.event, state.players);
 }
 
 function refreshDatalists(): void {
