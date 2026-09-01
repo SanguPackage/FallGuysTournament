@@ -74,12 +74,6 @@ export function validate(draft: ShowDraft): string[] {
 
   if (!draft.name.trim()) problems.push("Give the show a name.");
 
-  draft.rounds.forEach((round, index) => {
-    if (round.type === "race" && !round.first.trim()) {
-      problems.push(`Round ${index + 1} is a race and needs a first place.`);
-    }
-  });
-
   const finalists = filled(draft.finalists);
   const winners = filled(draft.winners);
 

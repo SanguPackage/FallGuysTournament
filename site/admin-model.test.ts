@@ -88,10 +88,10 @@ test("a show needs a name", () => {
   expect(validate(draft)).toContain("Give the show a name.");
 });
 
-test("a race round needs whoever crossed first", () => {
+test("a race whose first place is still unknown saves anyway", () => {
   const draft = complete();
   draft.rounds[0]!.first = "";
-  expect(validate(draft)).toContain("Round 1 is a race and needs a first place.");
+  expect(validate(draft)).toEqual([]);
 });
 
 test("a name nobody has registered yet is taken as typed", () => {
