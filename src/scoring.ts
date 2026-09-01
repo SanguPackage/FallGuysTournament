@@ -53,5 +53,15 @@ export function score(event: TournamentEvent, players: Players): LeaderboardRow[
     row.points += penalty.points;
   }
 
-  return [...rows.values()];
+  return [...rows.values()].sort(compareRows);
+}
+
+function compareRows(a: LeaderboardRow, b: LeaderboardRow): number {
+  return (
+    b.points - a.points ||
+    b.finalsWon - a.finalsWon ||
+    b.finalsReached - a.finalsReached ||
+    b.raceWins - a.raceWins ||
+    a.ingame.localeCompare(b.ingame)
+  );
 }

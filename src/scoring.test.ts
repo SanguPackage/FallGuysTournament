@@ -174,3 +174,59 @@ test("results for unregistered in-game names are ignored", () => {
   expect(rows.map((r) => r.ingame).sort()).toEqual(["Alpha", "Bravo", "Charlie"]);
   expect(pointsFor(rows, "Alpha")).toBe(1);
 });
+
+test("rows are ordered by points, highest first", () => {
+  const event = emptyEvent();
+  event.shows.push({
+    name: "Solos",
+    rounds: [
+      { map: "Dizzy Heights", type: "race", first: "Charlie" },
+      { map: "Slime Climb", type: "race", first: "Charlie" },
+      { map: "Tip Toe", type: "race", first: "Bravo" },
+    ],
+  });
+  const rows = score(event, players);
+  expect(rows.map((r) => r.ingame)).toEqual(["Charlie", "Bravo", "Alpha"]);
+});
+
+test("equal points are broken by finals won, then finals reached, then race wins", () => {
+  // Alpha takes 2 race wins (6). Bravo reaches and wins one final (6). Charlie takes a
+  // race win and reaches the final in two shows (8), so leads outright.
+  const event = emptyEvent();
+  event.shows.push({
+    name: "One",
+    finalists: ["Bravo"],
+    winners: ["Bravo"],
+    rounds: [
+      { map: "Dizzy Heights", type: "race", first: "Alpha" },
+      { map: "Slime Climb", type: "race", first: "Alpha" },
+      { map: "Fall Mountain", type: "final" },
+    ],
+  });
+  event.shows.push({
+    name: "Two",
+    finalists: ["Charlie"],
+    winners: [],
+    rounds: [
+      { map: "Tip Toe", type: "race", first: "Charlie" },
+      { map: "Hex-A-Gone", type: "final" },
+    ],
+  });
+  event.shows.push({
+    name: "Three",
+    finalists: ["Charlie"],
+    winners: [],
+    rounds: [
+      { map: "Whirlygig", type: "race", first: "Charlie" },
+      { map: "Hex-A-Gone", type: "final" },
+    ],
+  });
+  const rows = score(event, players);
+  expect(rows.map((r) => r.points)).toEqual([8, 6, 6]);
+  expect(rows.map((r) => r.ingame)).toEqual(["Charlie", "Bravo", "Alpha"]);
+});
+
+test("players level on every criterion are ordered by in-game name", () => {
+  const rows = score(emptyEvent(), players);
+  expect(rows.map((r) => r.ingame)).toEqual(["Alpha", "Bravo", "Charlie"]);
+});
