@@ -122,8 +122,11 @@ test("a round slot picks only that round's captures", () => {
   ]);
 });
 
-test("the finalists and winners slots pick their own", () => {
-  expect(shotsForSlot(PLACED, 0, { slot: "finalists" }).map((s) => s.file)).toEqual(["final.png"]);
+test("the final carries the victory screen with it, the winners slot stands alone", () => {
+  expect(shotsForSlot(PLACED, 0, { slot: "finalists" }).map((s) => s.file)).toEqual([
+    "final.png",
+    "win.png",
+  ]);
   expect(shotsForSlot(PLACED, 0, { slot: "winners" }).map((s) => s.file)).toEqual(["win.png"]);
 });
 

@@ -124,6 +124,15 @@ export function shotsForSlot(
 ): PlacedShot[] {
   if (selection.slot === "unmatched") return shots.filter((shot) => shot.showIndex === undefined);
   if (selection.slot === "all") return shots.filter((shot) => shot.showIndex === showIndex);
+
+  // The victory screen comes up seconds after the final ends, and it is still about the final.
+  if (selection.slot === "finalists") {
+    return shots.filter(
+      (shot) =>
+        shot.showIndex === showIndex && (shot.slot === "finalists" || shot.slot === "winners"),
+    );
+  }
+
   return shots.filter(
     (shot) =>
       shot.showIndex === showIndex &&
