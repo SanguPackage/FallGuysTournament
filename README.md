@@ -66,6 +66,7 @@ the headcount cannot support is skipped. Refresh it if the game changes the numb
 ```bash
 bun run build
 bun run dev     # http://localhost:3000/admin
+PORT=3100 bun run dev
 ```
 
 The admin page runs only against the local dev server, never on GitHub Pages. It reads
@@ -124,6 +125,24 @@ settings → `...` → Task = Capture → Active window.
 
 Set Fall Guys to Borderless (Settings → Display → Display Mode, or `Alt + Enter`).
 Exclusive fullscreen captures as a black frame.
+
+Shoot the race finish, the finalists and the winner screen. A final with several winners has
+no winner screen; shoot the surviving beans instead.
+
+The admin shows them in a panel down the right. Click a round, the finalists block or the
+winners block and the panel fills with the captures taken during it, so the names can be read
+off the screen instead of remembered. Click a capture for full resolution.
+
+It reads `Documents/ShareX/Screenshots` for any user on the C: drive, recursively, so the
+month folder does not matter. Set `SHAREX_DIR` to override. Nothing is copied and nothing is
+committed — the folder is only ever read.
+
+A capture is placed by its modified time against the log's round times, so a file copied into
+the folder lands wherever its new mtime falls. Anything that matches no round shows under
+**This show, between rounds** or **Outside every show** at the bottom of the panel.
+
+Times come from the log, which writes a clock with no date, so the day is taken from
+`date` in `event.json`. A log started the day before the event would shift every window.
 
 ## Tests
 
