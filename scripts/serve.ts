@@ -34,7 +34,7 @@ async function placed(dir: string | undefined, shows: ParsedShow[], date: string
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", "cache-control": "no-store" },
   });
 }
 
