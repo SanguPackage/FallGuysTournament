@@ -141,6 +141,8 @@ button.danger { color: var(--bad); }
   margin-bottom: 1rem;
 }
 
+.gaps { color: var(--accent); font-size: 0.85rem; }
+
 .show-done { cursor: pointer; display: flex; gap: 0.75rem; align-items: baseline; color: var(--muted); }
 .show-done.waiting { opacity: 0.6; }
 

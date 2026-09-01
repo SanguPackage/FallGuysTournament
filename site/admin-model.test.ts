@@ -8,6 +8,7 @@ import {
   suggestShowName,
   syncDraft,
   toShow,
+  missingFrom,
   validate,
 } from "./admin-model";
 import type { Players, TournamentEvent } from "../src/types";
@@ -349,4 +350,58 @@ test("a winner who was never listed as a finalist is taken as entered", () => {
   draft.finalists = ["oopman"];
   draft.winners = ["f1xel"];
   expect(validate(draft)).toEqual([]);
+});
+
+const played: ParsedShow = {
+  showId: "s",
+  rounds: [
+    { id: "one", isFinal: false, timedOut: false, present: [], qualified: [], eliminated: [] },
+    { id: "two", isFinal: true, timedOut: false, present: [1, 2], qualified: [], eliminated: [] },
+  ],
+  winnerId: 1,
+};
+
+test("a show nobody has recorded yet is missing everything", () => {
+  expect(missingFrom(undefined, played)).toEqual(["not recorded"]);
+});
+
+test("the gaps in a half-filled show are named one by one", () => {
+  const show = {
+    name: "",
+    rounds: [
+      { map: "one", type: "race" as const },
+      { map: "two", type: "final" as const },
+    ],
+    finalists: [],
+    winners: [],
+  };
+  expect(missingFrom(show, played)).toEqual([
+    "name",
+    "first place in round 1",
+    "finalists",
+    "winners",
+  ]);
+});
+
+test("rounds played since the show was saved count as missing", () => {
+  const show = {
+    name: "Solos",
+    rounds: [{ map: "one", type: "race" as const, first: "oopman" }],
+    finalists: ["oopman"],
+    winners: ["oopman"],
+  };
+  expect(missingFrom(show, played)).toEqual(["1 round not entered"]);
+});
+
+test("a show with nothing left to fill in reports no gaps", () => {
+  const show = {
+    name: "Solos",
+    rounds: [
+      { map: "one", type: "race" as const, first: "oopman" },
+      { map: "two", type: "final" as const },
+    ],
+    finalists: ["oopman", "f1xel"],
+    winners: ["oopman"],
+  };
+  expect(missingFrom(show, played)).toEqual([]);
 });

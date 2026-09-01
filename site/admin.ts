@@ -4,6 +4,7 @@ import {
   defaultMessage,
   draftFor,
   draftFromShow,
+  missingFrom,
   namesByPoints,
   suggestShowName,
   syncDraft,
@@ -467,6 +468,9 @@ function renderShows(): void {
           .join(" · "),
       ]),
     ];
+
+    const gaps = missingFrom(show, parsed);
+    if (gaps.length > 0) cells.push(el("span", { class: "gaps" }, [`needs ${gaps.join(", ")}`]));
 
     const edit = el("button", { type: "button" }, ["Edit"]);
     edit.addEventListener("click", (event) => {
