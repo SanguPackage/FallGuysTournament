@@ -1,0 +1,68 @@
+# FOM Fall Guys Tournament — Rules
+
+## 1. Registration
+
+Post your in-game Fall Guys name in the tournament Discord channel before the event
+starts, so it can be linked to your FOM name. Players whose in-game name has not been
+registered cannot be scored.
+
+## 2. Format
+
+2.1 The tournament is played as a solo custom lobby. Everybody plays at the same time,
+and each show runs to completion.
+
+2.2 One admin runs the event. The admin does not compete: they eliminate themselves as
+soon as possible at the start of each show and spectate, recording results and watching
+for rule breaches.
+
+2.3 The admin shares the lobby code in the tournament Discord channel. That code is for
+FOM attendees only.
+
+2.4 The admin chooses which shows to play, picking whatever suits the number of players
+present, and decides when the tournament ends.
+
+## 3. Scoring
+
+3.1 Points are awarded per round:
+
+| Achievement                           | Points |
+|---------------------------------------|--------|
+| First across the line in a race round | 3      |
+| Qualifying for a show's final round   | 1      |
+| Winning the final                     | 5      |
+
+3.2 Rounds that are neither races nor finals — survival, hunt and logic rounds — award
+no points.
+
+3.3 Reaching the final and winning it are cumulative, so winning a show is worth 6
+points in total.
+
+3.4 If several players win a final at the same moment — a simultaneous crown grab, or a
+"0 players remaining" screen — the 5 points are divided between them and rounded down.
+Two winners receive 2 points each; three receive 1 point each.
+
+3.5 The winner of the tournament is the player with the most points across every show
+played. Standings are published on the tournament leaderboard page and updated after
+each show.
+
+## 4. Conduct
+
+4.1 This is a solo tournament. Every player competes for themselves.
+
+4.2 The admin may penalise obvious collaboration between players. Penalties are at the
+admin's discretion, and may be a warning, a deduction of any number of points, or
+exclusion from some or all of the remaining shows.
+
+## 5. Tiebreaker
+
+5.1 If two or more players are tied for first place at the end of the event, they play
+one additional show. Whoever wins it takes first place.
+
+5.2 If fewer players are tied than the show needs in order to start, the admin or other
+attendees join to fill the lobby and eliminate themselves as soon as the show begins.
+
+## 6. Admin's Authority
+
+In any situation this document does not cover, the admin decides. Players may show the
+admin factual evidence if they believe a decision is wrong, but there is no right of
+protest.
