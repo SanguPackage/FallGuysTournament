@@ -29,7 +29,7 @@ const WATCH_MS = 5_000;
 
 let state: State;
 let showLinked = false;
-let selection: Selection = { slot: "show" };
+let selection: Selection = { slot: "all" };
 let selectedShow = 0;
 const drafts = new Map<number, ShowDraft>();
 
@@ -374,7 +374,7 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
       await save("/api/event", state.event);
       drafts.delete(index);
       selectedShow = state.event.shows.length;
-      selection = { slot: "show" };
+      selection = { slot: "all" };
       render();
     } catch (error) {
       state.event.shows.pop();
