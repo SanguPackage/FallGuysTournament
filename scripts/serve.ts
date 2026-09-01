@@ -100,6 +100,17 @@ const server = Bun.serve({
     // The admin is rebuilt on every request, so a cached copy is always the stale one.
     const fresh = (type: string) => ({ "content-type": type, "cache-control": "no-store" });
 
+    // The public site polls these out of dist/, which only refreshes on a build. Serving them
+    // from data/ means what the admin just saved is on the board within one poll.
+    for (const [route, path] of [
+      ["/event.json", EVENT_PATH],
+      ["/players.json", PLAYERS_PATH],
+    ] as const) {
+      if (pathname === route) {
+        return new Response(Bun.file(path), { headers: fresh("application/json") });
+      }
+    }
+
     if (pathname === "/admin" || pathname === "/admin.html") {
       return new Response(Bun.file("site/admin.html"), { headers: fresh("text/html") });
     }
