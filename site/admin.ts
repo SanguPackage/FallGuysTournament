@@ -79,14 +79,6 @@ async function save(path: string, body: unknown): Promise<void> {
   if (!response.ok) throw new Error(await response.text());
 }
 
-/** Names a round may be scored against. Admins do not compete, so entering one is a mistake. */
-function registeredNames(): string[] {
-  return state.players.players
-    .filter((player) => !player.admin)
-    .map((player) => player.ingame)
-    .filter((name): name is string => !!name);
-}
-
 /** Anyone who can be scored, best first: the admin runs the event and is never a name to type. */
 function knownNames(): string[] {
   return namesByPoints(state.event, state.players);
@@ -366,7 +358,7 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
   const problems = el("ul", { class: "problems" });
   const saveButton = el("button", { type: "button", class: "primary" }, ["Save show"]);
   saveButton.addEventListener("click", async () => {
-    const found = validate(draft, registeredNames());
+    const found = validate(draft);
     problems.replaceChildren(...found.map((problem) => el("li", {}, [problem])));
     if (found.length > 0) return;
     state.event.shows.push(toShow(draft));

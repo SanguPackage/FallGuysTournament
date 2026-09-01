@@ -69,7 +69,7 @@ export function toShow(draft: ShowDraft): Show {
   };
 }
 
-export function validate(draft: ShowDraft, registered: string[]): string[] {
+export function validate(draft: ShowDraft): string[] {
   const problems: string[] = [];
 
   if (!draft.name.trim()) problems.push("Give the show a name.");
@@ -82,10 +82,6 @@ export function validate(draft: ShowDraft, registered: string[]): string[] {
 
   const finalists = filled(draft.finalists);
   const winners = filled(draft.winners);
-  const named = [...draft.rounds.map((round) => round.first), ...finalists, ...winners];
-  for (const name of filled(named)) {
-    if (!registered.includes(name)) problems.push(`"${name}" is not a registered player.`);
-  }
 
   const twice = finalists.filter((name, index) => finalists.indexOf(name) !== index);
   for (const name of new Set(twice)) problems.push(`${name} is listed twice as a finalist.`);

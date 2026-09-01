@@ -68,7 +68,6 @@ test("a survival round carries no first place", () => {
   expect(toShow(draft).rounds[0]).toEqual({ map: "gold_rush", type: "survival" });
 });
 
-const registered = ["oopman", "nicksonn", "f1xel"];
 
 function complete() {
   const draft = draftFor(parsed);
@@ -80,44 +79,45 @@ function complete() {
 }
 
 test("a complete draft validates", () => {
-  expect(validate(complete(), registered)).toEqual([]);
+  expect(validate(complete())).toEqual([]);
 });
 
 test("a show needs a name", () => {
   const draft = complete();
   draft.name = "  ";
-  expect(validate(draft, registered)).toContain("Give the show a name.");
+  expect(validate(draft)).toContain("Give the show a name.");
 });
 
 test("a race round needs whoever crossed first", () => {
   const draft = complete();
   draft.rounds[0]!.first = "";
-  expect(validate(draft, registered)).toContain("Round 1 is a race and needs a first place.");
+  expect(validate(draft)).toContain("Round 1 is a race and needs a first place.");
 });
 
-test("unregistered names are rejected", () => {
+test("a name nobody has registered yet is taken as typed", () => {
   const draft = complete();
   draft.finalists = ["oopman", "nicksonn", "ghost"];
-  expect(validate(draft, registered)).toContain(`"ghost" is not a registered player.`);
+  draft.winners = ["ghost"];
+  expect(validate(draft)).toEqual([]);
 });
 
 test("a winner has to have reached the final", () => {
   const draft = complete();
   draft.winners = ["f1xel"];
   draft.finalists = ["oopman", "nicksonn"];
-  expect(validate(draft, registered)).toContain("Winners must be finalists: f1xel.");
+  expect(validate(draft)).toContain("Winners must be finalists: f1xel.");
 });
 
 test("the same player cannot be listed twice as a finalist", () => {
   const draft = complete();
   draft.finalists = ["oopman", "oopman", "f1xel"];
-  expect(validate(draft, registered)).toContain("oopman is listed twice as a finalist.");
+  expect(validate(draft)).toContain("oopman is listed twice as a finalist.");
 });
 
 test("blank finalist slots are allowed, so a show can be saved part-filled", () => {
   const draft = complete();
   draft.finalists = ["oopman", "", ""];
-  expect(validate(draft, registered)).toEqual([]);
+  expect(validate(draft)).toEqual([]);
 });
 
 test("blanks are dropped from the saved show", () => {
