@@ -1,7 +1,6 @@
-import { resolve } from "node:path";
 import { parseLog } from "../src/log";
 import { placeShots } from "../src/screenshots";
-import { listShots } from "../src/shot-folder";
+import { listShots, resolveShot } from "../src/shot-folder";
 import { findLog, findScreenshotDir } from "../src/windows-path";
 import { publish } from "../src/publish";
 import { EVENT_PATH, PLAYERS_PATH } from "../src/storage";
@@ -72,10 +71,8 @@ const server = Bun.serve({
       const dir = await findScreenshotDir();
       const file = new URL(request.url).searchParams.get("f");
       if (!dir || !file) return new Response("Not found", { status: 404 });
-      const path = resolve(dir, file);
-      console.log(`shot f=${JSON.stringify(file)} -> ${path} (root ${resolve(dir)})`);
-      // A relative path from the browser must not be able to walk out of the ShareX folder.
-      if (!path.startsWith(`${resolve(dir)}/`)) return new Response("Forbidden", { status: 403 });
+      const path = resolveShot(dir, file);
+      if (!path) return new Response("Forbidden", { status: 403 });
       const image = Bun.file(path);
       if (!(await image.exists())) return new Response("Not found", { status: 404 });
       return new Response(image);

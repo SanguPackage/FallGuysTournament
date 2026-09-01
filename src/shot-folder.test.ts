@@ -1,7 +1,8 @@
 import { expect, test } from "bun:test";
 import { mkdir, mkdtemp, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { listShots } from "./shot-folder";
+import { resolve } from "node:path";
+import { listShots, resolveShot } from "./shot-folder";
 
 const TAKEN = new Date("2026-09-01T20:25:20");
 
@@ -24,4 +25,17 @@ test("only the event's own month is read, images only", async () => {
 
 test("a month with no folder yet is empty rather than an error", async () => {
   expect(await listShots(await folder(), "2026-10")).toEqual([]);
+});
+
+test("a capture inside the folder resolves to its own path", () => {
+  expect(resolveShot("/shots", "2026-09/one.png")).toBe(resolve("/shots/2026-09/one.png"));
+});
+
+test("a name walking out of the folder resolves to nothing", () => {
+  expect(resolveShot("/shots", "../../../etc/passwd")).toBeUndefined();
+  expect(resolveShot("/shots", "..")).toBeUndefined();
+});
+
+test("an absolute name is not allowed to replace the folder", () => {
+  expect(resolveShot("/shots", "/etc/passwd")).toBeUndefined();
 });

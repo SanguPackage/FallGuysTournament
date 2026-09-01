@@ -1,4 +1,5 @@
 import { readdir, stat } from "node:fs/promises";
+import { isAbsolute, relative, resolve, sep } from "node:path";
 import type { Shot } from "./screenshots";
 
 const IMAGES = /\.(png|jpe?g)$/i;
@@ -21,4 +22,16 @@ export async function listShots(root: string, month: string): Promise<Shot[]> {
   }
 
   return shots;
+}
+
+/**
+ * Where a capture the admin asked for lives, or nothing if the name walks out of the folder.
+ * Compared with `relative` rather than a prefix: on Windows `resolve` yields backslashes, so a
+ * `root + "/"` prefix test rejects every real path.
+ */
+export function resolveShot(root: string, file: string): string | undefined {
+  const path = resolve(root, file);
+  const step = relative(resolve(root), path);
+  if (!step || step === ".." || step.startsWith(`..${sep}`) || isAbsolute(step)) return undefined;
+  return path;
 }
