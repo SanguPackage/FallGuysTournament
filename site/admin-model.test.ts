@@ -1,5 +1,14 @@
 import { expect, test } from "bun:test";
-import { defaultMessage, draftFor, toShow, validate } from "./admin-model";
+import {
+  defaultMessage,
+  draftFor,
+  namesInShows,
+  suggestShowName,
+  syncDraft,
+  toShow,
+  validate,
+} from "./admin-model";
+import type { ShowInOrder } from "./rules";
 import type { ParsedShow } from "../src/log";
 
 const parsed: ParsedShow = {
@@ -133,4 +142,123 @@ test("the commit message names the show just recorded", () => {
       penalties: [],
     }),
   ).toBe("data: record show 2 — Roll Call");
+});
+
+const order: ShowInOrder[] = [
+  { position: 1, show: "Solos", tier: "Opening", min: 2, max: 32 },
+  { position: 2, show: "Fan Favourites", tier: "Opening", min: 5, max: 32 },
+  { position: 3, show: "Roll Call", tier: "Advanced", min: 5, max: 32 },
+];
+
+test("the first show is named after the first in the planned order", () => {
+  expect(suggestShowName(order, [])).toBe("Solos");
+});
+
+test("the suggestion moves on to the next show as they are recorded", () => {
+  expect(suggestShowName(order, ["Solos"])).toBe("Fan Favourites");
+});
+
+test("a show the lobby skipped is passed over rather than suggested again", () => {
+  expect(suggestShowName(order, ["Solos", "Roll Call"])).toBe("Fan Favourites");
+});
+
+test("past the end of the order there is nothing to suggest", () => {
+  expect(suggestShowName(order, ["Solos", "Fan Favourites", "Roll Call"])).toBe("");
+});
+
+test("a round that appears in the log while typing is appended, leaving entries alone", () => {
+  const draft = draftFor({ showId: "s", rounds: [], winnerId: undefined }, "Solos");
+  draft.rounds.push({ map: "round_one", type: "race", first: "Alpha" });
+
+  syncDraft(draft, {
+    showId: "s",
+    rounds: [
+      { id: "round_one", isFinal: false, timedOut: false, present: [], qualified: [], eliminated: [] },
+      { id: "round_two", isFinal: true, timedOut: false, present: [1, 2], qualified: [], eliminated: [] },
+    ],
+    winnerId: undefined,
+  });
+
+  expect(draft.rounds).toHaveLength(2);
+  expect(draft.rounds[0]).toEqual({ map: "round_one", type: "race", first: "Alpha" });
+  expect(draft.rounds[1]!.map).toBe("round_two");
+  expect(draft.rounds[1]!.type).toBe("final");
+});
+
+test("the finalist slots grow with the final's field, keeping the names already typed", () => {
+  const draft = draftFor({ showId: "s", rounds: [], winnerId: undefined }, "Solos");
+  draft.finalists = ["Alpha"];
+
+  syncDraft(draft, {
+    showId: "s",
+    rounds: [
+      { id: "final", isFinal: true, timedOut: false, present: [1, 2, 3], qualified: [], eliminated: [] },
+    ],
+    winnerId: undefined,
+  });
+
+  expect(draft.finalists).toEqual(["Alpha", "", ""]);
+});
+
+test("a winner appearing in the log opens a slot for their name", () => {
+  const draft = draftFor({ showId: "s", rounds: [], winnerId: undefined }, "Solos");
+  expect(draft.winners).toEqual([]);
+  syncDraft(draft, { showId: "s", rounds: [], winnerId: 7 });
+  expect(draft.winners).toEqual([""]);
+});
+
+test("syncing never drops a winner slot the admin added by hand", () => {
+  const draft = draftFor({ showId: "s", rounds: [], winnerId: 7 }, "Solos");
+  draft.winners = ["Alpha", "Bravo"];
+  syncDraft(draft, { showId: "s", rounds: [], winnerId: 7 });
+  expect(draft.winners).toEqual(["Alpha", "Bravo"]);
+});
+
+test("a draft starts out named after the planned show", () => {
+  expect(draftFor({ showId: "s", rounds: [], winnerId: undefined }, "Solos").name).toBe("Solos");
+});
+
+function parsedRound(id: string, isFinal: boolean) {
+  return { id, isFinal, timedOut: false, present: [], qualified: [], eliminated: [] };
+}
+
+test("a round stops being the final once another one loads after it", () => {
+  const draft = draftFor({ showId: "s", rounds: [parsedRound("one", true)] }, "Solos");
+  expect(draft.rounds[0]!.type).toBe("final");
+
+  syncDraft(draft, { showId: "s", rounds: [parsedRound("one", false), parsedRound("two", true)] });
+  expect(draft.rounds.map((round) => round.type)).toEqual(["race", "final"]);
+});
+
+test("a type the admin picked is never overwritten by the log", () => {
+  const draft = draftFor({ showId: "s", rounds: [parsedRound("one", true)] }, "Solos");
+  draft.rounds[0]!.type = "survival";
+  draft.rounds[0]!.typeEdited = true;
+
+  syncDraft(draft, { showId: "s", rounds: [parsedRound("one", false), parsedRound("two", true)] });
+  expect(draft.rounds[0]!.type).toBe("survival");
+});
+
+test("names already entered in a show are offered again", () => {
+  const names = namesInShows({
+    name: "FOM",
+    date: "d",
+    shows: [
+      {
+        name: "Solos",
+        rounds: [
+          { map: "m", type: "race", first: "Bravo" },
+          { map: "n", type: "final" },
+        ],
+        finalists: ["Bravo", "Alpha"],
+        winners: ["Alpha"],
+      },
+    ],
+    penalties: [],
+  });
+  expect(names).toEqual(["Alpha", "Bravo"]);
+});
+
+test("no shows played yet means nothing to offer", () => {
+  expect(namesInShows({ name: "FOM", date: "d", shows: [], penalties: [] })).toEqual([]);
 });

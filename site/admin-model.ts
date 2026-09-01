@@ -1,10 +1,13 @@
 import type { ParsedShow } from "../src/log";
 import type { Round, RoundType, Show, TournamentEvent } from "../src/types";
+import type { ShowInOrder } from "./rules";
 
 export interface RoundDraft {
   map: string;
   type: RoundType;
   first: string;
+  /** Set once the admin picks a type, so the log never overrides their judgement. */
+  typeEdited?: boolean;
 }
 
 export interface ShowDraft {
@@ -14,18 +17,35 @@ export interface ShowDraft {
   winners: string[];
 }
 
-export function draftFor(parsed: ParsedShow): ShowDraft {
-  const final = parsed.rounds.at(-1);
-  return {
-    name: "",
-    rounds: parsed.rounds.map((round) => ({
-      map: round.id,
-      type: round.isFinal ? "final" : "race",
-      first: "",
-    })),
-    finalists: Array(final?.present.length ?? 0).fill(""),
-    winners: parsed.winnerId === undefined ? [] : [""],
-  };
+export function draftFor(parsed: ParsedShow, name = ""): ShowDraft {
+  const draft: ShowDraft = { name, rounds: [], finalists: [], winners: [] };
+  syncDraft(draft, parsed);
+  return draft;
+}
+
+/**
+ * Folds rounds that appeared in the log since the last look into a draft being typed, without
+ * touching anything already entered.
+ */
+export function syncDraft(draft: ShowDraft, parsed: ParsedShow): void {
+  for (const round of parsed.rounds.slice(draft.rounds.length)) {
+    draft.rounds.push({ map: round.id, type: round.isFinal ? "final" : "race", first: "" });
+  }
+
+  parsed.rounds.forEach((round, index) => {
+    const entry = draft.rounds[index];
+    if (entry && !entry.typeEdited) entry.type = round.isFinal ? "final" : "race";
+  });
+
+  const finalists = parsed.rounds.at(-1)?.present.length ?? 0;
+  while (draft.finalists.length < finalists) draft.finalists.push("");
+
+  if (parsed.winnerId !== undefined && draft.winners.length === 0) draft.winners.push("");
+}
+
+/** The next show in the planned order that has not been played, which is almost always the one on. */
+export function suggestShowName(order: ShowInOrder[], recorded: string[]): string {
+  return order.find((show) => !recorded.includes(show.show))?.show ?? "";
 }
 
 function filled(names: string[]): string[] {
@@ -81,4 +101,14 @@ export function validate(draft: ShowDraft, registered: string[]): string[] {
 export function defaultMessage(event: TournamentEvent): string {
   const last = event.shows.at(-1);
   return last ? `data: record show ${event.shows.length} — ${last.name}` : "data: update players";
+}
+
+/** Every name the admin has already typed into a show, so it can be picked rather than retyped. */
+export function namesInShows(event: TournamentEvent): string[] {
+  const names = event.shows.flatMap((show) => [
+    ...show.rounds.map((round) => round.first),
+    ...(show.finalists ?? []),
+    ...(show.winners ?? []),
+  ]);
+  return [...new Set(names.filter((name): name is string => !!name))].sort();
 }

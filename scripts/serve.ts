@@ -1,21 +1,19 @@
 import { parseLog } from "../src/log";
+import { findLog } from "../src/log-path";
 import { publish } from "../src/publish";
 import { EVENT_PATH, PLAYERS_PATH } from "../src/storage";
+import { parseShowOrder } from "../site/rules";
 
 const SHOWS_PATH = "data/shows.json";
 
-const LOG_NAME = "AppData/LocalLow/Mediatonic/FallGuys_client/Player.log";
-
-async function findLog(): Promise<string | undefined> {
-  const candidates = [process.env.FALLGUYS_LOG];
-  if (process.env.USERPROFILE) candidates.push(`${process.env.USERPROFILE}/${LOG_NAME}`);
-  for await (const path of new Bun.Glob(`*/${LOG_NAME}`).scan("/mnt/c/Users")) {
-    candidates.push(`/mnt/c/Users/${path}`);
+/** The log is a convenience: it prefills rounds. Losing it must not stop the admin loading. */
+async function parsedShows(logPath: string | undefined) {
+  if (!logPath) return [];
+  try {
+    return parseLog(await Bun.file(logPath).text());
+  } catch {
+    return [];
   }
-  for (const path of candidates) {
-    if (path && (await Bun.file(path).exists())) return path;
-  }
-  return undefined;
 }
 
 function json(body: unknown, status = 200): Response {
@@ -44,8 +42,9 @@ const server = Bun.serve({
         showNames: Object.keys(
           ((await Bun.file(SHOWS_PATH).json()) as { shows: Record<string, unknown> }).shows,
         ).sort(),
+        order: parseShowOrder(await Bun.file("docs/rules.md").text()),
         logPath: logPath ?? null,
-        shows: logPath ? parseLog(await Bun.file(logPath).text()) : [],
+        shows: await parsedShows(logPath),
       });
     }
 
