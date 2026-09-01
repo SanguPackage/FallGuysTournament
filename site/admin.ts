@@ -3,11 +3,11 @@ import type { Players, TournamentEvent } from "../src/types";
 import {
   defaultMessage,
   draftFor,
+  draftFromShow,
   namesByPoints,
   suggestShowName,
   syncDraft,
   toShow,
-  validate,
   type ShowDraft,
 } from "./admin-model";
 import type { ShowInOrder } from "./rules";
@@ -31,6 +31,8 @@ let state: State;
 let showLinked = false;
 let selection: Selection = { slot: "all" };
 let selectedShow = 0;
+/** The saved show reopened for editing, if any. Otherwise the next unrecorded show is the form. */
+let editing: number | null = null;
 const drafts = new Map<number, ShowDraft>();
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -193,8 +195,12 @@ function markSelected(): void {
   });
 }
 
+/** The log writes Belgian clock times, so captures are shown on the same clock wherever this runs. */
 function clock(takenAt: number): string {
-  return new Date(takenAt).toLocaleTimeString([], { hour12: false });
+  return new Date(takenAt).toLocaleTimeString("nl-BE", {
+    timeZone: "Europe/Brussels",
+    hour12: false,
+  });
 }
 
 function shotImages(shots: PlacedShot[]): Node[] {
@@ -263,7 +269,12 @@ function recordedShowNames(): string[] {
 }
 
 function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
-  const draft = drafts.get(index) ?? draftFor(parsed, suggestShowName(state.order, recordedShowNames()));
+  const saved = state.event.shows[index];
+  const draft =
+    drafts.get(index) ??
+    (saved
+      ? draftFromShow(saved, parsed)
+      : draftFor(parsed, suggestShowName(state.order, recordedShowNames())));
   syncDraft(draft, parsed);
   drafts.set(index, draft);
 
@@ -355,21 +366,31 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
     render();
   });
 
+  const stopEditing = el("button", { type: "button" }, ["Close"]);
+  stopEditing.addEventListener("click", () => {
+    drafts.delete(index);
+    editing = null;
+    render();
+  });
+
   const problems = el("ul", { class: "problems" });
-  const saveButton = el("button", { type: "button", class: "primary" }, ["Save show"]);
+  const saveButton = el("button", { type: "button", class: "primary" }, [
+    saved ? "Update show" : "Save show",
+  ]);
   saveButton.addEventListener("click", async () => {
-    const found = validate(draft);
-    problems.replaceChildren(...found.map((problem) => el("li", {}, [problem])));
-    if (found.length > 0) return;
-    state.event.shows.push(toShow(draft));
+    problems.replaceChildren();
+    const before = state.event.shows[index];
+    state.event.shows[index] = toShow(draft);
     try {
       await save("/api/event", state.event);
       drafts.delete(index);
+      editing = null;
       selectedShow = state.event.shows.length;
       selection = { slot: "all" };
       render();
     } catch (error) {
-      state.event.shows.pop();
+      if (before) state.event.shows[index] = before;
+      else state.event.shows.pop();
       problems.replaceChildren(el("li", {}, [`Could not save: ${error}`]));
     }
   });
@@ -400,13 +421,12 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
       { slot: "winners" },
     ),
     problems,
-    el("div", { class: "actions" }, [saveButton]),
+    el("div", { class: "actions" }, [saveButton, ...(saved ? [stopEditing] : [])]),
   ]);
 }
 
 function renderShows(): void {
   const target = document.querySelector("#shows")!;
-  const recorded = state.event.shows.length;
 
   if (state.shows.length === 0) {
     target.replaceChildren(
@@ -419,48 +439,44 @@ function renderShows(): void {
     return;
   }
 
-  const done = state.event.shows.map((show, index) =>
-    selectable(
-      el("div", { class: "show-done" }, [
-        el("span", { class: "show-number" }, [`Show ${index + 1}`]),
-        el("span", { class: "map" }, [show.name]),
-        el("span", { class: "hint" }, [
-          [
-            state.shows[index]?.startedAt,
-            `${show.rounds.length} rounds`,
-            `winner ${show.winners?.join(", ") || "—"}`,
-          ]
-            .filter(Boolean)
-            .join(" · "),
-        ]),
+  const open = editing ?? state.event.shows.length;
+
+  const rows = state.shows.map((parsed, index) => {
+    if (index === open) return renderShowForm(parsed, index);
+
+    const show = state.event.shows[index];
+    const cells: (Node | string)[] = [
+      el("span", { class: "show-number" }, [`Show ${index + 1}`]),
+      el("span", { class: "map" }, [show?.name || parsed.showId]),
+      el("span", { class: "hint" }, [
+        [
+          parsed.startedAt,
+          `${parsed.rounds.length} rounds`,
+          show ? `winner ${show.winners?.join(", ") || "—"}` : "waiting",
+        ]
+          .filter(Boolean)
+          .join(" · "),
       ]),
+    ];
+
+    if (show) {
+      const edit = el("button", { type: "button" }, ["Edit"]);
+      edit.addEventListener("click", (event) => {
+        event.stopPropagation();
+        editing = index;
+        render();
+      });
+      cells.push(edit);
+    }
+
+    return selectable(
+      el("div", { class: show ? "show-done" : "show-done waiting" }, cells),
       index,
       { slot: "all" },
-    ),
-  );
+    );
+  });
 
-  const next = state.shows[recorded];
-  const later = state.shows.slice(recorded + 1).map((parsed, offset) =>
-    selectable(
-      el("div", { class: "show-done waiting" }, [
-        el("span", { class: "show-number" }, [`Show ${recorded + offset + 2}`]),
-        el("span", { class: "map" }, [parsed.showId]),
-        el("span", { class: "hint" }, [
-          [parsed.startedAt, `${parsed.rounds.length} rounds`, "waiting"]
-            .filter(Boolean)
-            .join(" · "),
-        ]),
-      ]),
-      recorded + offset + 1,
-      { slot: "all" },
-    ),
-  );
-
-  target.replaceChildren(
-    ...done,
-    ...(next ? [renderShowForm(next, recorded)] : []),
-    ...later,
-  );
+  target.replaceChildren(...rows);
 }
 
 function renderPublish(): void {

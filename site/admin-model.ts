@@ -44,6 +44,23 @@ export function syncDraft(draft: ShowDraft, parsed: ParsedShow): void {
   if (parsed.winnerId !== undefined && draft.winners.length === 0) draft.winners.push("");
 }
 
+/** Reopens a show already in event.json, so blanks left at save time can still be filled in. */
+export function draftFromShow(show: Show, parsed: ParsedShow): ShowDraft {
+  const draft: ShowDraft = {
+    name: show.name,
+    rounds: show.rounds.map((round) => ({
+      map: round.map,
+      type: round.type,
+      first: round.first ?? "",
+      typeEdited: true,
+    })),
+    finalists: [...(show.finalists ?? [])],
+    winners: [...(show.winners ?? [])],
+  };
+  syncDraft(draft, parsed);
+  return draft;
+}
+
 /** The next show in the planned order that has not been played, which is almost always the one on. */
 export function suggestShowName(order: ShowInOrder[], recorded: string[]): string {
   return order.find((show) => !recorded.includes(show.show))?.show ?? "";
@@ -67,25 +84,6 @@ export function toShow(draft: ShowDraft): Show {
     finalists: filled(draft.finalists),
     winners: filled(draft.winners),
   };
-}
-
-export function validate(draft: ShowDraft): string[] {
-  const problems: string[] = [];
-
-  if (!draft.name.trim()) problems.push("Give the show a name.");
-
-  const finalists = filled(draft.finalists);
-  const winners = filled(draft.winners);
-
-  const twice = finalists.filter((name, index) => finalists.indexOf(name) !== index);
-  for (const name of new Set(twice)) problems.push(`${name} is listed twice as a finalist.`);
-
-  const notFinalists = winners.filter((name) => !finalists.includes(name));
-  if (notFinalists.length > 0) {
-    problems.push(`Winners must be finalists: ${notFinalists.join(", ")}.`);
-  }
-
-  return [...new Set(problems)];
 }
 
 /** What the publish box starts out saying, so the history reads consistently without typing. */

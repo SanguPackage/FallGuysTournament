@@ -4,10 +4,10 @@ import {
   draftFor,
   namesByPoints,
   namesInShows,
+  draftFromShow,
   suggestShowName,
   syncDraft,
   toShow,
-  validate,
 } from "./admin-model";
 import type { Players, TournamentEvent } from "../src/types";
 import type { ShowInOrder } from "./rules";
@@ -78,46 +78,47 @@ function complete() {
   return draft;
 }
 
-test("a complete draft validates", () => {
-  expect(validate(complete())).toEqual([]);
+test("a saved show reopens with everything that was entered", () => {
+  const parsedShow: ParsedShow = {
+    showId: "s",
+    rounds: [
+      { id: "one", isFinal: false, timedOut: false, present: [], qualified: [], eliminated: [] },
+      { id: "two", isFinal: true, timedOut: false, present: [1, 2], qualified: [], eliminated: [] },
+    ],
+    winnerId: 1,
+  };
+  const draft = draftFromShow(
+    {
+      name: "Solos",
+      rounds: [
+        { map: "one", type: "race", first: "oopman" },
+        { map: "two", type: "final" },
+      ],
+      finalists: ["oopman", "f1xel"],
+      winners: ["oopman"],
+    },
+    parsedShow,
+  );
+
+  expect(draft.name).toBe("Solos");
+  expect(draft.rounds[0]).toMatchObject({ map: "one", type: "race", first: "oopman" });
+  expect(draft.finalists).toEqual(["oopman", "f1xel"]);
+  expect(draft.winners).toEqual(["oopman"]);
 });
 
-test("a show needs a name", () => {
-  const draft = complete();
-  draft.name = "  ";
-  expect(validate(draft)).toContain("Give the show a name.");
-});
+test("reopening keeps a round type the log would have guessed differently", () => {
+  const draft = draftFromShow(
+    { name: "Solos", rounds: [{ map: "one", type: "survival" }], finalists: [], winners: [] },
+    {
+      showId: "s",
+      rounds: [
+        { id: "one", isFinal: true, timedOut: false, present: [], qualified: [], eliminated: [] },
+      ],
+      winnerId: undefined,
+    },
+  );
 
-test("a race whose first place is still unknown saves anyway", () => {
-  const draft = complete();
-  draft.rounds[0]!.first = "";
-  expect(validate(draft)).toEqual([]);
-});
-
-test("a name nobody has registered yet is taken as typed", () => {
-  const draft = complete();
-  draft.finalists = ["oopman", "nicksonn", "ghost"];
-  draft.winners = ["ghost"];
-  expect(validate(draft)).toEqual([]);
-});
-
-test("a winner has to have reached the final", () => {
-  const draft = complete();
-  draft.winners = ["f1xel"];
-  draft.finalists = ["oopman", "nicksonn"];
-  expect(validate(draft)).toContain("Winners must be finalists: f1xel.");
-});
-
-test("the same player cannot be listed twice as a finalist", () => {
-  const draft = complete();
-  draft.finalists = ["oopman", "oopman", "f1xel"];
-  expect(validate(draft)).toContain("oopman is listed twice as a finalist.");
-});
-
-test("blank finalist slots are allowed, so a show can be saved part-filled", () => {
-  const draft = complete();
-  draft.finalists = ["oopman", "", ""];
-  expect(validate(draft)).toEqual([]);
+  expect(draft.rounds[0]!.type).toBe("survival");
 });
 
 test("blanks are dropped from the saved show", () => {
