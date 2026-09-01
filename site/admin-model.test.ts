@@ -8,6 +8,7 @@ import {
   suggestShowName,
   syncDraft,
   toShow,
+  validate,
 } from "./admin-model";
 import type { Players, TournamentEvent } from "../src/types";
 import type { ShowInOrder } from "./rules";
@@ -329,4 +330,23 @@ test("with nothing played the list is alphabetical", () => {
     "Charlie",
     "Delta",
   ]);
+});
+
+test("a show needs a name", () => {
+  const draft = complete();
+  draft.name = "  ";
+  expect(validate(draft)).toEqual(["Give the show a name."]);
+});
+
+test("the same finalist twice is a slip worth catching", () => {
+  const draft = complete();
+  draft.finalists = ["oopman", "oopman", "f1xel"];
+  expect(validate(draft)).toEqual(["oopman is listed twice as a finalist."]);
+});
+
+test("a winner who was never listed as a finalist is taken as entered", () => {
+  const draft = complete();
+  draft.finalists = ["oopman"];
+  draft.winners = ["f1xel"];
+  expect(validate(draft)).toEqual([]);
 });

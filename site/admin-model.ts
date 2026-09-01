@@ -86,6 +86,18 @@ export function toShow(draft: ShowDraft): Show {
   };
 }
 
+export function validate(draft: ShowDraft): string[] {
+  const problems: string[] = [];
+
+  if (!draft.name.trim()) problems.push("Give the show a name.");
+
+  const finalists = filled(draft.finalists);
+  const twice = finalists.filter((name, index) => finalists.indexOf(name) !== index);
+  for (const name of new Set(twice)) problems.push(`${name} is listed twice as a finalist.`);
+
+  return problems;
+}
+
 /** What the publish box starts out saying, so the history reads consistently without typing. */
 export function defaultMessage(event: TournamentEvent): string {
   const last = event.shows.at(-1);
