@@ -48,6 +48,12 @@ leaderboard:
 { "fom": "Wouter_Van_Schandevijl", "admin": true }
 ```
 
+## Scoring is entered by hand
+
+The game's `Player.log` records every player's result, but against numeric playerIDs
+that carry no name and change from show to show. Log parsing was tried and dropped; see
+`data/logs/2026-09-01-join-order.md`. Results go in through the CLI.
+
 ## Show limits
 
 `data/shows.json` holds the minimum and maximum player count for every custom playlist,

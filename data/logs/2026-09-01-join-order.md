@@ -25,4 +25,15 @@ The host rebuilt the lobby at 20:20:57 (`LeaveParty, reason: PrivateLobby_Host`)
 solos show that followed, `winnerPlayerId:4` was oopman — ID 3 in lobby 1. Recreating a
 lobby therefore reassigns IDs.
 
-Whether IDs survive from one show to the next *within* one lobby is still untested.
+## Resolved: IDs are not stable, and log parsing is dropped
+
+Tested on the night: playerIDs do **not** survive from one show to the next, even within
+a single lobby that was never rebuilt. The mapping therefore cannot be established once
+and reused, and it cannot be reconstructed retroactively from a finished log either.
+
+Re-deriving it would mean naming players by observation in every show, which costs more
+attention than typing the results does.
+
+**Decision: results are entered by hand through the CLI. The log is not parsed for
+scoring.** `src/log.ts` and its tests stay in the repo as a record of what the log does
+contain, but nothing in the scoring path calls them.

@@ -144,21 +144,26 @@ near matches), recording a round with no show started (reject), a winner who is 
 among that show's `finalists` (reject), and an empty `winners` array (accept — a
 timed-out final awards the 1-point finalist bonus but no win).
 
-## 7. Log parsing — deferred
+## 7. Log parsing — tried and dropped
 
 Fall Guys writes `Player.log` (Windows:
-`%AppData%\..\LocalLow\Mediatonic\FallGuys_client\Player.log`), and the community tool
-FallGuysStats parses it for round names, qualification and placement. Because the admin
-spectates every round, their log should cover the whole event.
+`%AppData%\..\LocalLow\Mediatonic\FallGuys_client\Player.log`). It does record every
+player's result, not just the local one: `HandleServerPlayerProgress PlayerId=N is
+succeeded=True/False` gives qualification and finish order for the whole lobby, and
+`VictoryScene::winnerPlayerId:N` gives the winner.
 
-What is unverified: whether the log records placements for *all* lobby players or only
-the local one. This is version-dependent. Before building a parser, capture a real
-`Player.log` from a machine that has played a custom lobby and confirm the data is
-there.
+It records those results against numeric playerIDs, and **no player name appears
+anywhere in the log**. Naming them requires an ID-to-name mapping built by observation.
 
-If it is, the parser becomes an autofill layer that proposes round results for the CLI
-to confirm. It never becomes a dependency: manual entry stays the fallback, and the CLI
-is needed regardless for penalties and corrections.
+That mapping turned out not to be reusable. Testing on 2026-09-01 established that
+playerIDs do not survive from one show to the next, even inside a lobby that is never
+rebuilt — see `data/logs/2026-09-01-join-order.md`. So the mapping would have to be
+rebuilt for every show, by watching who wins rounds, which costs more attention than
+typing the results does.
 
-Screenshot OCR was considered and rejected — slower and more fragile than typing the
-result.
+**Decision: scoring is manual entry through the CLI. The log is not parsed.**
+`src/log.ts` and its tests remain as a record of the log's contents, but nothing in the
+scoring path depends on them.
+
+Screenshot OCR was considered and rejected earlier — slower and more fragile than typing
+the result.
