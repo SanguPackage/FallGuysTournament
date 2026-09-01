@@ -4,8 +4,12 @@
   "type": "module",
   "scripts": {
     "test": "bun test",
+    "typecheck": "tsc --noEmit",
     "cli": "bun run src/cli.ts",
     "build": "bun run scripts/build.ts",
     "dev": "bun run scripts/serve.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.0"
   }
 }

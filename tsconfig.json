@@ -4,6 +4,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "types": ["bun"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,

@@ -94,5 +94,7 @@ Pushing to `main` publishes `dist/` to GitHub Pages via
 ## Tests
 
 ```bash
+bun install
 bun test
+bun run typecheck
 ```
