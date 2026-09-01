@@ -66,3 +66,69 @@ p { margin: 0 0 0.75rem; }
 td.tier { color: var(--muted); }
 
 .doc th, .doc td { text-align: left; }
+
+.show {
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.show h2 { margin: 0 0 0.75rem; display: flex; align-items: baseline; gap: 0.6rem; }
+
+.show-number {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.rounds { margin: 0; padding: 0; list-style: none; }
+
+.rounds li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.35rem 0;
+  flex-wrap: wrap;
+}
+
+.round-number { width: 1.25rem; color: var(--muted); font-size: 0.85rem; }
+
+.map { font-weight: 600; }
+
+.type {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+}
+
+.type-final { border-color: var(--accent); color: var(--accent); }
+
+.first { font-size: 0.85rem; color: var(--muted); }
+
+.first.missing { font-style: italic; }
+
+.outcome {
+  display: grid;
+  grid-template-columns: 6rem 1fr;
+  gap: 0.35rem 0.75rem;
+  margin: 0.85rem 0 0;
+}
+
+.outcome dt { color: var(--muted); font-size: 0.85rem; }
+
+.outcome dd { margin: 0; }
+
+.name {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  margin: 0 0.15rem 0.15rem 0;
+  border-radius: 0.3rem;
+  background: var(--line);
+  font-size: 0.85rem;
+}
+
+.winners .name { background: var(--accent); color: #12121a; font-weight: 600; }

@@ -57,3 +57,7 @@ test("names are escaped", () => {
   const html = renderShows([{ name: "<b>", rounds: [] }]);
   expect(html).not.toContain("<b>");
 });
+
+test("winners are marked apart from finalists", () => {
+  expect(renderShows([fallBall])).toContain(`<dd class="winners">`);
+});

@@ -40,7 +40,7 @@ function renderShow(show: Show, index: number): string {
         <dt>Finalists</dt>
         <dd>${finalists.length > 0 ? names(finalists) : "—"}</dd>
         <dt>${winners.length > 1 ? "Winners" : "Winner"}</dt>
-        <dd>${winners.length > 0 ? names(winners) : "—"}</dd>
+        <dd class="winners">${winners.length > 0 ? names(winners) : "—"}</dd>
       </dl>`;
 
   return `
