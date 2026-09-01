@@ -11,6 +11,7 @@ import {
   type ShowDraft,
 } from "./admin-model";
 import type { ShowInOrder } from "./rules";
+import { shotsForSlot, type PlacedShot, type Selection } from "../src/screenshots";
 
 interface State {
   players: Players;
@@ -19,6 +20,8 @@ interface State {
   order: ShowInOrder[];
   logPath: string | null;
   shows: ParsedShow[];
+  shotDir: string | null;
+  shots: PlacedShot[];
 }
 
 /** The log only changes when a round ends, so this is about as often as it can pay off. */
@@ -26,6 +29,7 @@ const WATCH_MS = 5_000;
 
 let state: State;
 let showLinked = false;
+let selection: Selection = { slot: "show" };
 const drafts = new Map<number, ShowDraft>();
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -168,6 +172,86 @@ function renderPlayers(): void {
   );
 }
 
+function slotKey(slot: Selection): string {
+  return slot.slot === "round" ? `round:${slot.roundIndex}` : slot.slot;
+}
+
+/**
+ * Clicking or tabbing into a row points the panel at it. Only the class changes, so the form
+ * itself is left standing and nothing being typed moves.
+ */
+function selectable(node: HTMLElement, slot: Selection): HTMLElement {
+  node.dataset.slotKey = slotKey(slot);
+  const select = () => {
+    selection = slot;
+    renderShots();
+    markSelected();
+  };
+  node.addEventListener("click", select);
+  node.addEventListener("focusin", select);
+  return node;
+}
+
+function markSelected(): void {
+  const key = slotKey(selection);
+  document.querySelectorAll<HTMLElement>("[data-slot-key]").forEach((node) => {
+    node.classList.toggle("selected", node.dataset.slotKey === key);
+  });
+}
+
+function clock(takenAt: number): string {
+  return new Date(takenAt).toLocaleTimeString([], { hour12: false });
+}
+
+function shotImages(shots: PlacedShot[]): Node[] {
+  if (shots.length === 0) return [el("p", { class: "empty" }, ["No screenshots for this."])];
+  return shots.flatMap((shot) => {
+    const image = el("img", {
+      src: `/api/shot?f=${encodeURIComponent(shot.file)}`,
+      alt: shot.file,
+      loading: "lazy",
+    });
+    image.addEventListener("click", () => image.classList.toggle("full"));
+    return [el("p", { class: "shot-time" }, [clock(shot.takenAt)]), image];
+  });
+}
+
+const SLOT_LABELS: Record<Selection["slot"], string> = {
+  round: "This round",
+  finalists: "Finalists",
+  winners: "Winners",
+  show: "This show, between rounds",
+  unmatched: "Outside every show",
+};
+
+function catchAll(slot: "show" | "unmatched", showIndex: number): HTMLElement {
+  const shots = shotsForSlot(state.shots, showIndex, { slot });
+  const node = el("details", {}, [
+    el("summary", {}, [`${SLOT_LABELS[slot]} (${shots.length})`]),
+    ...shotImages(shots),
+  ]);
+  return node;
+}
+
+function renderShots(): void {
+  const target = document.querySelector("#shots")!;
+  if (!state.shotDir) {
+    target.replaceChildren(
+      el("h2", {}, ["Screenshots"]),
+      el("p", { class: "empty" }, ["No ShareX folder found. Set SHAREX_DIR and restart."]),
+    );
+    return;
+  }
+
+  const showIndex = state.event.shows.length;
+  target.replaceChildren(
+    el("h2", {}, [SLOT_LABELS[selection.slot]]),
+    ...shotImages(shotsForSlot(state.shots, showIndex, selection)),
+    catchAll("show", showIndex),
+    catchAll("unmatched", showIndex),
+  );
+}
+
 function nameInput(key: string, value: string, onChange: (value: string) => void): HTMLInputElement {
   const input = el("input", { type: "text", list: "registered", value, placeholder: "name" });
   input.dataset.focusKey = key;
@@ -247,7 +331,10 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
       ]),
     );
 
-    return el("li", {}, cells);
+    return selectable(
+      el("li", {}, cells),
+      entry.type === "final" ? { slot: "finalists" } : { slot: "round", roundIndex },
+    );
   });
 
   const finalists = draft.finalists.map((value, slot) =>
@@ -294,14 +381,20 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
       ]),
     ]),
     el("ol", { class: "rounds" }, rounds),
-    el("div", { class: "field" }, [
-      el("label", {}, [`Finalists (${finalists.length})`]),
-      el("div", { class: "names" }, finalists),
-    ]),
-    el("div", { class: "field" }, [
-      el("label", {}, ["Winners"]),
-      el("div", { class: "names" }, [...winners, addWinner]),
-    ]),
+    selectable(
+      el("div", { class: "field" }, [
+        el("label", {}, [`Finalists (${finalists.length})`]),
+        el("div", { class: "names" }, finalists),
+      ]),
+      { slot: "finalists" },
+    ),
+    selectable(
+      el("div", { class: "field" }, [
+        el("label", {}, ["Winners"]),
+        el("div", { class: "names" }, [...winners, addWinner]),
+      ]),
+      { slot: "winners" },
+    ),
     problems,
     el("div", { class: "actions" }, [saveButton]),
   ]);
@@ -367,6 +460,8 @@ function render(): void {
   renderPlayers();
   renderShows();
   renderPublish();
+  renderShots();
+  markSelected();
   restoreFocus(focus);
 }
 
@@ -375,7 +470,7 @@ function render(): void {
  * poll: players and drafts are whatever is being typed here.
  */
 async function watchLog(): Promise<void> {
-  let seen = JSON.stringify(state.shows);
+  let seen = JSON.stringify([state.shows, state.shots]);
   setInterval(async () => {
     let next: State;
     try {
@@ -385,10 +480,11 @@ async function watchLog(): Promise<void> {
       return;
     }
     status("watch-status", `Watching the log · ${next.shows.length} shows`);
-    const signature = JSON.stringify(next.shows);
+    const signature = JSON.stringify([next.shows, next.shots]);
     if (signature === seen) return;
     seen = signature;
     state.shows = next.shows;
+    state.shots = next.shots;
     state.order = next.order;
     render();
   }, WATCH_MS);
@@ -396,9 +492,10 @@ async function watchLog(): Promise<void> {
 
 async function main(): Promise<void> {
   state = (await (await fetch("/api/state")).json()) as State;
-  document.querySelector("#log-path")!.textContent = state.logPath
-    ? `Reading ${state.logPath}`
-    : "No Fall Guys log found";
+  document.querySelector("#log-path")!.textContent = [
+    state.logPath ? `Reading ${state.logPath}` : "No Fall Guys log found",
+    state.shotDir ? `Screenshots from ${state.shotDir}` : "No ShareX folder found",
+  ].join(" · ");
 
   document.querySelector("#add-player")!.addEventListener("click", () => {
     state.players.players.push({ fom: "" });

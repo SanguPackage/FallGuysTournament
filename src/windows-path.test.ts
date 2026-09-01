@@ -1,7 +1,14 @@
 import { expect, test } from "bun:test";
-import { findLog, LOG_NAME, WINDOWS_USERS, type LogLookup } from "./log-path";
+import {
+  findLog,
+  findScreenshotDir,
+  LOG_NAME,
+  SHAREX_NAME,
+  WINDOWS_USERS,
+  type Lookup,
+} from "./windows-path";
 
-function lookup(present: string[], overrides: Partial<LogLookup> = {}): LogLookup {
+function lookup(present: string[], overrides: Partial<Lookup> = {}): Lookup {
   return {
     env: {},
     exists: async (path) => present.includes(path),
@@ -62,4 +69,21 @@ test("an unreadable Users directory with nothing else found gives up quietly", a
     }),
   );
   expect(found).toBeUndefined();
+});
+
+test("an explicit SHAREX_DIR wins", async () => {
+  const found = await findScreenshotDir(
+    lookup(["/shots"], { env: { SHAREX_DIR: "/shots" } }),
+  );
+  expect(found).toBe("/shots");
+});
+
+test("otherwise the ShareX folder is looked for under every user on the C: drive", async () => {
+  expect(await findScreenshotDir(lookup([`${WINDOWS_USERS}/woute/${SHAREX_NAME}`]))).toBe(
+    `${WINDOWS_USERS}/woute/${SHAREX_NAME}`,
+  );
+});
+
+test("no ShareX folder anywhere is not an error", async () => {
+  expect(await findScreenshotDir(lookup([]))).toBeUndefined();
 });
