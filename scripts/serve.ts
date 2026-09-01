@@ -1,5 +1,5 @@
 import { parseLog } from "../src/log";
-import { placeShots } from "../src/screenshots";
+import { absoluteTimes, placeShots } from "../src/screenshots";
 import { listShots, resolveShot } from "../src/shot-folder";
 import { findLog, findScreenshotDir } from "../src/windows-path";
 import { publish } from "../src/publish";
@@ -64,6 +64,7 @@ const server = Bun.serve({
         order: parseShowOrder(await Bun.file("docs/rules.md").text()),
         logPath: logPath ?? null,
         shows,
+        times: absoluteTimes(shows, event.date),
         shotDir: shotDir ?? null,
         shots: await placed(shotDir, shows, event.date),
       });

@@ -29,12 +29,18 @@ interface Window {
   roundIndex?: number;
 }
 
+export interface ShowTimes {
+  startedAt?: number;
+  wonAt?: number;
+  rounds: (number | undefined)[];
+}
+
 /**
- * The log writes a clock time with no date, so a session played past midnight reads as going
+ * The log writes a UTC clock time with no date, so a session played past midnight reads as going
  * backwards. Stamps arrive in order, so a step backwards is a new day.
  */
 function clockReader(date: string) {
-  const midnight = new Date(`${date}T00:00:00`).getTime();
+  const midnight = Date.parse(`${date}T00:00:00Z`);
   let day = 0;
   let previous = -1;
 
@@ -48,13 +54,20 @@ function clockReader(date: string) {
   };
 }
 
-function windowsFor(shows: ParsedShow[], date: string): Window[] {
+/** When each show and round actually happened, so the admin can show one clock throughout. */
+export function absoluteTimes(shows: ParsedShow[], date: string): ShowTimes[] {
   const read = clockReader(date);
-  const spans = shows.map((show) => ({
-    show,
+  return shows.map((show) => ({
     startedAt: read(show.startedAt),
     rounds: show.rounds.map((round) => read(round.startedAt)),
     wonAt: read(show.wonAt),
+  }));
+}
+
+function windowsFor(shows: ParsedShow[], date: string): Window[] {
+  const spans = absoluteTimes(shows, date).map((times, index) => ({
+    show: shows[index]!,
+    ...times,
   }));
 
   const windows: Window[] = [];

@@ -146,8 +146,9 @@ A capture is placed by its modified time against the log's round times, so a fil
 the folder lands wherever its new mtime falls. Anything that matches no round shows under
 **This show, between rounds** or **Outside every show** at the bottom of the panel.
 
-Times come from the log, which writes a clock with no date, so the day is taken from
-`date` in `event.json`. A log started the day before the event would shift every window.
+The log stamps every line with a **UTC** clock and no date, so the day comes from `date` in
+`event.json` and every time on the admin page is converted to `Europe/Brussels`. A log started
+the day before the event would shift every window.
 
 ## Tests
 

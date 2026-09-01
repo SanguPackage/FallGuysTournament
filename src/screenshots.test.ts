@@ -1,12 +1,16 @@
+// The log writes UTC while the event runs on Belgian time, so these must not run in UTC.
+process.env.TZ = "Europe/Brussels";
+
 import { expect, test } from "bun:test";
-import { placeShots, shotsForSlot, type Shot } from "./screenshots";
+import { absoluteTimes, placeShots, shotsForSlot, type Shot } from "./screenshots";
 import type { ParsedShow } from "./log";
 import type { RoundType } from "./types";
 
 const DATE = "2026-09-01";
 
+/** Log stamps are UTC; a capture's mtime is an absolute instant. Both are epochs here. */
 function at(clock: string, dayOffset = 0): number {
-  return new Date(`${DATE}T${clock}`).getTime() + dayOffset * 86_400_000;
+  return Date.parse(`${DATE}T${clock}Z`) + dayOffset * 86_400_000;
 }
 
 function round(id: string, startedAt: string | undefined, isFinal = false) {
@@ -140,4 +144,14 @@ test("the unmatched slot picks what belongs to no show at all", () => {
   expect(shotsForSlot(PLACED, 0, { slot: "unmatched" }).map((s) => s.file)).toEqual([
     "desktop.png",
   ]);
+});
+
+test("log stamps are read as UTC, not as the clock on the wall", () => {
+  const [times] = absoluteTimes(SHOWS, DATE);
+  expect(times!.startedAt).toBe(Date.parse("2026-09-01T20:25:02Z"));
+  expect(times!.rounds).toEqual([
+    Date.parse("2026-09-01T20:25:05Z"),
+    Date.parse("2026-09-01T20:25:39Z"),
+  ]);
+  expect(times!.wonAt).toBe(Date.parse("2026-09-01T20:27:15Z"));
 });
