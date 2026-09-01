@@ -15,7 +15,7 @@ import {
   type ShowDraft,
 } from "./admin-model";
 import type { ShowInOrder } from "./rules";
-import { shotsForSlot, type PlacedShot, type Selection } from "../src/screenshots";
+import { shotsForSlot, type PlacedShot, type Selection, type ShowTimes } from "../src/screenshots";
 
 interface State {
   players: Players;
@@ -24,6 +24,7 @@ interface State {
   order: ShowInOrder[];
   logPath: string | null;
   shows: ParsedShow[];
+  times: ShowTimes[];
   shotDir: string | null;
   shots: PlacedShot[];
 }
@@ -199,9 +200,10 @@ function markSelected(): void {
   });
 }
 
-/** The log writes Belgian clock times, so captures are shown on the same clock wherever this runs. */
-function clock(takenAt: number): string {
-  return new Date(takenAt).toLocaleTimeString("nl-BE", {
+/** The log writes UTC, so every time on the page is put on the event's own clock instead. */
+function clock(at: number | undefined): string {
+  if (at === undefined) return "";
+  return new Date(at).toLocaleTimeString("nl-BE", {
     timeZone: "Europe/Brussels",
     hour12: false,
   });
@@ -214,7 +216,23 @@ function shotImages(shots: PlacedShot[]): Node[] {
       src: `/api/shot?f=${encodeURIComponent(shot.file)}`,
       alt: shot.file,
     });
-    image.addEventListener("click", () => image.classList.toggle("full"));
+    image.addEventListener("click", (event) => {
+      const before = image.getBoundingClientRect();
+      const across = (event.clientX - before.left) / before.width;
+      const down = (event.clientY - before.top) / before.height;
+
+      image.classList.toggle("full");
+      if (!image.classList.contains("full")) return;
+
+      // The panel is the scroller, so the point clicked is put in the middle of it.
+      const panel = image.closest(".shot-panel");
+      if (!(panel instanceof HTMLElement)) return;
+      const after = image.getBoundingClientRect();
+      const frame = panel.getBoundingClientRect();
+      panel.scrollLeft +=
+        after.left - frame.left + across * after.width - panel.clientWidth / 2;
+      panel.scrollTop += after.top - frame.top + down * after.height - panel.clientHeight / 2;
+    });
     return [el("p", { class: "shot-time" }, [clock(shot.takenAt)]), image];
   });
 }
@@ -334,7 +352,7 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
     cells.push(
       el("span", { class: "hint" }, [
         [
-          round.startedAt,
+          clock(state.times[index]?.rounds[roundIndex]),
           round.timedOut
             ? "timeout — nobody qualified"
             : `${round.present.length} started, ${round.qualified.length} qualified`,
@@ -412,7 +430,9 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
       el("span", { class: "show-number" }, [`Show ${index + 1}`]),
       name,
       el("span", { class: "hint" }, [
-        [parsed.startedAt, parsed.showId, `${parsed.players ?? "?"} players`].filter(Boolean).join(" · "),
+        [clock(state.times[index]?.startedAt), parsed.showId, `${parsed.players ?? "?"} players`]
+          .filter(Boolean)
+          .join(" · "),
       ]),
     ]),
     el("ol", { class: "rounds" }, rounds),
@@ -462,7 +482,7 @@ function renderShows(): void {
       el("span", { class: "map" }, [show?.name || parsed.showId]),
       el("span", { class: "hint" }, [
         [
-          parsed.startedAt,
+          clock(state.times[index]?.startedAt),
           `${parsed.rounds.length} rounds`,
           show ? `winner ${show.winners?.join(", ") || "—"}` : "waiting",
         ]
@@ -515,7 +535,7 @@ function render(): void {
  * poll: players and drafts are whatever is being typed here.
  */
 async function watchLog(): Promise<void> {
-  let seen = JSON.stringify([state.shows, state.shots]);
+  let seen = JSON.stringify([state.shows, state.shots, state.times]);
   setInterval(async () => {
     let next: State;
     try {
@@ -525,11 +545,12 @@ async function watchLog(): Promise<void> {
       return;
     }
     status("watch-status", `Watching the log · ${next.shows.length} shows`);
-    const signature = JSON.stringify([next.shows, next.shots]);
+    const signature = JSON.stringify([next.shows, next.shots, next.times]);
     if (signature === seen) return;
     seen = signature;
     state.shows = next.shows;
     state.shots = next.shots;
+    state.times = next.times;
     state.order = next.order;
     render();
   }, WATCH_MS);
