@@ -70,8 +70,13 @@ bun run dev     # http://localhost:3000/admin
 
 The admin page runs only against the local dev server, never on GitHub Pages. It reads
 the Fall Guys log to fill in each show's rounds, player counts and finals, so the only
-typing is names. It writes `data/players.json` and `data/event.json` directly; commit
-and push to publish.
+typing is names. It writes `data/players.json` and `data/event.json` directly.
+
+Names already entered are offered as a dropdown on every name field, so a player is
+typed out once and picked from the list after that.
+
+**Commit & push** commits `data/` and pushes, which rebuilds the public site. Only
+`data/` is committed, so anything else staged is left alone.
 
 It finds `Player.log` under `AppData/LocalLow/Mediatonic/FallGuys_client` for any user
 on the C: drive. Set `FALLGUYS_LOG` to override.
@@ -83,19 +88,42 @@ Player IDs in the log are reassigned every show — even inside one lobby — so
 never say *who* did something. See
 [data/logs/2026-09-01-join-order.md](data/logs/2026-09-01-join-order.md).
 
-## Leaderboard
+## The site
 
 ```bash
 bun run build   # bundle site/ and data/ into dist/
-bun run dev     # serve dist/ on http://localhost:3000
+bun run dev     # serve dist/ on http://localhost:3000, admin on /admin
 ```
 
-Pages: standings, results (every show's rounds, finalists and winners), rules and show
-order.
+Five pages, all built from `data/` and `docs/rules.md`:
+
+| Page       | What it shows                                                        |
+|------------|----------------------------------------------------------------------|
+| Dashboard  | Which show and round is on, the podium, and the rest of the field     |
+| Standings  | Every player with their races, finals, wins and penalties             |
+| Results    | Every show round by round, newest first                               |
+| Rules      | `docs/rules.md`                                                       |
+| Show order | The ten shows, marked played / playing now / upcoming                 |
+
+Every page but the rules refreshes itself every 15 seconds, so nobody has to reload during
+the event. Players who gained points since the last refresh are ringed in green for a few
+seconds.
+
+The status ribbon is derived from what has been recorded: the last show in `event.json` is
+the one being played, and the round is one past the last one entered. A show with `winners`
+is finished.
 
 Pushing to `main` publishes `dist/` to GitHub Pages via
 [.github/workflows/pages.yml](.github/workflows/pages.yml). Set the Pages source to
 "GitHub Actions" in the repository settings.
+
+## Screenshots
+
+ShareX captures the active window with `Alt + Print Screen`. Rebind under Hotkey
+settings → `...` → Task = Capture → Active window.
+
+Set Fall Guys to Borderless (Settings → Display → Display Mode, or `Alt + Enter`).
+Exclusive fullscreen captures as a black frame.
 
 ## Tests
 
