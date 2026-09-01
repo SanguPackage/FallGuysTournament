@@ -1,6 +1,8 @@
 import type { LeaderboardRow, Players, TournamentEvent } from "./types";
 
 export const RACE_WIN = 3;
+export const REACHED_FINAL = 1;
+export const FINAL_WIN = 5;
 
 export function score(event: TournamentEvent, players: Players): LeaderboardRow[] {
   const rows = new Map<string, LeaderboardRow>();
@@ -23,6 +25,24 @@ export function score(event: TournamentEvent, players: Players): LeaderboardRow[
       if (!row) continue;
       row.raceWins += 1;
       row.points += RACE_WIN;
+    }
+
+    for (const ingame of show.finalists ?? []) {
+      const row = rows.get(ingame);
+      if (!row) continue;
+      row.finalsReached += 1;
+      row.points += REACHED_FINAL;
+    }
+
+    const winners = show.winners ?? [];
+    if (winners.length > 0) {
+      const share = Math.floor(FINAL_WIN / winners.length);
+      for (const ingame of winners) {
+        const row = rows.get(ingame);
+        if (!row) continue;
+        row.finalsWon += 1;
+        row.points += share;
+      }
     }
   }
 
