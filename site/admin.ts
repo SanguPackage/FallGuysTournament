@@ -30,6 +30,7 @@ const WATCH_MS = 5_000;
 let state: State;
 let showLinked = false;
 let selection: Selection = { slot: "show" };
+let selectedShow = 0;
 const drafts = new Map<number, ShowDraft>();
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -172,18 +173,19 @@ function renderPlayers(): void {
   );
 }
 
-function slotKey(slot: Selection): string {
-  return slot.slot === "round" ? `round:${slot.roundIndex}` : slot.slot;
+function slotKey(showIndex: number, slot: Selection): string {
+  return `${showIndex}:${slot.slot === "round" ? `round:${slot.roundIndex}` : slot.slot}`;
 }
 
 /**
  * Clicking or tabbing into a row points the panel at it. Only the class changes, so the form
  * itself is left standing and nothing being typed moves.
  */
-function selectable(node: HTMLElement, slot: Selection): HTMLElement {
-  node.dataset.slotKey = slotKey(slot);
+function selectable(node: HTMLElement, showIndex: number, slot: Selection): HTMLElement {
+  node.dataset.slotKey = slotKey(showIndex, slot);
   const select = () => {
     selection = slot;
+    selectedShow = showIndex;
     renderShots();
     markSelected();
   };
@@ -193,7 +195,7 @@ function selectable(node: HTMLElement, slot: Selection): HTMLElement {
 }
 
 function markSelected(): void {
-  const key = slotKey(selection);
+  const key = slotKey(selectedShow, selection);
   document.querySelectorAll<HTMLElement>("[data-slot-key]").forEach((node) => {
     node.classList.toggle("selected", node.dataset.slotKey === key);
   });
@@ -220,17 +222,16 @@ const SLOT_LABELS: Record<Selection["slot"], string> = {
   round: "This round",
   finalists: "Finalists",
   winners: "Winners",
-  show: "This show, between rounds",
+  show: "Between this show's rounds",
+  all: "Everything from this show",
   unmatched: "Outside every show",
 };
 
-function catchAll(slot: "show" | "unmatched", showIndex: number): HTMLElement {
-  const shots = shotsForSlot(state.shots, showIndex, { slot });
-  const node = el("details", {}, [
-    el("summary", {}, [`${SLOT_LABELS[slot]} (${shots.length})`]),
+function catchAll(label: string, shots: PlacedShot[]): HTMLElement {
+  return el("details", {}, [
+    el("summary", {}, [`${label} (${shots.length})`]),
     ...shotImages(shots),
   ]);
-  return node;
 }
 
 function renderShots(): void {
@@ -243,12 +244,18 @@ function renderShots(): void {
     return;
   }
 
-  const showIndex = state.event.shows.length;
   target.replaceChildren(
-    el("h2", {}, [SLOT_LABELS[selection.slot]]),
-    ...shotImages(shotsForSlot(state.shots, showIndex, selection)),
-    catchAll("show", showIndex),
-    catchAll("unmatched", showIndex),
+    el("h2", {}, [`Show ${selectedShow + 1} · ${SLOT_LABELS[selection.slot]}`]),
+    ...shotImages(shotsForSlot(state.shots, selectedShow, selection)),
+    catchAll(
+      SLOT_LABELS.show,
+      shotsForSlot(state.shots, selectedShow, { slot: "show" }),
+    ),
+    catchAll(
+      SLOT_LABELS.unmatched,
+      shotsForSlot(state.shots, selectedShow, { slot: "unmatched" }),
+    ),
+    catchAll("Every screenshot this month", state.shots),
   );
 }
 
@@ -333,6 +340,7 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
 
     return selectable(
       el("li", {}, cells),
+      index,
       entry.type === "final" ? { slot: "finalists" } : { slot: "round", roundIndex },
     );
   });
@@ -365,6 +373,8 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
     try {
       await save("/api/event", state.event);
       drafts.delete(index);
+      selectedShow = state.event.shows.length;
+      selection = { slot: "show" };
       render();
     } catch (error) {
       state.event.shows.pop();
@@ -386,6 +396,7 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
         el("label", {}, [`Finalists (${finalists.length})`]),
         el("div", { class: "names" }, finalists),
       ]),
+      index,
       { slot: "finalists" },
     ),
     selectable(
@@ -393,6 +404,7 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
         el("label", {}, ["Winners"]),
         el("div", { class: "names" }, [...winners, addWinner]),
       ]),
+      index,
       { slot: "winners" },
     ),
     problems,
@@ -416,30 +428,40 @@ function renderShows(): void {
   }
 
   const done = state.event.shows.map((show, index) =>
-    el("div", { class: "show-done" }, [
-      el("span", { class: "show-number" }, [`Show ${index + 1}`]),
-      el("span", { class: "map" }, [show.name]),
-      el("span", { class: "hint" }, [
-        [
-          state.shows[index]?.startedAt,
-          `${show.rounds.length} rounds`,
-          `winner ${show.winners?.join(", ") || "—"}`,
-        ]
-          .filter(Boolean)
-          .join(" · "),
+    selectable(
+      el("div", { class: "show-done" }, [
+        el("span", { class: "show-number" }, [`Show ${index + 1}`]),
+        el("span", { class: "map" }, [show.name]),
+        el("span", { class: "hint" }, [
+          [
+            state.shows[index]?.startedAt,
+            `${show.rounds.length} rounds`,
+            `winner ${show.winners?.join(", ") || "—"}`,
+          ]
+            .filter(Boolean)
+            .join(" · "),
+        ]),
       ]),
-    ]),
+      index,
+      { slot: "all" },
+    ),
   );
 
   const next = state.shows[recorded];
   const later = state.shows.slice(recorded + 1).map((parsed, offset) =>
-    el("div", { class: "show-done waiting" }, [
-      el("span", { class: "show-number" }, [`Show ${recorded + offset + 2}`]),
-      el("span", { class: "map" }, [parsed.showId]),
-      el("span", { class: "hint" }, [
-        [parsed.startedAt, `${parsed.rounds.length} rounds`, "waiting"].filter(Boolean).join(" · "),
+    selectable(
+      el("div", { class: "show-done waiting" }, [
+        el("span", { class: "show-number" }, [`Show ${recorded + offset + 2}`]),
+        el("span", { class: "map" }, [parsed.showId]),
+        el("span", { class: "hint" }, [
+          [parsed.startedAt, `${parsed.rounds.length} rounds`, "waiting"]
+            .filter(Boolean)
+            .join(" · "),
+        ]),
       ]),
-    ]),
+      recorded + offset + 1,
+      { slot: "all" },
+    ),
   );
 
   target.replaceChildren(
@@ -492,6 +514,7 @@ async function watchLog(): Promise<void> {
 
 async function main(): Promise<void> {
   state = (await (await fetch("/api/state")).json()) as State;
+  selectedShow = state.event.shows.length;
   document.querySelector("#log-path")!.textContent = [
     state.logPath ? `Reading ${state.logPath}` : "No Fall Guys log found",
     state.shotDir ? `Screenshots from ${state.shotDir}` : "No ShareX folder found",

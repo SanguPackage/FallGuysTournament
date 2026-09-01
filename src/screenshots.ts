@@ -11,6 +11,7 @@ export type Selection =
   | { slot: "finalists" }
   | { slot: "winners" }
   | { slot: "show" }
+  | { slot: "all" }
   | { slot: "unmatched" };
 
 export interface PlacedShot extends Shot {
@@ -109,6 +110,7 @@ export function shotsForSlot(
   selection: Selection,
 ): PlacedShot[] {
   if (selection.slot === "unmatched") return shots.filter((shot) => shot.showIndex === undefined);
+  if (selection.slot === "all") return shots.filter((shot) => shot.showIndex === showIndex);
   return shots.filter(
     (shot) =>
       shot.showIndex === showIndex &&

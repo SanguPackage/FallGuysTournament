@@ -124,6 +124,15 @@ test("the show slot picks everything of that show that no round claimed", () => 
   expect(shotsForSlot(PLACED, 0, { slot: "show" }).map((s) => s.file)).toEqual(["idle.png"]);
 });
 
+test("a whole show picks everything of it, whatever slot it landed in", () => {
+  expect(shotsForSlot(PLACED, 0, { slot: "all" }).map((s) => s.file)).toEqual([
+    "idle.png",
+    "race.png",
+    "final.png",
+    "win.png",
+  ]);
+});
+
 test("the unmatched slot picks what belongs to no show at all", () => {
   expect(shotsForSlot(PLACED, 0, { slot: "unmatched" }).map((s) => s.file)).toEqual([
     "desktop.png",
