@@ -14,6 +14,7 @@ import {
 import type { Players, TournamentEvent } from "../src/types";
 import type { ShowInOrder } from "./rules";
 import type { ParsedShow } from "../src/log";
+import { identify } from "../src/rounds";
 
 const parsed: ParsedShow = {
   showId: "event_only_finals_v3_template",
@@ -21,14 +22,14 @@ const parsed: ParsedShow = {
   localPlayerId: 1,
   winnerId: 3,
   rounds: [
-    { id: "gold_rush", isFinal: false, timedOut: false, present: [1, 2, 3, 4], qualified: [1, 2, 3], eliminated: [4] },
-    { id: "floor_fall_final", isFinal: true, timedOut: false, present: [1, 2, 3], qualified: [3], eliminated: [1, 2] },
+    { id: "round_gauntlet_02_solos", name: "Dizzy Heights", type: "race", isFinal: false, timedOut: false, present: [1, 2, 3, 4], qualified: [1, 2, 3], eliminated: [4] },
+    { id: "round_floor_fall_final", name: "Hex-A-Gone", type: "final", isFinal: true, timedOut: false, present: [1, 2, 3], qualified: [3], eliminated: [1, 2] },
   ],
 };
 
 test("a draft mirrors the parsed rounds, with the last marked final", () => {
   const draft = draftFor(parsed);
-  expect(draft.rounds.map((round) => round.map)).toEqual(["gold_rush", "floor_fall_final"]);
+  expect(draft.rounds.map((round) => round.map)).toEqual(["Dizzy Heights", "Hex-A-Gone"]);
   expect(draft.rounds.map((round) => round.type)).toEqual(["race", "final"]);
 });
 
@@ -55,8 +56,8 @@ test("a draft becomes a show, dropping the final from the scored rounds' first p
   expect(toShow(draft)).toEqual({
     name: "Finals Marathon",
     rounds: [
-      { map: "gold_rush", type: "race", first: "oopman" },
-      { map: "floor_fall_final", type: "final" },
+      { map: "Dizzy Heights", type: "race", first: "oopman" },
+      { map: "Hex-A-Gone", type: "final" },
     ],
     finalists: ["oopman", "nicksonn", "f1xel"],
     winners: ["oopman"],
@@ -67,7 +68,7 @@ test("a survival round carries no first place", () => {
   const draft = draftFor(parsed);
   draft.rounds[0]!.type = "survival";
   draft.rounds[0]!.first = "oopman";
-  expect(toShow(draft).rounds[0]).toEqual({ map: "gold_rush", type: "survival" });
+  expect(toShow(draft).rounds[0]).toEqual({ map: "Dizzy Heights", type: "survival" });
 });
 
 
@@ -84,8 +85,8 @@ test("a saved show reopens with everything that was entered", () => {
   const parsedShow: ParsedShow = {
     showId: "s",
     rounds: [
-      { id: "one", isFinal: false, timedOut: false, present: [], qualified: [], eliminated: [] },
-      { id: "two", isFinal: true, timedOut: false, present: [1, 2], qualified: [], eliminated: [] },
+      { id: "one", name: "one", type: "unknown", isFinal: false, timedOut: false, present: [], qualified: [], eliminated: [] },
+      { id: "two", name: "two", type: "final", isFinal: true, timedOut: false, present: [1, 2], qualified: [], eliminated: [] },
     ],
     winnerId: 1,
   };
@@ -114,7 +115,7 @@ test("reopening keeps a round type the log would have guessed differently", () =
     {
       showId: "s",
       rounds: [
-        { id: "one", isFinal: true, timedOut: false, present: [], qualified: [], eliminated: [] },
+        { id: "one", name: "one", type: "final", isFinal: true, timedOut: false, present: [], qualified: [], eliminated: [] },
       ],
       winnerId: undefined,
     },
@@ -173,20 +174,20 @@ test("past the end of the order there is nothing to suggest", () => {
 
 test("a round that appears in the log while typing is appended, leaving entries alone", () => {
   const draft = draftFor({ showId: "s", rounds: [], winnerId: undefined }, "Solos");
-  draft.rounds.push({ map: "round_one", type: "race", first: "Alpha" });
+  draft.rounds.push({ map: "Wall Guys", type: "race", first: "Alpha" });
 
   syncDraft(draft, {
     showId: "s",
     rounds: [
-      { id: "round_one", isFinal: false, timedOut: false, present: [], qualified: [], eliminated: [] },
-      { id: "round_two", isFinal: true, timedOut: false, present: [1, 2], qualified: [], eliminated: [] },
+      { id: "round_wall_guys_solos", name: "Wall Guys", type: "race", isFinal: false, timedOut: false, present: [], qualified: [], eliminated: [] },
+      { id: "round_floor_fall_final", name: "Hex-A-Gone", type: "final", isFinal: true, timedOut: false, present: [1, 2], qualified: [], eliminated: [] },
     ],
     winnerId: undefined,
   });
 
   expect(draft.rounds).toHaveLength(2);
-  expect(draft.rounds[0]).toEqual({ map: "round_one", type: "race", first: "Alpha" });
-  expect(draft.rounds[1]!.map).toBe("round_two");
+  expect(draft.rounds[0]).toEqual({ map: "Wall Guys", type: "race", first: "Alpha" });
+  expect(draft.rounds[1]!.map).toBe("Hex-A-Gone");
   expect(draft.rounds[1]!.type).toBe("final");
 });
 
@@ -197,7 +198,7 @@ test("the finalist slots grow with the final's field, keeping the names already 
   syncDraft(draft, {
     showId: "s",
     rounds: [
-      { id: "final", isFinal: true, timedOut: false, present: [1, 2, 3], qualified: [], eliminated: [] },
+      { id: "final", name: "final", type: "final", isFinal: true, timedOut: false, present: [1, 2, 3], qualified: [], eliminated: [] },
     ],
     winnerId: undefined,
   });
@@ -223,24 +224,29 @@ test("a draft starts out named after the planned show", () => {
   expect(draftFor({ showId: "s", rounds: [], winnerId: undefined }, "Solos").name).toBe("Solos");
 });
 
+const RACE = "round_wall_guys_solos";
+const FINAL = "round_floor_fall_final";
+
 function parsedRound(id: string, isFinal: boolean) {
-  return { id, isFinal, timedOut: false, present: [], qualified: [], eliminated: [] };
+  const round = { id, ...identify(id), isFinal, timedOut: false, present: [], qualified: [], eliminated: [] };
+  if (isFinal) round.type = "final";
+  return round;
 }
 
 test("a round stops being the final once another one loads after it", () => {
-  const draft = draftFor({ showId: "s", rounds: [parsedRound("one", true)] }, "Solos");
+  const draft = draftFor({ showId: "s", rounds: [parsedRound(RACE, true)] }, "Solos");
   expect(draft.rounds[0]!.type).toBe("final");
 
-  syncDraft(draft, { showId: "s", rounds: [parsedRound("one", false), parsedRound("two", true)] });
+  syncDraft(draft, { showId: "s", rounds: [parsedRound(RACE, false), parsedRound(FINAL, true)] });
   expect(draft.rounds.map((round) => round.type)).toEqual(["race", "final"]);
 });
 
 test("a type the admin picked is never overwritten by the log", () => {
-  const draft = draftFor({ showId: "s", rounds: [parsedRound("one", true)] }, "Solos");
+  const draft = draftFor({ showId: "s", rounds: [parsedRound(RACE, true)] }, "Solos");
   draft.rounds[0]!.type = "survival";
   draft.rounds[0]!.typeEdited = true;
 
-  syncDraft(draft, { showId: "s", rounds: [parsedRound("one", false), parsedRound("two", true)] });
+  syncDraft(draft, { showId: "s", rounds: [parsedRound(RACE, false), parsedRound(FINAL, true)] });
   expect(draft.rounds[0]!.type).toBe("survival");
 });
 
@@ -355,8 +361,8 @@ test("a winner who was never listed as a finalist is taken as entered", () => {
 const played: ParsedShow = {
   showId: "s",
   rounds: [
-    { id: "one", isFinal: false, timedOut: false, present: [], qualified: [], eliminated: [] },
-    { id: "two", isFinal: true, timedOut: false, present: [1, 2], qualified: [], eliminated: [] },
+    { id: "one", name: "one", type: "unknown", isFinal: false, timedOut: false, present: [], qualified: [], eliminated: [] },
+    { id: "two", name: "two", type: "final", isFinal: true, timedOut: false, present: [1, 2], qualified: [], eliminated: [] },
   ],
   winnerId: 1,
 };
@@ -409,4 +415,31 @@ test("a show with nothing left to fill in reports no gaps", () => {
     winners: ["oopman"],
   };
   expect(missingFrom(show, played)).toEqual([]);
+});
+
+test("a round is drafted under its published name and type, not the log's level id", () => {
+  const draft = draftFor({
+    showId: "s",
+    rounds: [
+      { id: "round_tail_tag_solos", name: "Tail Tag", type: "hunt", isFinal: false, timedOut: false, present: [], qualified: [], eliminated: [] },
+      { id: "round_floor_fall_final", name: "Hex-A-Gone", type: "final", isFinal: true, timedOut: false, present: [], qualified: [], eliminated: [] },
+    ],
+    winnerId: undefined,
+  });
+  expect(draft.rounds.map((round) => [round.map, round.type])).toEqual([
+    ["Tail Tag", "hunt"],
+    ["Hex-A-Gone", "final"],
+  ]);
+});
+
+test("a first typed into a round that turns out to score nothing is dropped on save", () => {
+  const draft = draftFor({ showId: "s", rounds: [], winnerId: undefined }, "Solos");
+  draft.rounds.push({ map: "Hex-A-Gone", type: "survival", first: "Alpha", typeEdited: true });
+  expect(toShow(draft).rounds[0]).toEqual({ map: "Hex-A-Gone", type: "survival" });
+});
+
+test("a first typed into a hunt round is kept on save", () => {
+  const draft = draftFor({ showId: "s", rounds: [], winnerId: undefined }, "Solos");
+  draft.rounds.push({ map: "Airtime", type: "hunt", first: "Alpha", typeEdited: true });
+  expect(toShow(draft).rounds[0]).toEqual({ map: "Airtime", type: "hunt", first: "Alpha" });
 });

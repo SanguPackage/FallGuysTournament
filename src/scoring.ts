@@ -1,8 +1,11 @@
-import type { LeaderboardRow, Players, TournamentEvent } from "./types";
+import type { LeaderboardRow, Players, RoundType, TournamentEvent } from "./types";
 
 export const RACE_WIN = 3;
 export const REACHED_FINAL = 1;
 export const FINAL_WIN = 5;
+
+/** Rounds the game qualifies players from one at a time, so somebody visibly finished first. */
+const FIRST_COUNTS = new Set<RoundType>(["race", "hunt"]);
 
 export function score(event: TournamentEvent, players: Players): LeaderboardRow[] {
   const rows = new Map<string, LeaderboardRow>();
@@ -24,7 +27,7 @@ export function score(event: TournamentEvent, players: Players): LeaderboardRow[
 
   for (const show of event.shows) {
     for (const round of show.rounds) {
-      if (round.type !== "race" || !round.first) continue;
+      if (!FIRST_COUNTS.has(round.type) || !round.first) continue;
       const row = byIngame.get(round.first);
       if (!row) continue;
       row.raceWins += 1;

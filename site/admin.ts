@@ -6,6 +6,8 @@ import {
   draftFromShow,
   missingFrom,
   namesByPoints,
+  ROUND_TYPES,
+  SCORES_FIRST,
   suggestShowName,
   syncDraft,
   toShow,
@@ -301,7 +303,7 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
     });
 
     const type = el("select");
-    for (const option of ["race", "survival", "final"] as const) {
+    for (const option of ROUND_TYPES) {
       const node = el("option", { value: option }, [option]);
       if (entry.type === option) node.setAttribute("selected", "selected");
       type.append(node);
@@ -318,7 +320,7 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
       type,
     ];
 
-    if (entry.type === "race") {
+    if (SCORES_FIRST.has(entry.type)) {
       cells.push(
         el("label", {}, [
           "first ",

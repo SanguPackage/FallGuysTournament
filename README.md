@@ -8,11 +8,11 @@ Rules handed to the FOM board: [docs/rules.md](docs/rules.md)
 
 ## Scoring
 
-| Achievement                           | Points |
-|---------------------------------------|--------|
-| First across the line in a race round | 3      |
-| Qualifying for a show's final round   | 1      |
-| Winning the final                     | 5      |
+| Achievement                          | Points |
+|--------------------------------------|--------|
+| Finishing a round first              | 3      |
+| Qualifying for a show's final round  | 1      |
+| Winning the final                    | 5      |
 
 Simultaneous winners split the 5, rounded down.
 

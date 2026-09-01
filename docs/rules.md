@@ -48,14 +48,16 @@ next one in the list. The limits for each show are on the show order page.
 
 3.1 Points are awarded per round:
 
-| Achievement                           | Points |
-|---------------------------------------|--------|
-| First across the line in a race round | 3      |
-| Qualifying for a show's final round   | 1      |
-| Winning the final                     | 5      |
+| Achievement                          | Points |
+|--------------------------------------|--------|
+| Finishing a round first              | 3      |
+| Qualifying for a show's final round  | 1      |
+| Winning the final                    | 5      |
 
-3.2 Rounds that are neither races nor finals — survival, hunt and logic rounds — award
-no points.
+3.2 A round scores a first only where the game qualifies players one at a time and shows
+who got there first: races, and hunt rounds such as Airtime or Hoopsie Legends. Rounds
+everybody clears at the same moment award nothing — survival, logic and team rounds, and
+hunt rounds that end on a timer such as Tail Tag.
 
 3.3 Finals Marathon consists entirely of final rounds. Only its last round counts as the
 show's final; the earlier ones award nothing.

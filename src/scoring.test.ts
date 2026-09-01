@@ -285,3 +285,23 @@ test("results recorded against the admin score nothing", () => {
   expect(rows[0]!.fom).toBe("Ann");
   expect(rows[0]!.points).toBe(1);
 });
+
+test("a hunt round's first across the line scores like a race", () => {
+  const event = emptyEvent();
+  event.shows.push({ name: "Solos", rounds: [{ map: "Airtime", type: "hunt", first: "Alpha" }] });
+  expect(pointsFor(score(event, players), "Alpha")).toBe(3);
+});
+
+test("a first recorded on a round nobody can finish first in scores nothing", () => {
+  for (const type of ["survival", "logic", "team", "unknown"] as const) {
+    const event = emptyEvent();
+    event.shows.push({ name: "Solos", rounds: [{ map: "Roll Out", type, first: "Alpha" }] });
+    expect(pointsFor(score(event, players), "Alpha")).toBe(0);
+  }
+});
+
+test("a round with no first recorded scores nothing, whatever its type", () => {
+  const event = emptyEvent();
+  event.shows.push({ name: "Solos", rounds: [{ map: "Tail Tag", type: "hunt" }] });
+  expect(pointsFor(score(event, players), "Alpha")).toBe(0);
+});

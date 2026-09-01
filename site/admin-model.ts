@@ -3,6 +3,20 @@ import { score } from "../src/scoring";
 import type { Players, Round, RoundType, Show, TournamentEvent } from "../src/types";
 import type { ShowInOrder } from "./rules";
 
+/** Offered in the admin's type dropdown, in the order a round is most likely to need correcting. */
+export const ROUND_TYPES: readonly RoundType[] = [
+  "race",
+  "hunt",
+  "survival",
+  "logic",
+  "team",
+  "final",
+  "unknown",
+];
+
+/** The round types the game qualifies players from one at a time, so a first can be recorded. */
+export const SCORES_FIRST = new Set<RoundType>(["race", "hunt"]);
+
 export interface RoundDraft {
   map: string;
   type: RoundType;
@@ -30,12 +44,12 @@ export function draftFor(parsed: ParsedShow, name = ""): ShowDraft {
  */
 export function syncDraft(draft: ShowDraft, parsed: ParsedShow): void {
   for (const round of parsed.rounds.slice(draft.rounds.length)) {
-    draft.rounds.push({ map: round.id, type: round.isFinal ? "final" : "race", first: "" });
+    draft.rounds.push({ map: round.name, type: round.type, first: "" });
   }
 
   parsed.rounds.forEach((round, index) => {
     const entry = draft.rounds[index];
-    if (entry && !entry.typeEdited) entry.type = round.isFinal ? "final" : "race";
+    if (entry && !entry.typeEdited) entry.type = round.type;
   });
 
   const finalists = parsed.rounds.at(-1)?.present.length ?? 0;
@@ -73,7 +87,7 @@ function filled(names: string[]): string[] {
 export function toShow(draft: ShowDraft): Show {
   const rounds: Round[] = draft.rounds.map((round) => {
     const first = round.first.trim();
-    return round.type === "race" && first
+    return SCORES_FIRST.has(round.type) && first
       ? { map: round.map, type: round.type, first }
       : { map: round.map, type: round.type };
   });
