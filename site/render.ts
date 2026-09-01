@@ -30,7 +30,7 @@ export function renderLeaderboard(rows: LeaderboardRow[]): string {
         <td class="rank">${rank[index]}</td>
         <td class="player">
           <span class="fom">${escapeHtml(row.fom)}</span>
-          <span class="ingame">${escapeHtml(row.ingame)}</span>
+          <span class="ingame">${row.ingame ? escapeHtml(row.ingame) : "—"}</span>
         </td>
         <td class="points">${row.points}</td>
         <td>${row.raceWins}</td>

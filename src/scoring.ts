@@ -6,8 +6,9 @@ export const FINAL_WIN = 5;
 
 export function score(event: TournamentEvent, players: Players): LeaderboardRow[] {
   const rows = new Map<string, LeaderboardRow>();
+  const byIngame = new Map<string, LeaderboardRow>();
   for (const player of players.players) {
-    rows.set(player.ingame, {
+    const row: LeaderboardRow = {
       ingame: player.ingame,
       fom: player.fom,
       points: 0,
@@ -15,20 +16,22 @@ export function score(event: TournamentEvent, players: Players): LeaderboardRow[
       finalsReached: 0,
       finalsWon: 0,
       penaltyPoints: 0,
-    });
+    };
+    rows.set(player.fom, row);
+    if (player.ingame) byIngame.set(player.ingame, row);
   }
 
   for (const show of event.shows) {
     for (const round of show.rounds) {
       if (round.type !== "race" || !round.first) continue;
-      const row = rows.get(round.first);
+      const row = byIngame.get(round.first);
       if (!row) continue;
       row.raceWins += 1;
       row.points += RACE_WIN;
     }
 
     for (const ingame of show.finalists ?? []) {
-      const row = rows.get(ingame);
+      const row = byIngame.get(ingame);
       if (!row) continue;
       row.finalsReached += 1;
       row.points += REACHED_FINAL;
@@ -38,7 +41,7 @@ export function score(event: TournamentEvent, players: Players): LeaderboardRow[
     if (winners.length > 0) {
       const share = Math.floor(FINAL_WIN / winners.length);
       for (const ingame of winners) {
-        const row = rows.get(ingame);
+        const row = byIngame.get(ingame);
         if (!row) continue;
         row.finalsWon += 1;
         row.points += share;
@@ -47,7 +50,7 @@ export function score(event: TournamentEvent, players: Players): LeaderboardRow[
   }
 
   for (const penalty of event.penalties) {
-    const row = rows.get(penalty.ingame);
+    const row = byIngame.get(penalty.ingame);
     if (!row) continue;
     row.penaltyPoints += penalty.points;
     row.points += penalty.points;
@@ -62,6 +65,6 @@ function compareRows(a: LeaderboardRow, b: LeaderboardRow): number {
     b.finalsWon - a.finalsWon ||
     b.finalsReached - a.finalsReached ||
     b.raceWins - a.raceWins ||
-    a.ingame.localeCompare(b.ingame)
+    a.fom.localeCompare(b.fom)
   );
 }

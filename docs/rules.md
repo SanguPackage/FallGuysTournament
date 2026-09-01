@@ -18,8 +18,26 @@ for rule breaches.
 2.3 The admin shares the lobby code in the tournament Discord channel. That code is for
 FOM attendees only.
 
-2.4 The admin chooses which shows to play, picking whatever suits the number of players
-present, and decides when the tournament ends.
+2.4 Shows are played in this order, working up from the gentlest to the hardest:
+
+| #  | Show                  | Tier     |
+|----|-----------------------|----------|
+| 1  | Solos                 | Opening  |
+| 2  | Day at the Races Solo | Opening  |
+| 3  | Fan Favourites        | Opening  |
+| 4  | Slime Survivors       | Middle   |
+| 5  | Fall Ball Cup         | Middle   |
+| 6  | Finals Marathon       | Middle   |
+| 7  | Blast Ball Trials     | Advanced |
+| 8  | Roll Call             | Advanced |
+| 9  | X-Treme Solos         | Hardest  |
+| 10 | Button Basher Royale  | Hardest  |
+
+2.5 If time remains after the last show, the admin replays shows from the advanced and
+hardest tiers, and any show the lobby particularly enjoyed.
+
+2.6 The admin may skip or substitute a show the number of players present cannot
+support, and decides when the tournament ends.
 
 ## 3. Scoring
 
@@ -34,14 +52,17 @@ present, and decides when the tournament ends.
 3.2 Rounds that are neither races nor finals — survival, hunt and logic rounds — award
 no points.
 
-3.3 Reaching the final and winning it are cumulative, so winning a show is worth 6
+3.3 Finals Marathon consists entirely of final rounds. Only its last round counts as the
+show's final; the earlier ones award nothing.
+
+3.4 Reaching the final and winning it are cumulative, so winning a show is worth 6
 points in total.
 
-3.4 If several players win a final at the same moment — a simultaneous crown grab, or a
+3.5 If several players win a final at the same moment — a simultaneous crown grab, or a
 "0 players remaining" screen — the 5 points are divided between them and rounded down.
 Two winners receive 2 points each; three receive 1 point each.
 
-3.5 The winner of the tournament is the player with the most points across every show
+3.6 The winner of the tournament is the player with the most points across every show
 played. Standings are published on the tournament leaderboard page and updated after
 each show.
 

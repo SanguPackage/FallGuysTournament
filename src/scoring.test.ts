@@ -226,7 +226,36 @@ test("equal points are broken by finals won, then finals reached, then race wins
   expect(rows.map((r) => r.ingame)).toEqual(["Charlie", "Bravo", "Alpha"]);
 });
 
-test("players level on every criterion are ordered by in-game name", () => {
+test("players level on every criterion are ordered by FOM name", () => {
   const rows = score(emptyEvent(), players);
   expect(rows.map((r) => r.ingame)).toEqual(["Alpha", "Bravo", "Charlie"]);
+});
+
+const roster: Players = {
+  players: [
+    { ingame: "Alpha", fom: "Ann" },
+    { fom: "Bob" },
+    { fom: "Cas" },
+  ],
+};
+
+test("players with no in-game name yet still appear, on zero", () => {
+  const rows = score(emptyEvent(), roster);
+  expect(rows.map((r) => r.fom)).toEqual(["Ann", "Bob", "Cas"]);
+  expect(rows.every((r) => r.points === 0)).toBe(true);
+});
+
+test("two players with no in-game name do not collapse into one row", () => {
+  const rows = score(emptyEvent(), roster);
+  expect(rows.filter((r) => r.ingame === undefined)).toHaveLength(2);
+});
+
+test("scoring still reaches a player through their in-game name", () => {
+  const event = emptyEvent();
+  event.shows.push({
+    name: "Solos",
+    rounds: [{ map: "Dizzy Heights", type: "race", first: "Alpha" }],
+  });
+  const rows = score(event, roster);
+  expect(rows.find((r) => r.fom === "Ann")!.points).toBe(3);
 });

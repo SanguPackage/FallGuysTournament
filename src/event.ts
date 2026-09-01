@@ -1,13 +1,14 @@
-import type { Penalty, Players, Round, Show, TournamentEvent } from "./types";
+import type { Penalty, Player, Players, Round, Show, TournamentEvent } from "./types";
 
 export class ValidationError extends Error {}
 
 export function resolvePlayer(players: Players, name: string): string {
   const target = name.trim().toLowerCase();
-  const exact = players.players.find((p) => p.ingame.toLowerCase() === target);
+  const registered = players.players.filter((p): p is Player & { ingame: string } => !!p.ingame);
+  const exact = registered.find((p) => p.ingame.toLowerCase() === target);
   if (exact) return exact.ingame;
 
-  const known = players.players.map((p) => p.ingame);
+  const known = registered.map((p) => p.ingame);
   const near = known.filter(
     (n) => n.toLowerCase().includes(target) || target.includes(n.toLowerCase()),
   );

@@ -61,7 +61,7 @@ function printBoard(rows: LeaderboardRow[]): void {
   const body = rows.map((row, index) => [
     String(index + 1),
     row.fom,
-    row.ingame,
+    row.ingame ?? "—",
     String(row.points),
     String(row.raceWins),
     String(row.finalsReached),

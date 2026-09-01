@@ -51,3 +51,9 @@ test("names are escaped", () => {
   expect(html).toContain("&lt;script&gt;");
   expect(html).toContain("A&amp;B");
 });
+
+test("a player with no in-game name yet renders a placeholder", () => {
+  const html = renderLeaderboard([row({ fom: "Ann", ingame: undefined })]);
+  expect(html).toContain("Ann");
+  expect(html).toContain(`<span class="ingame">—</span>`);
+});

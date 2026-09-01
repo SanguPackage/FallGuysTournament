@@ -30,7 +30,8 @@ export interface TournamentEvent {
 }
 
 export interface Player {
-  ingame: string;
+  /** Absent until the player reports their in-game name on Discord. */
+  ingame?: string;
   fom: string;
   discord?: string;
 }
@@ -40,7 +41,7 @@ export interface Players {
 }
 
 export interface LeaderboardRow {
-  ingame: string;
+  ingame?: string;
   fom: string;
   points: number;
   raceWins: number;
