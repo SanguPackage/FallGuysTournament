@@ -367,17 +367,13 @@ function nameInput(key: string, value: string, onChange: (value: string) => void
   return input;
 }
 
-function recordedShowNames(): string[] {
-  return state.event.shows.map((show) => show.name);
-}
-
 function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
   const saved = state.event.shows[index];
   const draft =
     drafts.get(index) ??
     (saved
       ? draftFromShow(saved, parsed)
-      : draftFor(parsed, suggestShowName(state.order, recordedShowNames())));
+      : draftFor(parsed, suggestShowName(state.shows, index)));
   syncDraft(draft, parsed);
   drafts.set(index, draft);
 

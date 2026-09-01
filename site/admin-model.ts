@@ -4,7 +4,6 @@ import { SCORES_FIRST } from "../src/rounds";
 
 export { ROUND_TYPES, SCORES_FIRST } from "../src/rounds";
 import type { Players, Round, RoundType, Show, TournamentEvent } from "../src/types";
-import type { ShowInOrder } from "./rules";
 
 export interface RoundDraft {
   map: string;
@@ -67,9 +66,18 @@ export function draftFromShow(show: Show, parsed: ParsedShow): ShowDraft {
   return draft;
 }
 
-/** The next show in the planned order that has not been played, which is almost always the one on. */
-export function suggestShowName(order: ShowInOrder[], recorded: string[]): string {
-  return order.find((show) => !recorded.includes(show.show))?.show ?? "";
+/** The playlists the log cannot tell apart, since every solo show carries the same id. */
+const SHOW_NAMES: Record<string, string> = {
+  classic_solo_main_show: "Solos",
+  pl_solo_main_show: "Solos",
+};
+
+/** A show is named for its id and how many of that id came before it, e.g. the third is Solos 3. */
+export function suggestShowName(shows: ParsedShow[], index: number): string {
+  const parsed = shows[index];
+  if (!parsed) return "";
+  const before = shows.slice(0, index).filter((show) => show.showId === parsed.showId).length;
+  return `${SHOW_NAMES[parsed.showId] ?? parsed.showId} ${before + 1}`;
 }
 
 function filled(names: string[]): string[] {

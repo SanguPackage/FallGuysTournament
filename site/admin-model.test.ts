@@ -12,7 +12,6 @@ import {
   validate,
 } from "./admin-model";
 import type { Players, TournamentEvent } from "../src/types";
-import type { ShowInOrder } from "./rules";
 import type { ParsedShow } from "../src/log";
 import { identify } from "../src/rounds";
 
@@ -154,26 +153,21 @@ test("the commit message names the show just recorded", () => {
   ).toBe("data: record show 2 — Roll Call");
 });
 
-const order: ShowInOrder[] = [
-  { position: 1, show: "Solos", tier: "Opening", min: 2, max: 32 },
-  { position: 2, show: "Fan Favourites", tier: "Opening", min: 5, max: 32 },
-  { position: 3, show: "Roll Call", tier: "Advanced", min: 5, max: 32 },
-];
+const solos = (showId: string): ParsedShow => ({ showId, rounds: [], winnerId: undefined });
 
-test("the first show is named after the first in the planned order", () => {
-  expect(suggestShowName(order, [])).toBe("Solos");
+test("a show is named for its playlist and its turn", () => {
+  const shows = [solos("classic_solo_main_show"), solos("classic_solo_main_show")];
+  expect(suggestShowName(shows, 0)).toBe("Solos 1");
+  expect(suggestShowName(shows, 1)).toBe("Solos 2");
 });
 
-test("the suggestion moves on to the next show as they are recorded", () => {
-  expect(suggestShowName(order, ["Solos"])).toBe("Fan Favourites");
+test("counting starts again for a different playlist", () => {
+  const shows = [solos("classic_solo_main_show"), solos("event_only_finals_v3_template")];
+  expect(suggestShowName(shows, 1)).toBe("event_only_finals_v3_template 1");
 });
 
-test("a show the lobby skipped is passed over rather than suggested again", () => {
-  expect(suggestShowName(order, ["Solos", "Roll Call"])).toBe("Fan Favourites");
-});
-
-test("past the end of the order there is nothing to suggest", () => {
-  expect(suggestShowName(order, ["Solos", "Fan Favourites", "Roll Call"])).toBe("");
+test("a show the log has not reached has no name to suggest", () => {
+  expect(suggestShowName([], 0)).toBe("");
 });
 
 test("a round that appears in the log while typing is appended, leaving entries alone", () => {

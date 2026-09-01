@@ -111,12 +111,11 @@ const server = Bun.serve({
      * file, so the published board falls back to what was recorded.
      */
     if (pathname === "/live.json") {
-      const playing = (await parsedShows(await findLog())).at(-1);
+      const played = await parsedShows(await findLog());
+      const playing = played.at(-1);
       if (!playing) return json(null);
 
       const event = (await Bun.file(EVENT_PATH).json()) as TournamentEvent;
-      const recorded = event.shows.map((show) => show.name);
-      const order = parseShowOrder(await Bun.file("docs/rules.md").text());
       const round = playing.rounds.at(-1);
 
       // A recorded show without winners is the one still being typed in; anything else means the
@@ -125,7 +124,7 @@ const server = Bun.serve({
       const typing = last !== undefined && !last.winners?.length;
 
       const live: LiveNow = {
-        show: typing ? last.name : suggestShowName(order, recorded),
+        show: typing ? last.name : suggestShowName(played, played.length - 1),
         showNumber: typing ? event.shows.length : event.shows.length + 1,
         round: playing.rounds.length,
         map: round?.name ?? null,
