@@ -46,14 +46,24 @@ main { min-width: 0; }
 
 .shot-panel img {
   display: block;
-  width: 100%;
   margin-bottom: 0.6rem;
   border-radius: 0.3rem;
   cursor: zoom-in;
 }
 
-/* Nameplates are a few pixels tall at panel width, so a click drops the shot to its own size. */
+/* Nameplates are a few pixels tall, so a capture grows to the panel and then to its own size. */
+.shot-panel img.thumb { max-height: 250px; max-width: 100%; }
+.shot-panel img.fit { width: 100%; }
 .shot-panel img.full { width: auto; max-width: none; cursor: zoom-out; }
+
+.shot-panel .link {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--accent);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
 
 .shot-panel .shot-time { color: var(--muted); font-size: 0.8rem; margin: 0 0 0.2rem; }
 
