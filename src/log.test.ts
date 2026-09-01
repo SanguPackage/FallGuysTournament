@@ -136,3 +136,10 @@ test("the show's last round is a final whatever the level id is normally played 
 `)[0]!;
   expect(show.rounds[0]!.type).toBe("final");
 });
+
+test("a round is stamped with the last result the server reported", () => {
+  expect(parseLog(SHOW)[0]!.rounds.map((round) => round.endedAt)).toEqual([
+    "20:25:20",
+    "20:27:12",
+  ]);
+});

@@ -9,6 +9,8 @@ export interface ParsedRound {
   type: RoundType;
   /** Local clock time the round finished loading, as the log writes it. Absent on an unstamped line. */
   startedAt?: string;
+  /** When the server last reported a result, which is when play stopped and the screen came up. */
+  endedAt?: string;
   isFinal: boolean;
   timedOut: boolean;
   /** Everyone who started the round. For the final, this is the set of finalists. */
@@ -97,6 +99,7 @@ export function parseLog(text: string): ParsedShow[] {
 
     const progress = PROGRESS.exec(line);
     if (progress && round) {
+      if (at !== undefined) round.endedAt = at;
       const id = Number(progress[1]);
       if (progress[2] === "True") round.qualified.push(id);
       else round.eliminated.push(id);
