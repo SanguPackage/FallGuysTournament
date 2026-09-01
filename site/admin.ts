@@ -41,7 +41,26 @@ let editing: number | null = null;
 /** How large each capture is being shown, and which are collapsed, so a rebuild keeps them that way. */
 type ShotSize = "thumb" | "fit" | "full";
 const sizes = new Map<string, ShotSize>();
-const collapsed = new Set<string>();
+const COLLAPSED_KEY = "fallguys.admin.collapsed";
+
+/** Which captures are folded away outlives the page: reloading is how the admin recovers. */
+function loadCollapsed(): Set<string> {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(COLLAPSED_KEY) ?? "[]") as string[]);
+  } catch {
+    return new Set();
+  }
+}
+
+const collapsed = loadCollapsed();
+
+function rememberCollapsed(): void {
+  try {
+    localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...collapsed]));
+  } catch {
+    // Storage can be off; folding still works for this page.
+  }
+}
 let panelShowing = "";
 const drafts = new Map<number, ShowDraft>();
 
@@ -229,6 +248,7 @@ function shotImages(shots: PlacedShot[]): Node[] {
     hide.addEventListener("click", () => {
       if (collapsed.has(shot.file)) collapsed.delete(shot.file);
       else collapsed.add(shot.file);
+      rememberCollapsed();
       renderShots();
     });
 
