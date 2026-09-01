@@ -38,8 +38,10 @@ let selection: Selection = { slot: "all" };
 let selectedShow = 0;
 /** The saved show reopened for editing, if any. Otherwise the next unrecorded show is the form. */
 let editing: number | null = null;
-/** Captures blown up to full size, by file, so a rebuild does not undo what is being read. */
-const zoomed = new Set<string>();
+/** How large each capture is being shown, and which are collapsed, so a rebuild keeps them that way. */
+type ShotSize = "thumb" | "fit" | "full";
+const sizes = new Map<string, ShotSize>();
+const collapsed = new Set<string>();
 let panelShowing = "";
 const drafts = new Map<number, ShowDraft>();
 
@@ -214,33 +216,52 @@ function clock(at: number | undefined): string {
   });
 }
 
+const NEXT_SIZE: Record<ShotSize, ShotSize> = { thumb: "fit", fit: "full", full: "thumb" };
+
 function shotImages(shots: PlacedShot[]): Node[] {
   if (shots.length === 0) return [el("p", { class: "empty" }, ["No screenshots for this."])];
+
   return shots.flatMap((shot) => {
+    const name = shot.file.split("/").pop() ?? shot.file;
+    const hide = el("button", { type: "button", class: "link" }, [
+      collapsed.has(shot.file) ? "show" : "hide",
+    ]);
+    hide.addEventListener("click", () => {
+      if (collapsed.has(shot.file)) collapsed.delete(shot.file);
+      else collapsed.add(shot.file);
+      renderShots();
+    });
+
+    const caption = el("p", { class: "shot-time" }, [`${clock(shot.takenAt)} · ${name} `, hide]);
+    if (collapsed.has(shot.file)) return [caption];
+
+    const size = sizes.get(shot.file) ?? "thumb";
     const image = el("img", {
       src: `/api/shot?f=${encodeURIComponent(shot.file)}`,
-      alt: shot.file,
+      alt: name,
+      class: size,
     });
-    if (zoomed.has(shot.file)) image.classList.add("full");
+
     image.addEventListener("click", (event) => {
       const before = image.getBoundingClientRect();
       const across = (event.clientX - before.left) / before.width;
       const down = (event.clientY - before.top) / before.height;
 
-      if (image.classList.toggle("full")) zoomed.add(shot.file);
-      else zoomed.delete(shot.file);
-      if (!image.classList.contains("full")) return;
+      const next = NEXT_SIZE[sizes.get(shot.file) ?? "thumb"];
+      sizes.set(shot.file, next);
+      image.className = next;
+      if (next !== "full") return;
 
       // The panel is the scroller, so the point clicked is put in the middle of it.
       const panel = image.closest(".shot-panel");
       if (!(panel instanceof HTMLElement)) return;
       const after = image.getBoundingClientRect();
       const frame = panel.getBoundingClientRect();
-      panel.scrollLeft +=
-        after.left - frame.left + across * after.width - panel.clientWidth / 2;
+      panel.scrollLeft += after.left - frame.left + across * after.width - panel.clientWidth / 2;
       panel.scrollTop += after.top - frame.top + down * after.height - panel.clientHeight / 2;
     });
-    return [el("p", { class: "shot-time" }, [clock(shot.takenAt)]), image];
+
+    return [caption, image];
   });
 }
 
@@ -366,24 +387,23 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
       );
     }
 
+    const slot: Selection =
+      entry.type === "final" ? { slot: "finalists" } : { slot: "round", roundIndex };
+    const images = shotsForSlot(state.shots, index, slot).length;
+
     cells.push(
       el("span", { class: "hint" }, [
         [
           clock(state.times[index]?.rounds[roundIndex]),
-          round.timedOut
-            ? "timeout — nobody qualified"
-            : `${round.present.length} started, ${round.qualified.length} qualified`,
+          round.timedOut ? "timeout — nobody qualified" : `${round.qualified.length} qualified`,
+          images === 0 ? "no images" : `${images} image${images === 1 ? "" : "s"}`,
         ]
           .filter(Boolean)
           .join(" · "),
       ]),
     );
 
-    return selectable(
-      el("li", {}, cells),
-      index,
-      entry.type === "final" ? { slot: "finalists" } : { slot: "round", roundIndex },
-    );
+    return selectable(el("li", {}, cells), index, slot);
   });
 
   const finalists = draft.finalists.map((value, slot) =>
