@@ -110,9 +110,14 @@ Every page but the rules refreshes itself every 15 seconds, so nobody has to rel
 the event. Players who gained points since the last refresh are ringed in green for a few
 seconds.
 
-The status ribbon is derived from what has been recorded: the last show in `event.json` is
-the one being played, and the round is one past the last one entered. A show with `winners`
-is finished.
+Run from `bun run dev`, the status ribbon comes from the Fall Guys log over `/live.json`, so
+it names the show and the round on screen before a single result has been typed in. Only
+the machine running the game can serve that file; on GitHub Pages it is absent and the
+ribbon falls back to `event.json` — the last show recorded, and the round after the last
+one entered.
+
+So the board projected at the LAN should be the local one on `http://localhost:3000`. The
+published site is for everyone else, and is as current as the last push.
 
 Pushing to `main` publishes `dist/` to GitHub Pages via
 [.github/workflows/pages.yml](.github/workflows/pages.yml). Set the Pages source to
