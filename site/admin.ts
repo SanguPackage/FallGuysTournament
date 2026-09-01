@@ -40,28 +40,37 @@ let selectedShow = 0;
 let editing: number | null = null;
 /** How large each capture is being shown, and which are collapsed, so a rebuild keeps them that way. */
 type ShotSize = "thumb" | "fit" | "full";
-const sizes = new Map<string, ShotSize>();
+
+/**
+ * How the panel was left outlives the page: reloading is how the admin recovers from a mistake,
+ * and refolding and re-zooming a dozen captures afterwards would make that too expensive to do.
+ */
 const COLLAPSED_KEY = "fallguys.admin.collapsed";
+const SIZES_KEY = "fallguys.admin.sizes";
+const SCROLL_KEY = "fallguys.admin.scroll";
 
-/** Which captures are folded away outlives the page: reloading is how the admin recovers. */
-function loadCollapsed(): Set<string> {
+function stored<T>(key: string): T[] {
   try {
-    return new Set(JSON.parse(localStorage.getItem(COLLAPSED_KEY) ?? "[]") as string[]);
+    return JSON.parse(localStorage.getItem(key) ?? "[]") as T[];
   } catch {
-    return new Set();
+    return [];
   }
 }
 
-const collapsed = loadCollapsed();
-
-function rememberCollapsed(): void {
+function remember(key: string, entries: Iterable<unknown>): void {
   try {
-    localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...collapsed]));
+    localStorage.setItem(key, JSON.stringify([...entries]));
   } catch {
-    // Storage can be off; folding still works for this page.
+    // Storage can be off; the panel still behaves for this page.
   }
 }
+
+const collapsed = new Set(stored<string>(COLLAPSED_KEY));
+const sizes = new Map(stored<[string, ShotSize]>(SIZES_KEY));
+const scrolls = new Map(stored<[string, [number, number]]>(SCROLL_KEY));
 let panelShowing = "";
+/** Set while the panel is being scrolled back to where it was, so that is not read as a move. */
+let replacing = false;
 const drafts = new Map<number, ShowDraft>();
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -248,7 +257,7 @@ function shotImages(shots: PlacedShot[]): Node[] {
     hide.addEventListener("click", () => {
       if (collapsed.has(shot.file)) collapsed.delete(shot.file);
       else collapsed.add(shot.file);
-      rememberCollapsed();
+      remember(COLLAPSED_KEY, collapsed);
       renderShots();
     });
 
@@ -269,6 +278,7 @@ function shotImages(shots: PlacedShot[]): Node[] {
 
       const next = NEXT_SIZE[sizes.get(shot.file) ?? "thumb"];
       sizes.set(shot.file, next);
+      remember(SIZES_KEY, sizes);
       image.className = next;
       if (next !== "full") return;
 
@@ -279,6 +289,10 @@ function shotImages(shots: PlacedShot[]): Node[] {
       const frame = panel.getBoundingClientRect();
       panel.scrollLeft += after.left - frame.left + across * after.width - panel.clientWidth / 2;
       panel.scrollTop += after.top - frame.top + down * after.height - panel.clientHeight / 2;
+    });
+
+    image.addEventListener("load", () => {
+      if (panelShowing === slotKey(selectedShow, selection)) applyScroll();
     });
 
     return [caption, image];
@@ -301,10 +315,20 @@ function catchAll(label: string, shots: PlacedShot[]): HTMLElement {
   ]);
 }
 
+function applyScroll(): void {
+  const target = document.querySelector<HTMLElement>("#shots")!;
+  const [left, top] = scrolls.get(panelShowing) ?? [0, 0];
+  replacing = true;
+  target.scrollLeft = left;
+  target.scrollTop = top;
+  setTimeout(() => {
+    replacing = false;
+  }, 0);
+}
+
 function renderShots(): void {
   const target = document.querySelector<HTMLElement>("#shots")!;
   const showing = slotKey(selectedShow, selection);
-  const { scrollTop, scrollLeft } = target;
 
   if (!state.shotDir) {
     target.replaceChildren(
@@ -328,12 +352,8 @@ function renderShots(): void {
     catchAll("Every screenshot this month", state.shots),
   );
 
-  // Only the same slot keeps its place; a different one is meant to be read from the top.
-  if (showing === panelShowing) {
-    target.scrollTop = scrollTop;
-    target.scrollLeft = scrollLeft;
-  }
   panelShowing = showing;
+  applyScroll();
 }
 
 function nameInput(key: string, value: string, onChange: (value: string) => void): HTMLInputElement {
@@ -620,6 +640,19 @@ async function main(): Promise<void> {
     state.logPath ? `Reading ${state.logPath}` : "No Fall Guys log found",
     state.shotDir ? `Screenshots from ${state.shotDir}` : "No ShareX folder found",
   ].join(" · ");
+
+  const panel = document.querySelector<HTMLElement>("#shots")!;
+  let pending: ReturnType<typeof setTimeout> | undefined;
+  panel.addEventListener(
+    "scroll",
+    () => {
+      if (replacing) return;
+      scrolls.set(panelShowing, [panel.scrollLeft, panel.scrollTop]);
+      clearTimeout(pending);
+      pending = setTimeout(() => remember(SCROLL_KEY, scrolls), 300);
+    },
+    { passive: true },
+  );
 
   document.querySelector("#add-player")!.addEventListener("click", () => {
     state.players.players.push({ fom: "" });
