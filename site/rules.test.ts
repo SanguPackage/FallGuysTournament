@@ -62,3 +62,14 @@ const SAMPLE = `## 2. Format
 |-------------|--------|
 | Winning     | 5      |
 `;
+
+test("the show order renders the player limits when they are known", () => {
+  const html = renderShowOrder(parseShowOrder(SAMPLE), { Solos: { min: 2, max: 32 } });
+  expect(html).toContain("<td>2</td>");
+  expect(html).toContain("<td>32</td>");
+});
+
+test("a show with no known limits renders a dash", () => {
+  const html = renderShowOrder(parseShowOrder(SAMPLE), {});
+  expect(html).toContain("<td>—</td>");
+});

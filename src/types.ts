@@ -51,3 +51,19 @@ export interface LeaderboardRow {
   finalsWon: number;
   penaltyPoints: number;
 }
+
+export interface PlayerRange {
+  min: number;
+  max: number;
+}
+
+export interface ShowLimits {
+  source: string;
+  fetched: string;
+  shows: Record<string, PlayerRange>;
+}
+
+export interface SkippedShow {
+  show: string;
+  reason: string;
+}

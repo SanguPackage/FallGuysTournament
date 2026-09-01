@@ -10,7 +10,9 @@ import {
   ValidationError,
 } from "./event";
 import { score } from "./scoring";
-import { loadEvent, loadPlayers, saveEvent } from "./storage";
+import { playableAt } from "./shows";
+import { parseShowOrder } from "../site/rules";
+import { loadEvent, loadPlayers, loadShowLimits, saveEvent } from "./storage";
 import type { LeaderboardRow, Players, RoundType } from "./types";
 
 function ask(question: string): string {
@@ -132,12 +134,28 @@ async function main(): Promise<void> {
       await commit(`data: penalise ${ingame} ${points}`, noCommit);
       break;
     }
+    case "shows": {
+      const headcount = Number(args.find((arg) => /^\d+$/.test(arg)) ?? askRequired("How many players? "));
+      if (!Number.isInteger(headcount) || headcount < 1) {
+        throw new ValidationError("Give a whole number of players.");
+      }
+      const limits = await loadShowLimits();
+      const order = parseShowOrder(await Bun.file("docs/rules.md").text()).map((s) => s.show);
+      const { play, skip } = playableAt(limits, order, headcount);
+      console.log(`With ${headcount} players:\n`);
+      play.forEach((show, index) => console.log(`  ${String(index + 1).padStart(2)}  ${show}`));
+      if (skip.length > 0) {
+        console.log("\nSkipped:");
+        for (const { show, reason } of skip) console.log(`      ${show} — ${reason}`);
+      }
+      break;
+    }
     case "board": {
       printBoard(score(event, players));
       break;
     }
     default:
-      console.log("Usage: bun run cli <show|round|final|penalty|board> [--no-commit]");
+      console.log("Usage: bun run cli <show|round|final|penalty|shows|board> [--no-commit]");
       process.exit(1);
   }
 }

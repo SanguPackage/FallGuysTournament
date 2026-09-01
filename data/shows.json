@@ -1,0 +1,278 @@
+{
+  "source": "https://fallguysultimateknockout.fandom.com/wiki/Custom_Games",
+  "fetched": "2026-09-01",
+  "shows": {
+    "3,2,1, SPACE!": {
+      "min": 8,
+      "max": 24
+    },
+    "Anniversary Party": {
+      "min": 5,
+      "max": 30
+    },
+    "Beasty Guys": {
+      "min": 5,
+      "max": 32
+    },
+    "Big Yeetus Tour": {
+      "min": 2,
+      "max": 20
+    },
+    "Blast Ball": {
+      "min": 2,
+      "max": 30
+    },
+    "Blast Ball Bangers": {
+      "min": 4,
+      "max": 26
+    },
+    "Blast Ball Trials": {
+      "min": 5,
+      "max": 30
+    },
+    "Blunderbeach Bonanza": {
+      "min": 8,
+      "max": 20
+    },
+    "Bouncy Bean Time": {
+      "min": 5,
+      "max": 20
+    },
+    "Button Basher Royale": {
+      "min": 2,
+      "max": 16
+    },
+    "Day at the Races Solo": {
+      "min": 5,
+      "max": 32
+    },
+    "Day at the Races Squads": {
+      "min": 8,
+      "max": 32
+    },
+    "Duos": {
+      "min": 4,
+      "max": 32
+    },
+    "Dynamic Duos": {
+      "min": 4,
+      "max": 12
+    },
+    "Fall Ball Cup": {
+      "min": 2,
+      "max": 32
+    },
+    "Fall Mountain": {
+      "min": 2,
+      "max": 9
+    },
+    "Fallentines Festival": {
+      "min": 4,
+      "max": 20
+    },
+    "Fan Favourites": {
+      "min": 5,
+      "max": 32
+    },
+    "Finals Marathon": {
+      "min": 2,
+      "max": 16
+    },
+    "Foolish Trios": {
+      "min": 6,
+      "max": 24
+    },
+    "Frosty Frolics": {
+      "min": 8,
+      "max": 20
+    },
+    "Golden Goal Challenge": {
+      "min": 8,
+      "max": 16
+    },
+    "Hard Mode": {
+      "min": 5,
+      "max": 32
+    },
+    "Hex-A-Ring": {
+      "min": 2,
+      "max": 16
+    },
+    "Hex-A-Terrestrial": {
+      "min": 2,
+      "max": 32
+    },
+    "Hex-a-Gone": {
+      "min": 2,
+      "max": 20
+    },
+    "Hex-a-Gravity Trials": {
+      "min": 5,
+      "max": 20
+    },
+    "Hex-a-gone Trials": {
+      "min": 2,
+      "max": 20
+    },
+    "Hex-a-thon": {
+      "min": 5,
+      "max": 20
+    },
+    "Hoverboarding Time": {
+      "min": 5,
+      "max": 25
+    },
+    "Jump Around": {
+      "min": 5,
+      "max": 30
+    },
+    "Jump Showdown": {
+      "min": 2,
+      "max": 20
+    },
+    "Jungle Jumble": {
+      "min": 5,
+      "max": 32
+    },
+    "Knockout": {
+      "min": 5,
+      "max": 32
+    },
+    "Kraken Slam": {
+      "min": 2,
+      "max": 32
+    },
+    "Lily Leapers Limbo": {
+      "min": 5,
+      "max": 32
+    },
+    "Lost Temple": {
+      "min": 2,
+      "max": 15
+    },
+    "Party Time Tumble": {
+      "min": 5,
+      "max": 32
+    },
+    "Pegwin Palooza": {
+      "min": 2,
+      "max": 20
+    },
+    "Pixel Palooza": {
+      "min": 8,
+      "max": 32
+    },
+    "Ring Hexathlon": {
+      "min": 5,
+      "max": 16
+    },
+    "Roll Call": {
+      "min": 5,
+      "max": 32
+    },
+    "Roll Off": {
+      "min": 2,
+      "max": 10
+    },
+    "Royal Fumble": {
+      "min": 3,
+      "max": 24
+    },
+    "SWEET THIEVES": {
+      "min": 8,
+      "max": 12
+    },
+    "Scrapyard Stumble": {
+      "min": 8,
+      "max": 16
+    },
+    "Ski Fall High Scorers": {
+      "min": 2,
+      "max": 32
+    },
+    "Slime Climb Time": {
+      "min": 5,
+      "max": 32
+    },
+    "Slime Survivors": {
+      "min": 5,
+      "max": 24
+    },
+    "Slimescraper Time": {
+      "min": 5,
+      "max": 32
+    },
+    "Snow Day Stumble": {
+      "min": 10,
+      "max": 32
+    },
+    "Solos": {
+      "min": 2,
+      "max": 32
+    },
+    "Squad Celebration": {
+      "min": 8,
+      "max": 16
+    },
+    "Squads": {
+      "min": 8,
+      "max": 32
+    },
+    "Squads Spectacular": {
+      "min": 12,
+      "max": 20
+    },
+    "Survival Squads": {
+      "min": 8,
+      "max": 32
+    },
+    "The Vault": {
+      "min": 5,
+      "max": 32
+    },
+    "Thin Ice": {
+      "min": 2,
+      "max": 20
+    },
+    "Thin Ice Trials": {
+      "min": 2,
+      "max": 20
+    },
+    "Time Attack Shuffle": {
+      "min": 5,
+      "max": 20
+    },
+    "Tip Toe Finale": {
+      "min": 5,
+      "max": 16
+    },
+    "Tip Toe Tournament": {
+      "min": 5,
+      "max": 25
+    },
+    "Tuokconk": {
+      "min": 2,
+      "max": 12
+    },
+    "Volleyfall Tournament": {
+      "min": 2,
+      "max": 16
+    },
+    "Wilderness Falls": {
+      "min": 2,
+      "max": 20
+    },
+    "X-treme Solos": {
+      "min": 5,
+      "max": 32
+    },
+    "X-treme Squads": {
+      "min": 8,
+      "max": 32
+    },
+    "Yeetropolis GO!!!": {
+      "min": 8,
+      "max": 20
+    }
+  }
+}

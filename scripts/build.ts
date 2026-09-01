@@ -22,11 +22,13 @@ for (const [from, to] of [
   ["site/styles.css", `${OUT}/styles.css`],
   ["data/event.json", `${OUT}/event.json`],
   ["data/players.json", `${OUT}/players.json`],
+  ["data/shows.json", `${OUT}/shows.json`],
 ] as const) {
   await Bun.write(to, Bun.file(from));
 }
 
 const rules = await Bun.file("docs/rules.md").text();
+const limits = (await Bun.file("data/shows.json").json()).shows;
 
 await Bun.write(
   `${OUT}/index.html`,
@@ -42,8 +44,9 @@ await Bun.write(
     title: "Show order — FOM Fall Guys Tournament",
     current: "shows.html",
     body: `<h1>Show order</h1>
-<p class="subtitle">Played top to bottom, working up from the gentlest to the hardest.</p>
-${renderShowOrder(parseShowOrder(rules))}`,
+<p class="subtitle">Played top to bottom, working up from the gentlest to the hardest. A show
+the number of players present cannot support is skipped.</p>
+${renderShowOrder(parseShowOrder(rules), limits)}`,
   }),
 );
 

@@ -23,6 +23,7 @@ bun run cli show      # start a show
 bun run cli round     # record a race or survival round
 bun run cli final     # close the show: final map, finalists, winners
 bun run cli penalty   # deduct points
+bun run cli shows 21  # which shows work at this headcount
 bun run cli board     # print current standings
 ```
 
@@ -46,6 +47,13 @@ leaderboard:
 ```json
 { "fom": "Wouter_Van_Schandevijl", "admin": true }
 ```
+
+## Show limits
+
+`data/shows.json` holds the minimum and maximum player count for every custom playlist,
+taken from the
+[Fall Guys wiki](https://fallguysultimateknockout.fandom.com/wiki/Custom_Games). A show
+the headcount cannot support is skipped. Refresh it if the game changes the numbers.
 
 ## Leaderboard
 

@@ -6,6 +6,11 @@ export interface ShowInOrder {
   tier: string;
 }
 
+export interface ShowRange {
+  min: number;
+  max: number;
+}
+
 function cells(line: string): string[] {
   return line
     .slice(1, -1)
@@ -86,22 +91,31 @@ export function parseShowOrder(markdown: string): ShowInOrder[] {
   return shows;
 }
 
-export function renderShowOrder(shows: ShowInOrder[]): string {
+export function renderShowOrder(
+  shows: ShowInOrder[],
+  limits: Record<string, ShowRange> = {},
+): string {
+  const rangeFor = (name: string): ShowRange | undefined =>
+    Object.entries(limits).find(([key]) => key.toLowerCase() === name.toLowerCase())?.[1];
+
   const body = shows
-    .map(
-      (show) => `
+    .map((show) => {
+      const range = rangeFor(show.show);
+      return `
       <tr>
         <td class="rank">${show.position}</td>
         <td class="player">${escapeHtml(show.show)}</td>
         <td class="tier">${escapeHtml(show.tier)}</td>
-      </tr>`,
-    )
+        <td>${range ? range.min : "—"}</td>
+        <td>${range ? range.max : "—"}</td>
+      </tr>`;
+    })
     .join("");
 
   return `
     <table>
       <thead>
-        <tr><th>#</th><th>Show</th><th>Tier</th></tr>
+        <tr><th>#</th><th>Show</th><th>Tier</th><th>Min</th><th>Max</th></tr>
       </thead>
       <tbody>${body}</tbody>
     </table>`;

@@ -36,8 +36,11 @@ FOM attendees only.
 2.5 If time remains after the last show, the admin replays shows from the advanced and
 hardest tiers, and any show the lobby particularly enjoyed.
 
-2.6 The admin may skip or substitute a show the number of players present cannot
-support, and decides when the tournament ends.
+2.6 Every show has a minimum and maximum player count set by the game. A show the
+number of players present cannot support is skipped, and the tournament moves on to the
+next one in the list. The limits for each show are on the show order page.
+
+2.7 The admin decides when the tournament ends.
 
 ## 3. Scoring
 
