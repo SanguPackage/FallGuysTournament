@@ -21,6 +21,8 @@ export interface ParsedShow {
   localPlayerId?: number;
   rounds: ParsedRound[];
   winnerId?: number;
+  /** Local clock time the victory scene came up. Absent on an unstamped line. */
+  wonAt?: string;
 }
 
 const LOBBY_SIZE = /players in queued reached: (\d+) players/;
@@ -94,7 +96,10 @@ export function parseLog(text: string): ParsedShow[] {
     }
 
     const winner = WINNER.exec(line);
-    if (winner) show.winnerId = Number(winner[1]);
+    if (winner) {
+      show.winnerId = Number(winner[1]);
+      if (at !== undefined) show.wonAt = at;
+    }
   }
 
   for (const show of shows) {

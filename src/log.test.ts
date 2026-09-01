@@ -112,3 +112,7 @@ test("a line without a timestamp leaves the stamp off rather than guessing", () 
   );
   expect(show!.startedAt).toBeUndefined();
 });
+
+test("the win is stamped with the time the victory scene came up", () => {
+  expect(parseLog(SHOW)[0]!.wonAt).toBe("20:27:15");
+});
