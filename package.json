@@ -13,5 +13,9 @@
   },
   "devDependencies": {
     "@types/bun": "^1.4.0"
+  },
+  "dependencies": {
+    "jimp": "^1.6.1",
+    "tesseract.js": "^7.0.0"
   }
 }
