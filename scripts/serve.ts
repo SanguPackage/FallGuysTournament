@@ -73,6 +73,7 @@ const server = Bun.serve({
       const file = new URL(request.url).searchParams.get("f");
       if (!dir || !file) return new Response("Not found", { status: 404 });
       const path = resolve(dir, file);
+      console.log(`shot f=${JSON.stringify(file)} -> ${path} (root ${resolve(dir)})`);
       // A relative path from the browser must not be able to walk out of the ShareX folder.
       if (!path.startsWith(`${resolve(dir)}/`)) return new Response("Forbidden", { status: 403 });
       const image = Bun.file(path);
