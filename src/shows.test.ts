@@ -1,52 +1,35 @@
 import { expect, test } from "bun:test";
-import { limitsFor, playable, playableAt } from "./shows";
-import type { ShowLimits } from "./types";
+import { playableAt } from "./shows";
+import type { ShowInOrder } from "../site/rules";
 
-const limits: ShowLimits = {
-  source: "https://example.invalid",
-  fetched: "2026-09-01",
-  shows: {
-    Solos: { min: 2, max: 32 },
-    "Finals Marathon": { min: 2, max: 16 },
-    "Slime Survivors": { min: 5, max: 24 },
-  },
-};
+const order: ShowInOrder[] = [
+  { position: 1, show: "Solos", tier: "Opening", min: 2, max: 32 },
+  { position: 2, show: "Finals Marathon", tier: "Middle", min: 2, max: 16 },
+  { position: 3, show: "Slime Survivors", tier: "Middle", min: 5, max: 24 },
+];
 
-test("a show is playable inside its limits", () => {
-  expect(playable(limits, "Solos", 21)).toBe(true);
+test("a headcount inside every limit plays the whole list", () => {
+  const result = playableAt(order, 16);
+  expect(result.play.map((s) => s.show)).toEqual(["Solos", "Finals Marathon", "Slime Survivors"]);
+  expect(result.skip).toEqual([]);
 });
 
-test("a show is not playable above its maximum", () => {
-  expect(playable(limits, "Finals Marathon", 21)).toBe(false);
-  expect(playable(limits, "Finals Marathon", 16)).toBe(true);
+test("a show is skipped above its maximum", () => {
+  const result = playableAt(order, 21);
+  expect(result.play.map((s) => s.show)).toEqual(["Solos", "Slime Survivors"]);
+  expect(result.skip).toEqual([
+    { show: "Finals Marathon", reason: "needs at most 16 players" },
+  ]);
 });
 
-test("a show is not playable below its minimum", () => {
-  expect(playable(limits, "Slime Survivors", 4)).toBe(false);
-  expect(playable(limits, "Slime Survivors", 5)).toBe(true);
+test("a show is skipped below its minimum", () => {
+  const result = playableAt(order, 3);
+  expect(result.play.map((s) => s.show)).toEqual(["Solos", "Finals Marathon"]);
+  expect(result.skip).toEqual([
+    { show: "Slime Survivors", reason: "needs at least 5 players" },
+  ]);
 });
 
-test("a show the wiki does not list is treated as playable", () => {
-  expect(playable(limits, "Some Creative Level", 21)).toBe(true);
-});
-
-test("limitsFor returns undefined for an unknown show", () => {
-  expect(limitsFor(limits, "Some Creative Level")).toBeUndefined();
-  expect(limitsFor(limits, "Solos")).toEqual({ min: 2, max: 32 });
-});
-
-test("show names match regardless of case", () => {
-  expect(limitsFor(limits, "finals marathon")).toEqual({ min: 2, max: 16 });
-});
-
-test("playableAt splits an ordered list into playable and skipped", () => {
-  const result = playableAt(limits, ["Solos", "Finals Marathon", "Slime Survivors"], 21);
-  expect(result.play).toEqual(["Solos", "Slime Survivors"]);
-  expect(result.skip).toEqual([{ show: "Finals Marathon", reason: "needs at most 16 players" }]);
-});
-
-test("playableAt explains a show that needs more players", () => {
-  const result = playableAt(limits, ["Slime Survivors"], 3);
-  expect(result.play).toEqual([]);
-  expect(result.skip).toEqual([{ show: "Slime Survivors", reason: "needs at least 5 players" }]);
+test("the playable list keeps the order given", () => {
+  expect(playableAt(order, 21).play.map((s) => s.position)).toEqual([1, 3]);
 });

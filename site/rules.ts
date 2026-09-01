@@ -4,9 +4,7 @@ export interface ShowInOrder {
   position: number;
   show: string;
   tier: string;
-}
-
-export interface ShowRange {
+  /** Player counts the game allows for this show. */
   min: number;
   max: number;
 }
@@ -77,7 +75,7 @@ export function renderMarkdown(markdown: string): string {
 export function parseShowOrder(markdown: string): ShowInOrder[] {
   const rows = markdown.split("\n").map((line) => line.trim());
   const start = rows.findIndex(
-    (line) => isTableRow(line) && cells(line).join("|") === "#|Show|Tier",
+    (line) => isTableRow(line) && cells(line).join("|") === "#|Show|Tier|Min|Max",
   );
   if (start === -1) return [];
 
@@ -85,31 +83,30 @@ export function parseShowOrder(markdown: string): ShowInOrder[] {
   for (const line of rows.slice(start + 1)) {
     if (!isTableRow(line)) break;
     if (isDivider(line)) continue;
-    const [position, show, tier] = cells(line);
-    shows.push({ position: Number(position), show: show!, tier: tier! });
+    const [position, show, tier, min, max] = cells(line);
+    shows.push({
+      position: Number(position),
+      show: show!,
+      tier: tier!,
+      min: Number(min),
+      max: Number(max),
+    });
   }
   return shows;
 }
 
-export function renderShowOrder(
-  shows: ShowInOrder[],
-  limits: Record<string, ShowRange> = {},
-): string {
-  const rangeFor = (name: string): ShowRange | undefined =>
-    Object.entries(limits).find(([key]) => key.toLowerCase() === name.toLowerCase())?.[1];
-
+export function renderShowOrder(shows: ShowInOrder[]): string {
   const body = shows
-    .map((show) => {
-      const range = rangeFor(show.show);
-      return `
+    .map(
+      (show) => `
       <tr>
         <td class="rank">${show.position}</td>
         <td class="player">${escapeHtml(show.show)}</td>
         <td class="tier">${escapeHtml(show.tier)}</td>
-        <td>${range ? range.min : "—"}</td>
-        <td>${range ? range.max : "—"}</td>
-      </tr>`;
-    })
+        <td>${show.min}</td>
+        <td>${show.max}</td>
+      </tr>`,
+    )
     .join("");
 
   return `

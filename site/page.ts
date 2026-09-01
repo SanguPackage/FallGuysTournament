@@ -2,6 +2,7 @@ import { escapeHtml } from "./render";
 
 const NAV = [
   { href: "./index.html", label: "Standings" },
+  { href: "./results.html", label: "Results" },
   { href: "./rules.html", label: "Rules" },
   { href: "./shows.html", label: "Show order" },
 ] as const;

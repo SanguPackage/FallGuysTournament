@@ -20,18 +20,20 @@ FOM attendees only.
 
 2.4 Shows are played in this order, working up from the gentlest to the hardest:
 
-| #  | Show                  | Tier     |
-|----|-----------------------|----------|
-| 1  | Solos                 | Opening  |
-| 2  | Day at the Races Solo | Opening  |
-| 3  | Fan Favourites        | Opening  |
-| 4  | Slime Survivors       | Middle   |
-| 5  | Fall Ball Cup         | Middle   |
-| 6  | Finals Marathon       | Middle   |
-| 7  | Blast Ball Trials     | Advanced |
-| 8  | Roll Call             | Advanced |
-| 9  | X-Treme Solos         | Hardest  |
-| 10 | Button Basher Royale  | Hardest  |
+| #  | Show                  | Tier     | Min | Max |
+|----|-----------------------|----------|-----|-----|
+| 1  | Solos                 | Opening  | 2   | 32  |
+| 2  | Day at the Races Solo | Opening  | 5   | 32  |
+| 3  | Fan Favourites        | Opening  | 5   | 32  |
+| 4  | Slime Survivors       | Middle   | 5   | 24  |
+| 5  | Fall Ball Cup         | Middle   | 2   | 32  |
+| 6  | Finals Marathon       | Middle   | 2   | 16  |
+| 7  | Blast Ball Trials     | Advanced | 5   | 30  |
+| 8  | Roll Call             | Advanced | 5   | 32  |
+| 9  | X-Treme Solos         | Hardest  | 5   | 32  |
+| 10 | Button Basher Royale  | Hardest  | 2   | 16  |
+
+Min and Max are the player counts the game itself allows for that show.
 
 2.5 If time remains after the last show, the admin replays shows from the advanced and
 hardest tiers, and any show the lobby particularly enjoyed.

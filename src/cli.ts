@@ -12,7 +12,7 @@ import {
 import { score } from "./scoring";
 import { playableAt } from "./shows";
 import { parseShowOrder } from "../site/rules";
-import { loadEvent, loadPlayers, loadShowLimits, saveEvent } from "./storage";
+import { loadEvent, loadPlayers, saveEvent } from "./storage";
 import type { LeaderboardRow, Players, RoundType } from "./types";
 
 function ask(question: string): string {
@@ -139,11 +139,12 @@ async function main(): Promise<void> {
       if (!Number.isInteger(headcount) || headcount < 1) {
         throw new ValidationError("Give a whole number of players.");
       }
-      const limits = await loadShowLimits();
-      const order = parseShowOrder(await Bun.file("docs/rules.md").text()).map((s) => s.show);
-      const { play, skip } = playableAt(limits, order, headcount);
+      const order = parseShowOrder(await Bun.file("docs/rules.md").text());
+      const { play, skip } = playableAt(order, headcount);
       console.log(`With ${headcount} players:\n`);
-      play.forEach((show, index) => console.log(`  ${String(index + 1).padStart(2)}  ${show}`));
+      play.forEach((show, index) =>
+        console.log(`  ${String(index + 1).padStart(2)}  ${show.show}`),
+      );
       if (skip.length > 0) {
         console.log("\nSkipped:");
         for (const { show, reason } of skip) console.log(`      ${show} — ${reason}`);

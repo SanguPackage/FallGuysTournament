@@ -1,0 +1,86 @@
+import { expect, test } from "bun:test";
+import { parseLog } from "./log";
+
+const SHOW = `
+20:25:00.656: [Matchmaking] [StatePrivateLobby] Send Start Match Command - players in queued reached: 4 players
+20:25:02.406: [HandleSuccessfulLogin] Selected show is event_only_finals_v3_template IsUltimatePartyEpisode: False
+20:25:05.138: [StateGameLoading] Finished loading game level, assumed to be first_round_normal. Duration: 1.96s
+20:25:05.760: [ClientGameManager] Handling bootstrap for local player FallGuy [31] (FG.Common.MPGNetObject), playerID = 1, squadID = 0
+20:25:20.615: ClientGameManager::HandleServerPlayerProgress PlayerId=4 is succeeded=False
+20:25:20.616: ClientGameManager::HandleServerPlayerProgress PlayerId=1 is succeeded=True
+20:25:20.624: ClientGameManager::HandleServerPlayerProgress PlayerId=2 is succeeded=True
+20:25:20.624: ClientGameManager::HandleServerPlayerProgress PlayerId=3 is succeeded=True
+20:25:39.000: [StateGameLoading] Finished loading game level, assumed to be round_floor_fall_final. Duration: 1.2s
+20:26:05.219: ClientGameManager::HandleServerPlayerProgress PlayerId=1 is succeeded=False
+20:27:12.803: ClientGameManager::HandleServerPlayerProgress PlayerId=2 is succeeded=False
+20:27:12.803: ClientGameManager::HandleServerPlayerProgress PlayerId=3 is succeeded=True
+20:27:15.840: VictoryScene::winnerPlayerId:3 squadId:0 teamId:-1
+`;
+
+test("a show is read with its id and lobby size", () => {
+  const [show] = parseLog(SHOW);
+  expect(show!.showId).toBe("event_only_finals_v3_template");
+  expect(show!.players).toBe(4);
+});
+
+test("rounds are read in order, by round id", () => {
+  const [show] = parseLog(SHOW);
+  expect(show!.rounds.map((round) => round.id)).toEqual([
+    "first_round_normal",
+    "round_floor_fall_final",
+  ]);
+});
+
+test("a round records who qualified, in finish order, and who went out", () => {
+  const [round] = parseLog(SHOW)[0]!.rounds;
+  expect(round!.qualified).toEqual([1, 2, 3]);
+  expect(round!.eliminated).toEqual([4]);
+});
+
+test("the referee's own id is read from the local player line", () => {
+  expect(parseLog(SHOW)[0]!.localPlayerId).toBe(1);
+});
+
+test("the winner is read from the victory screen", () => {
+  expect(parseLog(SHOW)[0]!.winnerId).toBe(3);
+});
+
+test("the last round of a show is its final", () => {
+  const show = parseLog(SHOW)[0]!;
+  expect(show.rounds.map((round) => round.isFinal)).toEqual([false, true]);
+});
+
+test("a round nobody qualifies from is a timeout", () => {
+  const show = parseLog(`
+20:00:00.000: [HandleSuccessfulLogin] Selected show is s IsUltimatePartyEpisode: False
+20:00:01.000: [StateGameLoading] Finished loading game level, assumed to be r. Duration: 1s
+20:00:02.000: ClientGameManager::HandleServerPlayerProgress PlayerId=1 is succeeded=False
+`)[0]!;
+  expect(show.rounds[0]!.timedOut).toBe(true);
+});
+
+test("a UGC round still counts, having no scene line of its own", () => {
+  const show = parseLog(`
+20:00:00.000: [HandleSuccessfulLogin] Selected show is s IsUltimatePartyEpisode: False
+20:00:01.000: [RoundLoader] Load UGC via share code: 3298-6726-4118:33
+20:00:02.000: [StateGameLoading] Finished loading game level, assumed to be ugc_round_normal. Duration: 1s
+`)[0]!;
+  expect(show.rounds.map((round) => round.id)).toEqual(["ugc_round_normal"]);
+});
+
+test("several shows in one log are kept apart", () => {
+  const shows = parseLog(`${SHOW}
+20:30:00.000: [HandleSuccessfulLogin] Selected show is pl_solo_main_show IsUltimatePartyEpisode: False
+20:30:01.000: [StateGameLoading] Finished loading game level, assumed to be r. Duration: 1s
+20:30:02.000: VictoryScene::winnerPlayerId:2 squadId:0 teamId:-1
+`);
+  expect(shows.map((show) => show.showId)).toEqual([
+    "event_only_finals_v3_template",
+    "pl_solo_main_show",
+  ]);
+  expect(shows[1]!.winnerId).toBe(2);
+});
+
+test("lines before any show are ignored", () => {
+  expect(parseLog("20:00:00.000: [Global] nothing to see\n")).toEqual([]);
+});

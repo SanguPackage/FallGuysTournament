@@ -7,7 +7,7 @@ const OUT = "dist";
 await rm(OUT, { recursive: true, force: true });
 
 const result = await Bun.build({
-  entrypoints: ["site/main.ts"],
+  entrypoints: ["site/main.ts", "site/results.ts"],
   outdir: OUT,
   minify: true,
   target: "browser",
@@ -28,11 +28,14 @@ for (const [from, to] of [
 }
 
 const rules = await Bun.file("docs/rules.md").text();
-const limits = (await Bun.file("data/shows.json").json()).shows;
 
 await Bun.write(
   `${OUT}/index.html`,
   (await Bun.file("site/index.html").text()).replace("<!--nav-->", nav("index.html")),
+);
+await Bun.write(
+  `${OUT}/results.html`,
+  (await Bun.file("site/results.html").text()).replace("<!--nav-->", nav("results.html")),
 );
 await Bun.write(
   `${OUT}/rules.html`,
@@ -46,7 +49,7 @@ await Bun.write(
     body: `<h1>Show order</h1>
 <p class="subtitle">Played top to bottom, working up from the gentlest to the hardest. A show
 the number of players present cannot support is skipped.</p>
-${renderShowOrder(parseShowOrder(rules), limits)}`,
+${renderShowOrder(parseShowOrder(rules))}`,
   }),
 );
 

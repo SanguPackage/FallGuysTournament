@@ -1,8 +1,7 @@
-import type { Players, ShowLimits, TournamentEvent } from "./types";
+import type { Players, TournamentEvent } from "./types";
 
 export const EVENT_PATH = "data/event.json";
 export const PLAYERS_PATH = "data/players.json";
-export const SHOWS_PATH = "data/shows.json";
 
 export async function loadEvent(path: string = EVENT_PATH): Promise<TournamentEvent> {
   return (await Bun.file(path).json()) as TournamentEvent;
@@ -17,8 +16,4 @@ export async function saveEvent(
 
 export async function loadPlayers(path: string = PLAYERS_PATH): Promise<Players> {
   return (await Bun.file(path).json()) as Players;
-}
-
-export async function loadShowLimits(path: string = SHOWS_PATH): Promise<ShowLimits> {
-  return (await Bun.file(path).json()) as ShowLimits;
 }

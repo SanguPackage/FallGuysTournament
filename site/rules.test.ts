@@ -33,11 +33,11 @@ test("markup in the source is escaped", () => {
   expect(renderMarkdown("<script>alert(1)</script>\n")).not.toContain("<script>");
 });
 
-test("the show order comes from the table headed # / Show / Tier", () => {
+test("the show order carries each show's player limits", () => {
   const shows = parseShowOrder(SAMPLE);
   expect(shows).toEqual([
-    { position: 1, show: "Solos", tier: "Opening" },
-    { position: 2, show: "Roll Call", tier: "Advanced" },
+    { position: 1, show: "Solos", tier: "Opening", min: 2, max: 32 },
+    { position: 2, show: "Roll Call", tier: "Advanced", min: 5, max: 16 },
   ]);
 });
 
@@ -53,23 +53,38 @@ test("the show order renders in order with its tiers", () => {
 
 const SAMPLE = `## 2. Format
 
-| #  | Show      | Tier     |
-|----|-----------|----------|
-| 1  | Solos     | Opening  |
-| 2  | Roll Call | Advanced |
+| #  | Show      | Tier     | Min | Max |
+|----|-----------|----------|-----|-----|
+| 1  | Solos     | Opening  | 2   | 32  |
+| 2  | Roll Call | Advanced | 5   | 16  |
 
 | Achievement | Points |
 |-------------|--------|
 | Winning     | 5      |
 `;
 
-test("the show order renders the player limits when they are known", () => {
-  const html = renderShowOrder(parseShowOrder(SAMPLE), { Solos: { min: 2, max: 32 } });
+test("the show order renders each show's player limits", () => {
+  const html = renderShowOrder(parseShowOrder(SAMPLE));
   expect(html).toContain("<td>2</td>");
   expect(html).toContain("<td>32</td>");
 });
 
-test("a show with no known limits renders a dash", () => {
-  const html = renderShowOrder(parseShowOrder(SAMPLE), {});
-  expect(html).toContain("<td>—</td>");
+test("the rules table and the fetched wiki limits agree", async () => {
+  const rules = await Bun.file("docs/rules.md").text();
+  const wiki = (await Bun.file("data/shows.json").json()).shows as Record<
+    string,
+    { min: number; max: number }
+  >;
+  const lookup = (name: string) =>
+    Object.entries(wiki).find(([key]) => key.toLowerCase() === name.toLowerCase())?.[1];
+
+  const order = parseShowOrder(rules);
+  expect(order).toHaveLength(10);
+  for (const show of order) {
+    expect({ show: show.show, ...lookup(show.show) }).toEqual({
+      show: show.show,
+      min: show.min,
+      max: show.max,
+    });
+  }
 });
