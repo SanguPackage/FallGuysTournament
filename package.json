@@ -8,7 +8,8 @@
     "cli": "bun run src/cli.ts",
     "build": "bun run scripts/build.ts",
     "rounds": "bun run scripts/fetch-rounds.ts",
-    "dev": "bun run scripts/serve.ts"
+    "dev": "bun run scripts/serve.ts",
+    "live": "bun run scripts/serve.ts --publish"
   },
   "devDependencies": {
     "@types/bun": "^1.4.0"

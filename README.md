@@ -16,6 +16,24 @@ Rules handed to the FOM board: [docs/rules.md](docs/rules.md)
 
 Simultaneous winners split the 5, rounded down.
 
+## Running the admin
+
+```bash
+bun run live   # every save is committed and pushed
+bun run dev    # saves stay on this machine
+```
+
+Both serve the admin on <http://localhost:3000/admin> and the board beside it.
+
+`bun run live` is the event itself: recording a show writes `data/`, commits it under
+`data: record show N — Name` and pushes, which rebuilds the published site. `bun run dev`
+writes the same files and stops there.
+
+Nothing is pushed unless `data/event.json` and `data/players.json` parse and hold the
+shape the board reads. A file that fails is still saved, so no typing is lost, but the
+publish is refused with the field named, and the admin carries a banner until it is
+fixed. The `Commit & push` button runs the same check under a message you write.
+
 ## Running the event
 
 ```bash

@@ -2,15 +2,22 @@ import { parseLog } from "../src/log";
 import { absoluteTimes, placeShots } from "../src/screenshots";
 import { listShots, resolveShot } from "../src/shot-folder";
 import { findLog, findScreenshotDir } from "../src/windows-path";
+import { checkData } from "../src/data-check";
 import { publish } from "../src/publish";
 import { EVENT_PATH, PLAYERS_PATH } from "../src/storage";
 import { parseShowOrder } from "../site/rules";
-import { suggestShowName } from "../site/admin-model";
+import { defaultMessage, suggestShowName } from "../site/admin-model";
 import type { LiveNow } from "../src/live";
 import type { ParsedShow } from "../src/log";
 import type { TournamentEvent } from "../src/types";
 
 const SHOWS_PATH = "data/shows.json";
+
+/**
+ * Off by default: development saves the same files the event does, and every save would otherwise
+ * land on the public board. `bun run live` turns it on for the night itself.
+ */
+const AUTO_PUBLISH = Bun.argv.includes("--publish");
 
 /** The log is a convenience: it prefills rounds. Losing it must not stop the admin loading. */
 async function parsedShows(logPath: string | undefined) {
@@ -39,10 +46,19 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-async function writeJson(path: string, request: Request): Promise<Response> {
+async function writeJson(
+  path: string,
+  request: Request,
+  describe: (body: never) => string,
+): Promise<Response> {
   const body = await request.json();
   await Bun.write(path, `${JSON.stringify(body, null, 2)}\n`);
-  return json({ saved: path });
+  if (!AUTO_PUBLISH) return json({ saved: path });
+
+  const subject = describe(body as never);
+  const published = await publish(subject);
+  console.log(`${subject} — ${published.message}`);
+  return json({ saved: path, published });
 }
 
 const server = Bun.serve({
@@ -67,6 +83,8 @@ const server = Bun.serve({
         times: absoluteTimes(shows, event.date),
         shotDir: shotDir ?? null,
         shots: await placed(shotDir, shows, event.date),
+        autoPublish: AUTO_PUBLISH,
+        problems: await checkData(),
       });
     }
 
@@ -82,10 +100,10 @@ const server = Bun.serve({
     }
 
     if (request.method === "PUT" && pathname === "/api/players") {
-      return writeJson(PLAYERS_PATH, request);
+      return writeJson(PLAYERS_PATH, request, () => "data: update players");
     }
     if (request.method === "PUT" && pathname === "/api/event") {
-      return writeJson(EVENT_PATH, request);
+      return writeJson(EVENT_PATH, request, (saved: TournamentEvent) => defaultMessage(saved));
     }
 
     /**
@@ -160,3 +178,4 @@ const server = Bun.serve({
 
 console.log(`Public site   ${server.url}`);
 console.log(`Admin         ${server.url}admin`);
+console.log(`Publishing    ${AUTO_PUBLISH ? "on — every save is committed and pushed" : "off"}`);

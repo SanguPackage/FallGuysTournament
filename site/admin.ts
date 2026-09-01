@@ -14,6 +14,8 @@ import {
   validate,
   type ShowDraft,
 } from "./admin-model";
+import type { DataProblem } from "../src/data-check";
+import type { PublishResult } from "../src/publish";
 import type { ShowInOrder } from "./rules";
 import { shotsForSlot, type PlacedShot, type Selection, type ShowTimes } from "../src/screenshots";
 
@@ -27,6 +29,10 @@ interface State {
   times: ShowTimes[];
   shotDir: string | null;
   shots: PlacedShot[];
+  /** Whether a save also commits and pushes, which is the flag the server was started with. */
+  autoPublish: boolean;
+  /** Anything in data/ that would break the published board. Blocks publishing while non-empty. */
+  problems: DataProblem[];
 }
 
 /** The log only changes when a round ends, so this is about as often as it can pay off. */
@@ -110,13 +116,15 @@ function status(id: string, message: string, ok = true): void {
   node.className = ok ? "status ok" : "status bad";
 }
 
-async function save(path: string, body: unknown): Promise<void> {
+async function save(path: string, body: unknown): Promise<PublishResult | undefined> {
   const response = await fetch(path, {
     method: "PUT",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body),
   });
   if (!response.ok) throw new Error(await response.text());
+  const { published } = (await response.json()) as { published?: PublishResult };
+  return published;
 }
 
 /** Anyone who can be scored, best first: the admin runs the event and is never a name to type. */
@@ -490,12 +498,13 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
     }
     state.event.shows[index] = toShow(draft);
     try {
-      await save("/api/event", state.event);
+      const published = await save("/api/event", state.event);
       drafts.delete(index);
       editing = null;
       selectedShow = state.event.shows.length;
       selection = { slot: "all" };
       render();
+      if (published) status("publish-status", published.message, published.pushed);
     } catch (error) {
       state.event.shows = before;
       problems.replaceChildren(el("li", {}, [`Could not save: ${error}`]));
@@ -594,6 +603,20 @@ function renderShows(): void {
 function renderPublish(): void {
   const input = document.querySelector<HTMLInputElement>("#publish-message")!;
   if (!input.dataset.edited) input.value = defaultMessage(state.event);
+
+  document.querySelector("#publish-mode")!.textContent = state.autoPublish
+    ? "Every save is committed and pushed. This button is only needed to publish under your own message."
+    : "Publishing is off: saves stay on this machine. Restart with bun run live to publish as you go.";
+}
+
+/** A field the board cannot read is a blank page for everyone watching, so it is said out loud. */
+function renderProblems(): void {
+  const banner = document.querySelector<HTMLElement>("#data-problems")!;
+  banner.hidden = state.problems.length === 0;
+  banner.replaceChildren(
+    el("b", {}, [`data/ will not publish — ${state.problems.length} problem${state.problems.length === 1 ? "" : "s"}`]),
+    el("ul", {}, state.problems.map(({ file, problem }) => el("li", {}, [`${file}: ${problem}`]))),
+  );
 }
 
 function render(): void {
@@ -601,6 +624,7 @@ function render(): void {
   refreshDatalists();
   renderPlayers();
   renderShows();
+  renderProblems();
   renderPublish();
   renderShots();
   markSelected();
@@ -612,7 +636,7 @@ function render(): void {
  * poll: players and drafts are whatever is being typed here.
  */
 async function watchLog(): Promise<void> {
-  let seen = JSON.stringify([state.shows, state.shots, state.times]);
+  let seen = JSON.stringify([state.shows, state.shots, state.times, state.problems]);
   setInterval(async () => {
     let next: State;
     try {
@@ -622,13 +646,14 @@ async function watchLog(): Promise<void> {
       return;
     }
     status("watch-status", `Watching the log · ${next.shows.length} shows`);
-    const signature = JSON.stringify([next.shows, next.shots, next.times]);
+    const signature = JSON.stringify([next.shows, next.shots, next.times, next.problems]);
     if (signature === seen) return;
     seen = signature;
     state.shows = next.shows;
     state.shots = next.shots;
     state.times = next.times;
     state.order = next.order;
+    state.problems = next.problems;
     render();
   }, WATCH_MS);
 }
@@ -671,7 +696,8 @@ async function main(): Promise<void> {
       return;
     }
     try {
-      await save("/api/players", state.players);
+      const published = await save("/api/players", state.players);
+      if (published) status("publish-status", published.message, published.pushed);
       status("players-status", "Saved.");
     } catch (error) {
       status("players-status", `Could not save: ${error}`, false);

@@ -21,6 +21,7 @@
       </nav>
       <h1>Admin</h1>
       <p id="log-path" class="subtitle"></p>
+      <div id="data-problems" class="banner" hidden></div>
 
       <section>
         <h2>Shows</h2>
@@ -39,9 +40,7 @@
             <button id="publish" type="button" class="primary">Commit &amp; push</button>
             <span id="publish-status" class="status"></span>
           </div>
-          <p class="hint">
-            Commits everything under <code>data/</code> and pushes, which rebuilds the public site.
-          </p>
+          <p id="publish-mode" class="hint"></p>
         </div>
       </section>
 
