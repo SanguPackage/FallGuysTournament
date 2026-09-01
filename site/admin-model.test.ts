@@ -41,9 +41,13 @@ test("a draft asks for one winner, since the log reports one", () => {
   expect(draftFor(parsed).winners).toHaveLength(1);
 });
 
-test("a show with no winner asks for none", () => {
-  const draft = draftFor({ ...parsed, winnerId: undefined });
-  expect(draft.winners).toHaveLength(0);
+test("a final nobody has come through yet asks for no winner", () => {
+  const unfinished = {
+    ...parsed,
+    winnerId: undefined,
+    rounds: [parsed.rounds[0]!, { ...parsed.rounds[1]!, qualified: [], eliminated: [] }],
+  };
+  expect(draftFor(unfinished).winners).toHaveLength(0);
 });
 
 test("a draft becomes a show, dropping the final from the scored rounds' first place", () => {
@@ -452,6 +456,8 @@ test("the final's survivors give the winner slots, however many there are", () =
     rounds: [
       {
         id: "final",
+        name: "Hex-A-Gone",
+        type: "final",
         isFinal: true,
         timedOut: false,
         present: [1, 2, 3],
@@ -471,7 +477,16 @@ test("a win the server announced with nobody qualifying still gets a slot", () =
   syncDraft(draft, {
     showId: "s",
     rounds: [
-      { id: "final", isFinal: true, timedOut: true, present: [1], qualified: [], eliminated: [1] },
+      {
+        id: "final",
+        name: "Hex-A-Gone",
+        type: "final",
+        isFinal: true,
+        timedOut: true,
+        present: [1],
+        qualified: [],
+        eliminated: [1],
+      },
     ],
     winnerId: 1,
   });
