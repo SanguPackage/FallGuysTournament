@@ -55,12 +55,37 @@ taken from the
 [Fall Guys wiki](https://fallguysultimateknockout.fandom.com/wiki/Custom_Games). A show
 the headcount cannot support is skipped. Refresh it if the game changes the numbers.
 
+## Admin UI
+
+```bash
+bun run build
+bun run dev     # http://localhost:3000/admin
+```
+
+The admin page runs only against the local dev server, never on GitHub Pages. It reads
+the Fall Guys log to fill in each show's rounds, player counts and finals, so the only
+typing is names. It writes `data/players.json` and `data/event.json` directly; commit
+and push to publish.
+
+It finds `Player.log` under `AppData/LocalLow/Mediatonic/FallGuys_client` for any user
+on the C: drive. Set `FALLGUYS_LOG` to override.
+
+Shows must be recorded in the order they were played: only the next unrecorded show is
+editable, so its number matches the log.
+
+Player IDs in the log are reassigned every show — even inside one lobby — so the log can
+never say *who* did something. See
+[data/logs/2026-09-01-join-order.md](data/logs/2026-09-01-join-order.md).
+
 ## Leaderboard
 
 ```bash
 bun run build   # bundle site/ and data/ into dist/
 bun run dev     # serve dist/ on http://localhost:3000
 ```
+
+Pages: standings, results (every show's rounds, finalists and winners), rules and show
+order.
 
 Pushing to `main` publishes `dist/` to GitHub Pages via
 [.github/workflows/pages.yml](.github/workflows/pages.yml). Set the Pages source to
