@@ -1,5 +1,7 @@
 export interface ParsedRound {
   id: string;
+  /** Local clock time the round finished loading, as the log writes it. Absent on an unstamped line. */
+  startedAt?: string;
   isFinal: boolean;
   timedOut: boolean;
   /** Everyone who started the round. For the final, this is the set of finalists. */
@@ -11,6 +13,8 @@ export interface ParsedRound {
 
 export interface ParsedShow {
   showId: string;
+  /** Local clock time the show was selected. Absent on an unstamped line. */
+  startedAt?: string;
   /** Lobby size at the start of the show. Absent outside private lobbies. */
   players?: number;
   /** The client running the log, so the referee can be told apart from the field. */
@@ -22,6 +26,7 @@ export interface ParsedShow {
 const LOBBY_SIZE = /players in queued reached: (\d+) players/;
 const SHOW = /\[HandleSuccessfulLogin\] Selected show is (\S+)/;
 /** Covers UGC rounds too, which log no "Game level to load" line. */
+const AT = /^(\d\d:\d\d:\d\d)\.\d+: /;
 const ROUND = /Finished loading game level, assumed to be ([^.]+)\./;
 const LOCAL_PLAYER = /bootstrap for local player .*playerID = (\d+)/;
 const BOOTSTRAP = /bootstrap for (?:local|remote) player .*playerID = (\d+)/;
@@ -35,6 +40,7 @@ export function parseLog(text: string): ParsedShow[] {
   for (const line of text.split("\n")) {
     const show = shows.at(-1);
     const round = show?.rounds.at(-1);
+    const at = AT.exec(line)?.[1];
 
     const size = LOBBY_SIZE.exec(line);
     if (size) {
@@ -46,6 +52,7 @@ export function parseLog(text: string): ParsedShow[] {
     if (started) {
       shows.push({
         showId: started[1]!,
+        ...(at === undefined ? {} : { startedAt: at }),
         ...(lobbySize === undefined ? {} : { players: lobbySize }),
         rounds: [],
       });
@@ -59,6 +66,7 @@ export function parseLog(text: string): ParsedShow[] {
     if (loaded) {
       show.rounds.push({
         id: loaded[1]!,
+        ...(at === undefined ? {} : { startedAt: at }),
         isFinal: false,
         timedOut: false,
         present: [],

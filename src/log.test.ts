@@ -94,3 +94,21 @@ test("several shows in one log are kept apart", () => {
 test("lines before any show are ignored", () => {
   expect(parseLog("20:00:00.000: [Global] nothing to see\n")).toEqual([]);
 });
+
+test("a show is stamped with the time it was selected", () => {
+  expect(parseLog(SHOW)[0]!.startedAt).toBe("20:25:02");
+});
+
+test("each round is stamped with the time it finished loading", () => {
+  expect(parseLog(SHOW)[0]!.rounds.map((round) => round.startedAt)).toEqual([
+    "20:25:05",
+    "20:25:39",
+  ]);
+});
+
+test("a line without a timestamp leaves the stamp off rather than guessing", () => {
+  const [show] = parseLog(
+    "[HandleSuccessfulLogin] Selected show is solos IsUltimatePartyEpisode: False\n",
+  );
+  expect(show!.startedAt).toBeUndefined();
+});
