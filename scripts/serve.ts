@@ -1,5 +1,5 @@
 import { parseLog } from "../src/log";
-import { findLog } from "../src/log-path";
+import { findLog } from "../src/windows-path";
 import { publish } from "../src/publish";
 import { EVENT_PATH, PLAYERS_PATH } from "../src/storage";
 import { parseShowOrder } from "../site/rules";
