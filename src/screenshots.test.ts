@@ -13,12 +13,18 @@ function at(clock: string, dayOffset = 0): number {
   return Date.parse(`${DATE}T${clock}Z`) + dayOffset * 86_400_000;
 }
 
-function round(id: string, startedAt: string | undefined, isFinal = false) {
+function round(
+  id: string,
+  startedAt: string | undefined,
+  isFinal = false,
+  endedAt?: string,
+) {
   return {
     id,
     name: id,
     type: (isFinal ? "final" : "unknown") as RoundType,
     ...(startedAt === undefined ? {} : { startedAt }),
+    ...(endedAt === undefined ? {} : { endedAt }),
     isFinal,
     timedOut: false,
     present: [],
@@ -31,7 +37,10 @@ const SHOWS: ParsedShow[] = [
   {
     showId: "solos",
     startedAt: "20:25:02",
-    rounds: [round("hexsnake", "20:25:05"), round("floor_fall", "20:25:39", true)],
+    rounds: [
+      round("hexsnake", "20:25:05", false, "20:25:30"),
+      round("floor_fall", "20:25:39", true),
+    ],
     winnerId: 3,
     wonAt: "20:27:15",
   },
@@ -157,4 +166,24 @@ test("log stamps are read as UTC, not as the clock on the wall", () => {
     Date.parse("2026-09-01T20:25:39Z"),
   ]);
   expect(times!.wonAt).toBe(Date.parse("2026-09-01T20:27:15Z"));
+});
+
+test("the screen after the round before the final names the finalists", () => {
+  const shots: Shot[] = [
+    { file: "playing.png", takenAt: at("20:25:20") },
+    { file: "qualified.png", takenAt: at("20:25:35") },
+  ];
+  const placed = placeShots(shots, SHOWS, DATE);
+
+  expect(placed[0]).toMatchObject({ slot: "round", roundIndex: 0 });
+  expect(placed[0]!.namesFinalists).toBeUndefined();
+  expect(placed[1]).toMatchObject({ slot: "round", roundIndex: 0, namesFinalists: true });
+
+  expect(shotsForSlot(placed, 0, { slot: "finalists" }).map((s) => s.file)).toEqual([
+    "qualified.png",
+  ]);
+  expect(shotsForSlot(placed, 0, { slot: "round", roundIndex: 0 }).map((s) => s.file)).toEqual([
+    "playing.png",
+    "qualified.png",
+  ]);
 });

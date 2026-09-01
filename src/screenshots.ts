@@ -19,6 +19,11 @@ export interface PlacedShot extends Shot {
   showIndex?: number;
   slot?: Selection["slot"];
   roundIndex?: number;
+  /**
+   * The screen naming who got through comes up once the round before the final has ended, and it
+   * is the only place the finalists' names are written down.
+   */
+  namesFinalists?: true;
 }
 
 interface Window {
@@ -33,6 +38,8 @@ export interface ShowTimes {
   startedAt?: number;
   wonAt?: number;
   rounds: (number | undefined)[];
+  /** When each round's last result came in, so the screen that follows it can be told apart. */
+  ends: (number | undefined)[];
 }
 
 /**
@@ -57,11 +64,17 @@ function clockReader(date: string) {
 /** When each show and round actually happened, so the admin can show one clock throughout. */
 export function absoluteTimes(shows: ParsedShow[], date: string): ShowTimes[] {
   const read = clockReader(date);
-  return shows.map((show) => ({
-    startedAt: read(show.startedAt),
-    rounds: show.rounds.map((round) => read(round.startedAt)),
-    wonAt: read(show.wonAt),
-  }));
+  // The reader rolls the day over whenever the clock steps back, so stamps must reach it in order.
+  return shows.map((show) => {
+    const startedAt = read(show.startedAt);
+    const rounds: (number | undefined)[] = [];
+    const ends: (number | undefined)[] = [];
+    for (const round of show.rounds) {
+      rounds.push(read(round.startedAt));
+      ends.push(read(round.endedAt));
+    }
+    return { startedAt, rounds, ends, wonAt: read(show.wonAt) };
+  });
 }
 
 function windowsFor(shows: ParsedShow[], date: string): Window[] {
@@ -102,6 +115,7 @@ function windowsFor(shows: ParsedShow[], date: string): Window[] {
 
 export function placeShots(shots: Shot[], shows: ParsedShow[], date: string): PlacedShot[] {
   const windows = windowsFor(shows, date);
+  const times = absoluteTimes(shows, date);
   const holds = (window: Window, shot: Shot) =>
     shot.takenAt >= window.from && shot.takenAt < window.to;
 
@@ -112,8 +126,27 @@ export function placeShots(shots: Shot[], shows: ParsedShow[], date: string): Pl
         windows.find((candidate) => candidate.slot !== "show" && holds(candidate, shot)) ??
         windows.find((candidate) => candidate.slot === "show" && holds(candidate, shot));
       if (!window) return { ...shot };
+
       const { showIndex, slot, roundIndex } = window;
-      return { ...shot, showIndex, slot, ...(roundIndex === undefined ? {} : { roundIndex }) };
+      const placed: PlacedShot = {
+        ...shot,
+        showIndex,
+        slot,
+        ...(roundIndex === undefined ? {} : { roundIndex }),
+      };
+
+      const rounds = shows[showIndex]!.rounds;
+      const ended = roundIndex === undefined ? undefined : times[showIndex]!.ends[roundIndex];
+      if (
+        roundIndex === rounds.length - 2 &&
+        rounds.at(-1)?.isFinal === true &&
+        ended !== undefined &&
+        shot.takenAt >= ended
+      ) {
+        placed.namesFinalists = true;
+      }
+
+      return placed;
     });
 }
 
@@ -125,11 +158,12 @@ export function shotsForSlot(
   if (selection.slot === "unmatched") return shots.filter((shot) => shot.showIndex === undefined);
   if (selection.slot === "all") return shots.filter((shot) => shot.showIndex === showIndex);
 
-  // The victory screen comes up seconds after the final ends, and it is still about the final.
+  // The final is bracketed by the two screens that name people: who got through, and who won.
   if (selection.slot === "finalists") {
     return shots.filter(
       (shot) =>
-        shot.showIndex === showIndex && (shot.slot === "finalists" || shot.slot === "winners"),
+        shot.showIndex === showIndex &&
+        (shot.slot === "finalists" || shot.slot === "winners" || shot.namesFinalists === true),
     );
   }
 
