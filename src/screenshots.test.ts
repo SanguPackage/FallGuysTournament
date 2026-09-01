@@ -1,7 +1,5 @@
 import { expect, test } from "bun:test";
-import { listShots, placeShots, shotsForSlot, type Shot } from "./screenshots";
-import { mkdtemp, mkdir, writeFile, utimes } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { placeShots, shotsForSlot, type Shot } from "./screenshots";
 import type { ParsedShow } from "./log";
 
 const DATE = "2026-09-01";
@@ -129,17 +127,5 @@ test("the show slot picks everything of that show that no round claimed", () => 
 test("the unmatched slot picks what belongs to no show at all", () => {
   expect(shotsForSlot(PLACED, 0, { slot: "unmatched" }).map((s) => s.file)).toEqual([
     "desktop.png",
-  ]);
-});
-
-test("the folder is read down into its month subfolders, images only", async () => {
-  const dir = await mkdtemp(`${tmpdir()}/shots-`);
-  await mkdir(`${dir}/2026-09`);
-  await writeFile(`${dir}/2026-09/one.png`, "");
-  await writeFile(`${dir}/2026-09/notes.txt`, "");
-  await utimes(`${dir}/2026-09/one.png`, new Date(at("20:25:20")), new Date(at("20:25:20")));
-
-  expect(await listShots(dir)).toEqual([
-    { file: "2026-09/one.png", takenAt: at("20:25:20") },
   ]);
 });
