@@ -381,7 +381,15 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
     const found = validate(draft);
     problems.replaceChildren(...found.map((problem) => el("li", {}, [problem])));
     if (found.length > 0) return;
-    const before = state.event.shows[index];
+    const before = [...state.event.shows];
+    // Shows are stored by their position in the log, so recording one out of order leaves a gap
+    // that has to be filled or every later index would shift.
+    for (let earlier = 0; earlier < index; earlier += 1) {
+      const parsedEarlier = state.shows[earlier];
+      state.event.shows[earlier] ??= parsedEarlier
+        ? toShow(draftFor(parsedEarlier))
+        : { name: "", rounds: [] };
+    }
     state.event.shows[index] = toShow(draft);
     try {
       await save("/api/event", state.event);
@@ -391,8 +399,7 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
       selection = { slot: "all" };
       render();
     } catch (error) {
-      if (before) state.event.shows[index] = before;
-      else state.event.shows.pop();
+      state.event.shows = before;
       problems.replaceChildren(el("li", {}, [`Could not save: ${error}`]));
     }
   });
@@ -461,15 +468,13 @@ function renderShows(): void {
       ]),
     ];
 
-    if (show) {
-      const edit = el("button", { type: "button" }, ["Edit"]);
-      edit.addEventListener("click", (event) => {
-        event.stopPropagation();
-        editing = index;
-        render();
-      });
-      cells.push(edit);
-    }
+    const edit = el("button", { type: "button" }, ["Edit"]);
+    edit.addEventListener("click", (event) => {
+      event.stopPropagation();
+      editing = index;
+      render();
+    });
+    cells.push(edit);
 
     return selectable(
       el("div", { class: show ? "show-done" : "show-done waiting" }, cells),
