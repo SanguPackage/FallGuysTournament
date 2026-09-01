@@ -1,6 +1,55 @@
 {
   "name": "FOM 2026",
   "date": "2026-09-01",
-  "shows": [],
+  "shows": [
+    {
+      "name": "Solos",
+      "rounds": [
+        {
+          "map": "Wall Guys",
+          "type": "race",
+          "first": "Optinux_Prime"
+        },
+        {
+          "map": "Hoverboard Heroes",
+          "type": "survival"
+        },
+        {
+          "map": "Starchart",
+          "type": "race"
+        },
+        {
+          "map": "Thin Ice",
+          "type": "final"
+        }
+      ],
+      "finalists": [],
+      "winners": []
+    },
+    {
+      "name": "Day at the Races Solo",
+      "rounds": [
+        {
+          "map": "Airtime",
+          "type": "hunt",
+          "first": "Optinux_Prime"
+        },
+        {
+          "map": "Pegwin Pool Party",
+          "type": "hunt"
+        },
+        {
+          "map": "Tail Tag",
+          "type": "hunt"
+        },
+        {
+          "map": "Hex-A-Terrestrial",
+          "type": "final"
+        }
+      ],
+      "finalists": [],
+      "winners": []
+    }
+  ],
   "penalties": []
 }
