@@ -1,5 +1,12 @@
+import { identify } from "./rounds";
+import type { RoundType } from "./types";
+
 export interface ParsedRound {
   id: string;
+  /** The round's published name, or the raw id when no table names it. */
+  name: string;
+  /** What the round is normally played as. The show's last round is a final whatever it says. */
+  type: RoundType;
   /** Local clock time the round finished loading, as the log writes it. Absent on an unstamped line. */
   startedAt?: string;
   isFinal: boolean;
@@ -68,6 +75,7 @@ export function parseLog(text: string): ParsedShow[] {
     if (loaded) {
       show.rounds.push({
         id: loaded[1]!,
+        ...identify(loaded[1]!),
         ...(at === undefined ? {} : { startedAt: at }),
         isFinal: false,
         timedOut: false,
@@ -104,7 +112,10 @@ export function parseLog(text: string): ParsedShow[] {
 
   for (const show of shows) {
     const last = show.rounds.at(-1);
-    if (last) last.isFinal = true;
+    if (last) {
+      last.isFinal = true;
+      last.type = "final";
+    }
     for (const round of show.rounds) {
       round.present.sort((a, b) => a - b);
       round.timedOut = round.qualified.length === 0 && round.eliminated.length > 0;

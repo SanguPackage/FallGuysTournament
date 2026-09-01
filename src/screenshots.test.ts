@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { placeShots, shotsForSlot, type Shot } from "./screenshots";
 import type { ParsedShow } from "./log";
+import type { RoundType } from "./types";
 
 const DATE = "2026-09-01";
 
@@ -11,6 +12,8 @@ function at(clock: string, dayOffset = 0): number {
 function round(id: string, startedAt: string | undefined, isFinal = false) {
   return {
     id,
+    name: id,
+    type: (isFinal ? "final" : "unknown") as RoundType,
     ...(startedAt === undefined ? {} : { startedAt }),
     isFinal,
     timedOut: false,

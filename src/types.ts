@@ -1,4 +1,12 @@
-export type RoundType = "race" | "survival" | "final";
+/** The game's own round categories, plus `unknown` for a round no published table names. */
+export type RoundType =
+  | "race"
+  | "hunt"
+  | "survival"
+  | "logic"
+  | "team"
+  | "final"
+  | "unknown";
 
 export interface Round {
   map: string;

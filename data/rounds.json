@@ -1,0 +1,689 @@
+{
+  "sources": [
+    "https://github.com/Micdu70/FinalBeansStats/blob/main/Entities/LevelStats.cs",
+    "https://github.com/Hoier/Fallalytics/blob/main/util/rounds.js"
+  ],
+  "fetched": "2026-09-01",
+  "rounds": {
+    "round_1v1_button_basher": {
+      "name": "Button Bashers",
+      "type": "hunt"
+    },
+    "round_1v1_volleyfall": {
+      "name": "Volleyfall",
+      "type": "hunt"
+    },
+    "round_1v1_volleyfall_symphony_launch_show": {
+      "name": "Volleyfall",
+      "type": "hunt"
+    },
+    "round_airtime": {
+      "name": "Airtime",
+      "type": "hunt"
+    },
+    "round_ballhogs": {
+      "name": "Hoarders",
+      "type": "team"
+    },
+    "round_basketfall": {
+      "name": "Basketfall",
+      "type": "team"
+    },
+    "round_basketfall_s4_show": {
+      "name": "Basketfall",
+      "type": "team"
+    },
+    "round_biggestfan": {
+      "name": "Big Fans",
+      "type": "race"
+    },
+    "round_blastball_arenasurvival": {
+      "name": "Blast Ball",
+      "type": "survival"
+    },
+    "round_blastball_arenasurvival_symphony_launch_show": {
+      "name": "Blast Ball",
+      "type": "final"
+    },
+    "round_blastballruins": {
+      "name": "Blastlantis",
+      "type": "survival"
+    },
+    "round_block_party": {
+      "name": "Block Party",
+      "type": "survival"
+    },
+    "round_bluejay": {
+      "name": "Bean Hill Zone",
+      "type": "hunt"
+    },
+    "round_bowling": {
+      "name": "Bean Ball Bowling",
+      "type": "hunt"
+    },
+    "round_chicken_chase": {
+      "name": "Pegwin Pursuit",
+      "type": "team"
+    },
+    "round_chompchomp": {
+      "name": "Gate Crash",
+      "type": "race"
+    },
+    "round_conveyor_arena": {
+      "name": "Team Tail Tag",
+      "type": "team"
+    },
+    "round_crown_maze": {
+      "name": "Lost Temple",
+      "type": "race"
+    },
+    "round_dodge_fall": {
+      "name": "Fruit Chute",
+      "type": "race"
+    },
+    "round_door_dash": {
+      "name": "Door Dash",
+      "type": "race"
+    },
+    "round_drumtop": {
+      "name": "Lily Leapers",
+      "type": "race"
+    },
+    "round_egg_grab": {
+      "name": "Egg Scramble",
+      "type": "team"
+    },
+    "round_egg_grab_02": {
+      "name": "Egg Siege",
+      "type": "team"
+    },
+    "round_fall_ball": {
+      "name": "Fall Ball",
+      "type": "team"
+    },
+    "round_fall_ball_60_players": {
+      "name": "Fall Ball",
+      "type": "team"
+    },
+    "round_fall_mountain": {
+      "name": "Fall Mountain",
+      "type": "race"
+    },
+    "round_fall_mountain_hub_complete": {
+      "name": "Fall Mountain",
+      "type": "final"
+    },
+    "round_ffa_button_bashers": {
+      "name": "Frantic Factory",
+      "type": "hunt"
+    },
+    "round_ffa_button_bashers_squads_almond": {
+      "name": "Frantic Factory",
+      "type": "hunt"
+    },
+    "round_floor_fall": {
+      "name": "Hex-A-Gone",
+      "type": "survival"
+    },
+    "round_follow_the_line": {
+      "name": "Puzzle Path",
+      "type": "race"
+    },
+    "round_follow-the-leader": {
+      "name": "Leading Light",
+      "type": "hunt"
+    },
+    "round_follow-the-leader_s6_launch": {
+      "name": "Leading Light",
+      "type": "hunt"
+    },
+    "round_fruit_bowl": {
+      "name": "Sum Fruit",
+      "type": "logic"
+    },
+    "round_fruitpunch": {
+      "name": "Big Shots",
+      "type": "survival"
+    },
+    "round_fruitpunch_s4_show": {
+      "name": "Big Shots",
+      "type": "survival"
+    },
+    "round_gauntlet_01": {
+      "name": "Hit Parade",
+      "type": "race"
+    },
+    "round_gauntlet_02": {
+      "name": "Dizzy Heights",
+      "type": "race"
+    },
+    "round_gauntlet_03": {
+      "name": "The Whirlygig",
+      "type": "race"
+    },
+    "round_gauntlet_04": {
+      "name": "Knight Fever",
+      "type": "race"
+    },
+    "round_gauntlet_05": {
+      "name": "Tundra Run",
+      "type": "race"
+    },
+    "round_gauntlet_06": {
+      "name": "Skyline Stumble",
+      "type": "race"
+    },
+    "round_gauntlet_07": {
+      "name": "Treetop Tumble",
+      "type": "race"
+    },
+    "round_gauntlet_08": {
+      "name": "Party Promenade",
+      "type": "race"
+    },
+    "round_gauntlet_09": {
+      "name": "Track Attack",
+      "type": "race"
+    },
+    "round_gauntlet_09_symphony_launch_show": {
+      "name": "Track Attack",
+      "type": "race"
+    },
+    "round_gauntlet_10": {
+      "name": "Space Race",
+      "type": "race"
+    },
+    "round_gauntlet_10_almond": {
+      "name": "Space Race",
+      "type": "race"
+    },
+    "round_hallow_heights": {
+      "name": "Hallow Heights",
+      "type": "race"
+    },
+    "round_hexaghoul": {
+      "name": "Hex-A-Ghoul",
+      "type": "survival"
+    },
+    "round_hexaring": {
+      "name": "Hex-A-Ring",
+      "type": "survival"
+    },
+    "round_hexaring_symphony_launch_show": {
+      "name": "Hex-A-Ring",
+      "type": "final"
+    },
+    "round_hexsnake": {
+      "name": "Hex-A-Terrestrial",
+      "type": "survival"
+    },
+    "round_hexsnake_almond": {
+      "name": "Hex-A-Terrestrial",
+      "type": "final"
+    },
+    "round_hoops": {
+      "name": "Hoopsie Daisy",
+      "type": "team"
+    },
+    "round_hoops_blockade_solo": {
+      "name": "Hoopsie Legends",
+      "type": "hunt"
+    },
+    "round_hoops_revenge": {
+      "name": "Bounce Party",
+      "type": "hunt"
+    },
+    "round_hoops_revenge_symphony_launch_show": {
+      "name": "Bounce Party",
+      "type": "hunt"
+    },
+    "round_hoverboardsurvival": {
+      "name": "Hoverboard Heroes",
+      "type": "survival"
+    },
+    "round_hoverboardsurvival_s4_show": {
+      "name": "Hoverboard Heroes",
+      "type": "survival"
+    },
+    "round_hoverboardsurvival2": {
+      "name": "Hyperdrive Heroes",
+      "type": "survival"
+    },
+    "round_hoverboardsurvival2_almond": {
+      "name": "Hyperdrive Heroes",
+      "type": "survival"
+    },
+    "round_iceclimb": {
+      "name": "Freezy Peak",
+      "type": "race"
+    },
+    "round_invisibeans": {
+      "name": "Sweet Thieves",
+      "type": "team"
+    },
+    "round_jinxed": {
+      "name": "Jinxed",
+      "type": "team"
+    },
+    "round_jump_club": {
+      "name": "Jump Club",
+      "type": "survival"
+    },
+    "round_jump_showdown": {
+      "name": "Jump Showdown",
+      "type": "survival"
+    },
+    "round_king_of_the_hill": {
+      "name": "Bubble Trouble",
+      "type": "hunt"
+    },
+    "round_kraken_attack": {
+      "name": "Kraken Slam",
+      "type": "survival"
+    },
+    "round_lava": {
+      "name": "Slime Climb",
+      "type": "race"
+    },
+    "round_match_fall": {
+      "name": "Perfect Match",
+      "type": "logic"
+    },
+    "round_penguin_solos": {
+      "name": "Pegwin Pool Party",
+      "type": "hunt"
+    },
+    "round_pipedup": {
+      "name": "Pipe Dream",
+      "type": "race"
+    },
+    "round_pipedup_s6_launch": {
+      "name": "Pipe Dream",
+      "type": "race"
+    },
+    "round_pixelperfect": {
+      "name": "Pixel Painters",
+      "type": "logic"
+    },
+    "round_pixelperfect_almond": {
+      "name": "Pixel Painters",
+      "type": "race"
+    },
+    "round_pumpkin_pie": {
+      "name": "Treat Thieves",
+      "type": "team"
+    },
+    "round_robotrampage_arena_2": {
+      "name": "Stompin' Ground",
+      "type": "survival"
+    },
+    "round_rocknroll": {
+      "name": "Rock 'n' Roll",
+      "type": "team"
+    },
+    "round_royal_rumble": {
+      "name": "Royal Fumble",
+      "type": "hunt"
+    },
+    "round_satellitehoppers": {
+      "name": "Cosmic Highway",
+      "type": "race"
+    },
+    "round_satellitehoppers_almond": {
+      "name": "Cosmic Highway",
+      "type": "race"
+    },
+    "round_see_saw": {
+      "name": "See Saw",
+      "type": "race"
+    },
+    "round_see_saw_360": {
+      "name": "Full Tilt",
+      "type": "race"
+    },
+    "round_short_circuit_2": {
+      "name": "Speed Circuit",
+      "type": "race"
+    },
+    "round_short_circuit_2_symphony_launch_show": {
+      "name": "Speed Circuit",
+      "type": "race"
+    },
+    "round_shortcircuit": {
+      "name": "Short Circuit",
+      "type": "race"
+    },
+    "round_skeefall": {
+      "name": "Ski Fall",
+      "type": "race"
+    },
+    "round_slide_chute": {
+      "name": "Speed Slider",
+      "type": "race"
+    },
+    "round_slimeclimb_2": {
+      "name": "The Slimescraper",
+      "type": "race"
+    },
+    "round_slippy_slide": {
+      "name": "Hoop Chute",
+      "type": "hunt"
+    },
+    "round_snowballsurvival": {
+      "name": "Snowball Survival",
+      "type": "survival"
+    },
+    "round_snowy_scrap": {
+      "name": "Snowy Scrap",
+      "type": "team"
+    },
+    "round_spin_ring": {
+      "name": "The Swiveller",
+      "type": "survival"
+    },
+    "round_spin_ring_symphony_launch_show": {
+      "name": "The Swiveller",
+      "type": "survival"
+    },
+    "round_starlink": {
+      "name": "Starchart",
+      "type": "race"
+    },
+    "round_starlink_almond": {
+      "name": "Starchart",
+      "type": "race"
+    },
+    "round_tail_tag": {
+      "name": "Tail Tag",
+      "type": "hunt"
+    },
+    "round_territory_control": {
+      "name": "Power Trip",
+      "type": "team"
+    },
+    "round_territory_control_s4_show": {
+      "name": "Power Trip",
+      "type": "team"
+    },
+    "round_thin_ice": {
+      "name": "Thin Ice",
+      "type": "survival"
+    },
+    "round_tip_toe": {
+      "name": "Tip Toe",
+      "type": "race"
+    },
+    "round_tiptoefinale": {
+      "name": "Tip Toe Finale",
+      "type": "race"
+    },
+    "round_tiptoefinale_almond": {
+      "name": "Tip Toe Finale",
+      "type": "final"
+    },
+    "round_tunnel": {
+      "name": "Roll Out",
+      "type": "survival"
+    },
+    "round_tunnel_final": {
+      "name": "Roll Off",
+      "type": "survival"
+    },
+    "round_tunnel_race": {
+      "name": "Roll On",
+      "type": "race"
+    },
+    "round_wall_guys": {
+      "name": "Wall Guys",
+      "type": "race"
+    },
+    "round_zombean": {
+      "name": "Zombeanland",
+      "type": "survival"
+    },
+    "wle_s10_orig_round_001": {
+      "name": "Beans Ahoy!",
+      "type": "race"
+    },
+    "wle_s10_orig_round_002": {
+      "name": "Airborne Antics",
+      "type": "race"
+    },
+    "wle_s10_orig_round_003": {
+      "name": "Scythes & Roundabouts",
+      "type": "race"
+    },
+    "wle_s10_orig_round_004": {
+      "name": "Cardio Runners",
+      "type": "race"
+    },
+    "wle_s10_orig_round_005": {
+      "name": "Fan Flingers",
+      "type": "race"
+    },
+    "wle_s10_orig_round_006": {
+      "name": "Uphill Struggle",
+      "type": "race"
+    },
+    "wle_s10_orig_round_007": {
+      "name": "Spinner Sprint",
+      "type": "race"
+    },
+    "wle_s10_orig_round_008": {
+      "name": "Lane Changers",
+      "type": "race"
+    },
+    "wle_s10_orig_round_009": {
+      "name": "Gentle Gauntlet",
+      "type": "race"
+    },
+    "wle_s10_orig_round_010": {
+      "name": "Square Up",
+      "type": "final"
+    },
+    "wle_s10_orig_round_011": {
+      "name": "Slide Showdown",
+      "type": "final"
+    },
+    "wle_s10_orig_round_012": {
+      "name": "Up & Down",
+      "type": "race"
+    },
+    "wle_s10_orig_round_013": {
+      "name": "Choo Choo Challenge",
+      "type": "race"
+    },
+    "wle_s10_orig_round_014": {
+      "name": "Runner Beans",
+      "type": "race"
+    },
+    "wle_s10_orig_round_015": {
+      "name": "Disc Dashers",
+      "type": "race"
+    },
+    "wle_s10_orig_round_016": {
+      "name": "Two Faced",
+      "type": "race"
+    },
+    "wle_s10_orig_round_017": {
+      "name": "Bellyflop Battlers",
+      "type": "final"
+    },
+    "wle_s10_orig_round_018": {
+      "name": "Apples & Oranges",
+      "type": "final"
+    },
+    "wle_s10_orig_round_019": {
+      "name": "Blueberry Bombardment",
+      "type": "race"
+    },
+    "wle_s10_orig_round_020": {
+      "name": "Chuting Stars",
+      "type": "race"
+    },
+    "wle_s10_orig_round_021": {
+      "name": "Slimy Slopes",
+      "type": "race"
+    },
+    "wle_s10_orig_round_022": {
+      "name": "Circuit Breakers",
+      "type": "race"
+    },
+    "wle_s10_orig_round_023": {
+      "name": "Winding Walkways",
+      "type": "race"
+    },
+    "wle_s10_orig_round_024": {
+      "name": "Wooseleum",
+      "type": "final"
+    },
+    "wle_s10_orig_round_025": {
+      "name": "Mount Boom",
+      "type": "final"
+    },
+    "wle_s10_orig_round_026": {
+      "name": "Hyperlink Hijinks",
+      "type": "race"
+    },
+    "wle_s10_orig_round_027": {
+      "name": "Fan Frolics",
+      "type": "race"
+    },
+    "wle_s10_orig_round_028": {
+      "name": "Windmill Road",
+      "type": "race"
+    },
+    "wle_s10_orig_round_029": {
+      "name": "Conveyor Clash",
+      "type": "race"
+    },
+    "wle_s10_orig_round_030": {
+      "name": "Mega Monument",
+      "type": "final"
+    },
+    "wle_s10_orig_round_031": {
+      "name": "Transfer Turnpike",
+      "type": "final"
+    },
+    "wle_s10_orig_round_032": {
+      "name": "Fortress Frolics",
+      "type": "race"
+    },
+    "wle_s10_orig_round_033": {
+      "name": "Super Door Dash",
+      "type": "race"
+    },
+    "wle_s10_orig_round_034": {
+      "name": "Spiral Of Woo",
+      "type": "race"
+    },
+    "wle_s10_orig_round_035": {
+      "name": "Tornado Trial",
+      "type": "race"
+    },
+    "wle_s10_orig_round_036": {
+      "name": "Hopscotch Havoc",
+      "type": "race"
+    },
+    "wle_s10_orig_round_037": {
+      "name": "Beat Bouncers",
+      "type": "race"
+    },
+    "wle_s10_orig_round_038": {
+      "name": "Blunder Bridges",
+      "type": "race"
+    },
+    "wle_s10_orig_round_039": {
+      "name": "Incline Rewind",
+      "type": "race"
+    },
+    "wle_s10_orig_round_040": {
+      "name": "Prismatic Parade",
+      "type": "race"
+    },
+    "wle_s10_orig_round_041": {
+      "name": "Swept Away",
+      "type": "race"
+    },
+    "wle_s10_orig_round_042": {
+      "name": "Balancing Act",
+      "type": "race"
+    },
+    "wle_s10_orig_round_043": {
+      "name": "Trouble Tower",
+      "type": "race"
+    },
+    "wle_s10_orig_round_044": {
+      "name": "Serpent Slalom",
+      "type": "race"
+    },
+    "wle_s10_orig_round_045": {
+      "name": "Floorless",
+      "type": "race"
+    },
+    "wle_s10_orig_round_046": {
+      "name": "In The Cloud",
+      "type": "race"
+    },
+    "wle_s10_orig_round_047": {
+      "name": "Downstream Duel",
+      "type": "race"
+    },
+    "wle_s10_orig_round_048": {
+      "name": "Lost Palace",
+      "type": "race"
+    },
+    "wle_s10_round_001": {
+      "name": "Digi Trek",
+      "type": "race"
+    },
+    "wle_s10_round_002": {
+      "name": "Shortcut Links",
+      "type": "race"
+    },
+    "wle_s10_round_003": {
+      "name": "Upload Heights",
+      "type": "race"
+    },
+    "wle_s10_round_004": {
+      "name": "Parkour Panic",
+      "type": "final"
+    },
+    "wle_s10_round_005": {
+      "name": "Data Streams",
+      "type": "race"
+    },
+    "wle_s10_round_006": {
+      "name": "Gigabyte Gauntlet",
+      "type": "race"
+    },
+    "wle_s10_round_007": {
+      "name": "Cube Corruption",
+      "type": "race"
+    },
+    "wle_s10_round_008": {
+      "name": "Wham Bam Boom",
+      "type": "race"
+    },
+    "wle_s10_round_009": {
+      "name": "Firewall Finale",
+      "type": "final"
+    },
+    "wle_s10_round_010": {
+      "name": "Pixel Hearts",
+      "type": "race"
+    },
+    "wle_s10_round_011": {
+      "name": "Cyber Circuit",
+      "type": "race"
+    },
+    "wle_s10_round_012": {
+      "name": "Boom Blaster Trial",
+      "type": "race"
+    },
+    "wle_s10_round_share_code": {
+      "name": "Creative Custom",
+      "type": "unknown"
+    }
+  }
+}

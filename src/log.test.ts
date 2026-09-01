@@ -116,3 +116,23 @@ test("a line without a timestamp leaves the stamp off rather than guessing", () 
 test("the win is stamped with the time the victory scene came up", () => {
   expect(parseLog(SHOW)[0]!.wonAt).toBe("20:27:15");
 });
+
+test("a round carries the name and type its level id resolves to", () => {
+  const show = parseLog(`20:00:00.000: [HandleSuccessfulLogin] Selected show is show_solos
+20:00:01.000: [StateGameLoading] Finished loading game level, assumed to be round_tail_tag_solos. Duration: 1s
+20:00:02.000: [StateGameLoading] Finished loading game level, assumed to be round_wall_guys_solos. Duration: 1s
+20:00:03.000: [StateGameLoading] Finished loading game level, assumed to be round_floor_fall_only_finals_v2_final. Duration: 1s
+`)[0]!;
+  expect(show.rounds.map((round) => [round.name, round.type])).toEqual([
+    ["Tail Tag", "hunt"],
+    ["Wall Guys", "race"],
+    ["Hex-A-Gone", "final"],
+  ]);
+});
+
+test("the show's last round is a final whatever the level id is normally played as", () => {
+  const show = parseLog(`20:00:00.000: [HandleSuccessfulLogin] Selected show is show_solos
+20:00:01.000: [StateGameLoading] Finished loading game level, assumed to be round_wall_guys_solos. Duration: 1s
+`)[0]!;
+  expect(show.rounds[0]!.type).toBe("final");
+});

@@ -7,6 +7,7 @@
     "typecheck": "tsc --noEmit",
     "cli": "bun run src/cli.ts",
     "build": "bun run scripts/build.ts",
+    "rounds": "bun run scripts/fetch-rounds.ts",
     "dev": "bun run scripts/serve.ts"
   },
   "devDependencies": {
