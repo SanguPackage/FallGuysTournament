@@ -40,6 +40,13 @@ their FOM name; add `ingame` as people report theirs in the Discord channel.
 
 A player without an `ingame` shows on the leaderboard on zero and cannot be scored.
 
+The admin runs the event instead of competing, and is marked so they stay off the
+leaderboard:
+
+```json
+{ "fom": "Wouter_Van_Schandevijl", "admin": true }
+```
+
 ## Leaderboard
 
 ```bash

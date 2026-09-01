@@ -34,6 +34,8 @@ export interface Player {
   ingame?: string;
   fom: string;
   discord?: string;
+  /** Admins run the event rather than competing, so they are left off the leaderboard. */
+  admin?: boolean;
 }
 
 export interface Players {

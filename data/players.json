@@ -5,7 +5,7 @@
     { "fom": "Greatfather" },
     { "fom": "reach1" },
     { "fom": "muffinman." },
-    { "fom": "Wouter_Van_Schandevijl" },
+    { "fom": "Wouter_Van_Schandevijl", "admin": true },
     { "fom": "Misterstino" },
     { "fom": "GingerBot" },
     { "fom": "Elbanditos" },

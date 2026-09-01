@@ -47,3 +47,22 @@ tbody tr:first-child td.rank,
 tbody tr:first-child .fom { color: var(--accent); }
 
 .empty { color: var(--muted); }
+
+nav {
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+nav a { color: var(--muted); }
+
+nav [aria-current] { color: var(--accent); font-weight: 700; }
+
+h2 { margin: 2rem 0 0.75rem; font-size: 1.15rem; }
+
+p { margin: 0 0 0.75rem; }
+
+td.tier { color: var(--muted); }
+
+.doc th, .doc td { text-align: left; }

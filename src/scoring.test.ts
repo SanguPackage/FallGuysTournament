@@ -259,3 +259,29 @@ test("scoring still reaches a player through their in-game name", () => {
   const rows = score(event, roster);
   expect(rows.find((r) => r.fom === "Ann")!.points).toBe(3);
 });
+
+const withAdmin: Players = {
+  players: [
+    { ingame: "Alpha", fom: "Ann" },
+    { ingame: "Ref", fom: "Wouter", admin: true },
+  ],
+};
+
+test("the admin is left off the leaderboard", () => {
+  const rows = score(emptyEvent(), withAdmin);
+  expect(rows.map((r) => r.fom)).toEqual(["Ann"]);
+});
+
+test("results recorded against the admin score nothing", () => {
+  const event = emptyEvent();
+  event.shows.push({
+    name: "Solos",
+    finalists: ["Ref", "Alpha"],
+    winners: ["Ref"],
+    rounds: [{ map: "Dizzy Heights", type: "race", first: "Ref" }],
+  });
+  const rows = score(event, withAdmin);
+  expect(rows).toHaveLength(1);
+  expect(rows[0]!.fom).toBe("Ann");
+  expect(rows[0]!.points).toBe(1);
+});
