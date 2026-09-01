@@ -26,8 +26,9 @@ search is testable, and a failure to read `/mnt/c/Users` is not fatal:
 SHAREX_DIR  →  $USERPROFILE/Documents/ShareX/Screenshots  →  /mnt/c/Users/*/…same
 ```
 
-The root is scanned recursively, so ShareX's `2026-09` month folder is never hardcoded and a
-session running past midnight into `2026-10` still works.
+Inside the root, only ShareX's month folder for the event is read — `2026-09` for an event
+dated `2026-09-01`. Scanning the whole tree drags in every capture of every earlier month,
+and the event never spans a month boundary.
 
 A capture's time is its mtime. ShareX filenames carry no clock, and copying a file into the
 folder would lose its mtime — a caveat for the README, not a case to handle.

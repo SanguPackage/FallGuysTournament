@@ -25,7 +25,7 @@ async function parsedShows(logPath: string | undefined) {
 async function placed(dir: string | undefined, shows: ParsedShow[], date: string) {
   if (!dir) return [];
   try {
-    return placeShots(await listShots(dir), shows, date);
+    return placeShots(await listShots(dir, date.slice(0, 7)), shows, date);
   } catch {
     return [];
   }

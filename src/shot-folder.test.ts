@@ -5,14 +5,23 @@ import { listShots } from "./shot-folder";
 
 const TAKEN = new Date("2026-09-01T20:25:20");
 
-test("the folder is read down into its month subfolders, images only", async () => {
+async function folder(): Promise<string> {
   const dir = await mkdtemp(`${tmpdir()}/shots-`);
+  await mkdir(`${dir}/2026-08`);
   await mkdir(`${dir}/2026-09`);
+  await writeFile(`${dir}/2026-08/july.png`, "");
   await writeFile(`${dir}/2026-09/one.png`, "");
   await writeFile(`${dir}/2026-09/notes.txt`, "");
   await utimes(`${dir}/2026-09/one.png`, TAKEN, TAKEN);
+  return dir;
+}
 
-  expect(await listShots(dir)).toEqual([
+test("only the event's own month is read, images only", async () => {
+  expect(await listShots(await folder(), "2026-09")).toEqual([
     { file: "2026-09/one.png", takenAt: TAKEN.getTime() },
   ]);
+});
+
+test("a month with no folder yet is empty rather than an error", async () => {
+  expect(await listShots(await folder(), "2026-10")).toEqual([]);
 });
