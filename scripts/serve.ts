@@ -96,18 +96,19 @@ const server = Bun.serve({
       }
     }
 
+    // The admin is rebuilt on every request, so a cached copy is always the stale one.
+    const fresh = (type: string) => ({ "content-type": type, "cache-control": "no-store" });
+
     if (pathname === "/admin" || pathname === "/admin.html") {
-      return new Response(Bun.file("site/admin.html"), {
-        headers: { "content-type": "text/html" },
-      });
+      return new Response(Bun.file("site/admin.html"), { headers: fresh("text/html") });
     }
     if (pathname === "/admin.css") {
-      return new Response(Bun.file("site/admin.css"), { headers: { "content-type": "text/css" } });
+      return new Response(Bun.file("site/admin.css"), { headers: fresh("text/css") });
     }
     if (pathname === "/admin.js") {
       const built = await Bun.build({ entrypoints: ["site/admin.ts"], target: "browser" });
       if (!built.success) return new Response(built.logs.join("\n"), { status: 500 });
-      return new Response(built.outputs[0]!, { headers: { "content-type": "text/javascript" } });
+      return new Response(built.outputs[0]!, { headers: fresh("text/javascript") });
     }
 
     const file = Bun.file(`dist${pathname === "/" ? "/index.html" : pathname}`);
