@@ -24,9 +24,8 @@ body {
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 60rem) 24rem;
+  grid-template-columns: minmax(0, 60rem) minmax(24rem, 1fr);
   gap: 2rem;
-  justify-content: center;
   align-items: start;
 }
 
