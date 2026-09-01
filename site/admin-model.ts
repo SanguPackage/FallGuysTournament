@@ -52,10 +52,13 @@ export function syncDraft(draft: ShowDraft, parsed: ParsedShow): void {
     if (entry && !entry.typeEdited) entry.type = round.type;
   });
 
-  const finalists = parsed.rounds.at(-1)?.present.length ?? 0;
+  const final = parsed.rounds.at(-1);
+  const finalists = final?.present.length ?? 0;
   while (draft.finalists.length < finalists) draft.finalists.push("");
 
-  if (parsed.winnerId !== undefined && draft.winners.length === 0) draft.winners.push("");
+  // Whoever succeeded in the final won it, however many that turns out to be.
+  const won = Math.max(final?.qualified.length ?? 0, parsed.winnerId === undefined ? 0 : 1);
+  while (draft.winners.length < won) draft.winners.push("");
 }
 
 /** Reopens a show already in event.json, so blanks left at save time can still be filled in. */

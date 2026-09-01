@@ -443,3 +443,38 @@ test("a first typed into a hunt round is kept on save", () => {
   draft.rounds.push({ map: "Airtime", type: "hunt", first: "Alpha", typeEdited: true });
   expect(toShow(draft).rounds[0]).toEqual({ map: "Airtime", type: "hunt", first: "Alpha" });
 });
+
+test("the final's survivors give the winner slots, however many there are", () => {
+  const draft = draftFor({ showId: "s", rounds: [], winnerId: undefined }, "Solos");
+
+  syncDraft(draft, {
+    showId: "s",
+    rounds: [
+      {
+        id: "final",
+        isFinal: true,
+        timedOut: false,
+        present: [1, 2, 3],
+        qualified: [1, 2],
+        eliminated: [3],
+      },
+    ],
+    winnerId: undefined,
+  });
+
+  expect(draft.winners).toEqual(["", ""]);
+});
+
+test("a win the server announced with nobody qualifying still gets a slot", () => {
+  const draft = draftFor({ showId: "s", rounds: [], winnerId: undefined }, "Solos");
+
+  syncDraft(draft, {
+    showId: "s",
+    rounds: [
+      { id: "final", isFinal: true, timedOut: true, present: [1], qualified: [], eliminated: [1] },
+    ],
+    winnerId: 1,
+  });
+
+  expect(draft.winners).toEqual([""]);
+});

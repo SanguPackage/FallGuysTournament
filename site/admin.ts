@@ -483,7 +483,7 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
     ),
     selectable(
       el("div", { class: "field" }, [
-        el("label", {}, ["Winners"]),
+        el("label", {}, [`Winners (${winners.length})`]),
         el("div", { class: "names" }, [...winners, addWinner]),
       ]),
       index,
