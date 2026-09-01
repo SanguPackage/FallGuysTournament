@@ -5,6 +5,8 @@ import { findLog, findScreenshotDir } from "../src/windows-path";
 import { publish } from "../src/publish";
 import { EVENT_PATH, PLAYERS_PATH } from "../src/storage";
 import { parseShowOrder } from "../site/rules";
+import { suggestShowName } from "../site/admin-model";
+import type { LiveNow } from "../src/live";
 import type { ParsedShow } from "../src/log";
 import type { TournamentEvent } from "../src/types";
 
@@ -83,6 +85,35 @@ const server = Bun.serve({
     }
     if (request.method === "PUT" && pathname === "/api/event") {
       return writeJson(EVENT_PATH, request);
+    }
+
+    /**
+     * What the game has on screen, which only this machine's log knows. GitHub Pages has no such
+     * file, so the published board falls back to what was recorded.
+     */
+    if (pathname === "/live.json") {
+      const playing = (await parsedShows(await findLog())).at(-1);
+      if (!playing) return json(null);
+
+      const event = (await Bun.file(EVENT_PATH).json()) as TournamentEvent;
+      const recorded = event.shows.map((show) => show.name);
+      const order = parseShowOrder(await Bun.file("docs/rules.md").text());
+      const round = playing.rounds.at(-1);
+
+      // A recorded show without winners is the one still being typed in; anything else means the
+      // lobby has moved on to the next show in the plan.
+      const last = event.shows.at(-1);
+      const typing = last !== undefined && !last.winners?.length;
+
+      const live: LiveNow = {
+        show: typing ? last.name : suggestShowName(order, recorded),
+        showNumber: typing ? event.shows.length : event.shows.length + 1,
+        round: playing.rounds.length,
+        map: round?.name ?? null,
+        type: round ? (round.isFinal ? "final" : round.type) : null,
+        startedAt: round?.startedAt ?? null,
+      };
+      return json(live);
     }
 
     if (request.method === "POST" && pathname === "/api/publish") {

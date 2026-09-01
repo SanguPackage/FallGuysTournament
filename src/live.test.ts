@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import type { ShowInOrder } from "../site/rules";
-import { liveStatus } from "./live";
+import { liveStatus, withLiveLog } from "./live";
 import type { Round, Show, TournamentEvent } from "./types";
 
 const ORDER: ShowInOrder[] = [
@@ -74,4 +74,52 @@ test("a replayed show the order does not list leaves the pips unanchored", () =>
   const status = liveStatus(event([{ name: "Some Replay", rounds: [] }]), ORDER);
   expect(status.orderIndex).toBe(-1);
   expect(status.nextShow).toBeUndefined();
+});
+
+const NOW = {
+  show: "Fan Favourites",
+  showNumber: 2,
+  round: 3,
+  map: "Hex-A-Terrestrial",
+  type: "survival" as const,
+  startedAt: "21:04:11",
+};
+
+test("without the log the status is whatever was recorded", () => {
+  const status = liveStatus(event([{ name: "Solos", rounds: [race("Dizzy Heights")] }]), ORDER);
+  expect(withLiveLog(status, null, ORDER)).toEqual(status);
+});
+
+test("the log says what is on screen, ahead of anything saved", () => {
+  const status = liveStatus(event([{ name: "Solos", rounds: [], winners: ["Alpha"] }]), ORDER);
+  const live = withLiveLog(status, NOW, ORDER);
+  expect(live.state).toBe("playing");
+  expect(live.showName).toBe("Fan Favourites");
+  expect(live.showNumber).toBe(2);
+  expect(live.round).toBe(3);
+});
+
+test("the round on screen is named and typed before a single score is entered", () => {
+  const live = withLiveLog(liveStatus(event([]), ORDER), NOW, ORDER);
+  expect(live.lastRound).toEqual({ map: "Hex-A-Terrestrial", type: "survival" });
+  expect(live.roundLive).toBe(true);
+});
+
+test("the pips and what is up next follow the show the log reports", () => {
+  const live = withLiveLog(liveStatus(event([]), ORDER), NOW, ORDER);
+  expect(live.orderIndex).toBe(1);
+  expect(live.nextShow).toBe("Roll Call");
+});
+
+test("a show still loading its first round keeps the last recorded round on screen", () => {
+  const status = liveStatus(event([{ name: "Solos", rounds: [race("Dizzy Heights")] }]), ORDER);
+  const live = withLiveLog(status, { ...NOW, round: 0, map: null, type: null }, ORDER);
+  expect(live.lastRound?.map).toBe("Dizzy Heights");
+  expect(live.roundLive).toBe(false);
+});
+
+test("a show the order does not list leaves the pips unanchored", () => {
+  const live = withLiveLog(liveStatus(event([]), ORDER), { ...NOW, show: "Some Replay" }, ORDER);
+  expect(live.orderIndex).toBe(-1);
+  expect(live.nextShow).toBeUndefined();
 });

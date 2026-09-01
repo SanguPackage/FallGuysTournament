@@ -1,4 +1,4 @@
-import { liveStatus } from "../src/live";
+import { liveStatus, withLiveLog, type LiveNow } from "../src/live";
 import { score } from "../src/scoring";
 import type { LeaderboardRow, Players, TournamentEvent } from "../src/types";
 import { renderField, renderPodium, renderStandings, renderStatus } from "./render";
@@ -14,6 +14,8 @@ interface Data {
   event: TournamentEvent;
   players: Players;
   order: ShowInOrder[];
+  /** Absent once published: only the machine running Fall Guys serves it. */
+  now: LiveNow | null;
 }
 
 async function fetchJson<T>(path: string): Promise<T> {
@@ -22,17 +24,29 @@ async function fetchJson<T>(path: string): Promise<T> {
   return (await response.json()) as T;
 }
 
+async function liveNow(): Promise<LiveNow | null> {
+  try {
+    return await fetchJson<LiveNow | null>("./live.json");
+  } catch {
+    return null;
+  }
+}
+
 async function load(): Promise<{ data: Data; signature: string }> {
-  const [event, players, order] = await Promise.all([
+  const [event, players, order, now] = await Promise.all([
     fetchJson<TournamentEvent>("./event.json"),
     fetchJson<Players>("./players.json"),
     fetchJson<ShowInOrder[]>("./order.json"),
+    liveNow(),
   ]);
-  return { data: { event, players, order }, signature: JSON.stringify([event, players]) };
+  return {
+    data: { event, players, order, now },
+    signature: JSON.stringify([event, players, now]),
+  };
 }
 
 function render(page: string, data: Data, rows: LeaderboardRow[], movers: Set<string>): string {
-  const status = liveStatus(data.event, data.order);
+  const status = withLiveLog(liveStatus(data.event, data.order), data.now, data.order);
   switch (page) {
     case "dashboard":
       return renderStatus(status, data.order) + renderPodium(rows) + renderField(rows, movers);

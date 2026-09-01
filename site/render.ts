@@ -132,7 +132,7 @@ export function renderStatus(status: LiveStatus, order: ShowInOrder[]): string {
         ${playing}
       </div>
       <div class="mid">
-        <div class="lbl">Last round</div>
+        <div class="lbl">${status.roundLive ? "On screen now" : "Last round"}</div>
         ${lastRoundCell(status)}
         ${pips(order, status.orderIndex)}
       </div>
