@@ -2,6 +2,8 @@ export interface ParsedRound {
   id: string;
   isFinal: boolean;
   timedOut: boolean;
+  /** Everyone who started the round. For the final, this is the set of finalists. */
+  present: number[];
   /** playerIDs in the order the server reported them qualifying. */
   qualified: number[];
   eliminated: number[];
@@ -22,6 +24,7 @@ const SHOW = /\[HandleSuccessfulLogin\] Selected show is (\S+)/;
 /** Covers UGC rounds too, which log no "Game level to load" line. */
 const ROUND = /Finished loading game level, assumed to be ([^.]+)\./;
 const LOCAL_PLAYER = /bootstrap for local player .*playerID = (\d+)/;
+const BOOTSTRAP = /bootstrap for (?:local|remote) player .*playerID = (\d+)/;
 const PROGRESS = /HandleServerPlayerProgress PlayerId=(\d+) is succeeded=(True|False)/;
 const WINNER = /VictoryScene::winnerPlayerId:(\d+)/;
 
@@ -58,15 +61,19 @@ export function parseLog(text: string): ParsedShow[] {
         id: loaded[1]!,
         isFinal: false,
         timedOut: false,
+        present: [],
         qualified: [],
         eliminated: [],
       });
       continue;
     }
 
-    const local = LOCAL_PLAYER.exec(line);
-    if (local) {
-      show.localPlayerId = Number(local[1]);
+    const bootstrap = BOOTSTRAP.exec(line);
+    if (bootstrap) {
+      const local = LOCAL_PLAYER.exec(line);
+      if (local) show.localPlayerId = Number(local[1]);
+      const id = Number(bootstrap[1]);
+      if (round && !round.present.includes(id)) round.present.push(id);
       continue;
     }
 
@@ -86,6 +93,7 @@ export function parseLog(text: string): ParsedShow[] {
     const last = show.rounds.at(-1);
     if (last) last.isFinal = true;
     for (const round of show.rounds) {
+      round.present.sort((a, b) => a - b);
       round.timedOut = round.qualified.length === 0 && round.eliminated.length > 0;
     }
   }

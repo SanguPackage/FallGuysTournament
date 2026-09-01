@@ -37,6 +37,16 @@ test("a round records who qualified, in finish order, and who went out", () => {
   expect(round!.eliminated).toEqual([4]);
 });
 
+test("a round records everyone who started it", () => {
+  const show = parseLog(`
+20:00:00.000: [HandleSuccessfulLogin] Selected show is s IsUltimatePartyEpisode: False
+20:00:01.000: [StateGameLoading] Finished loading game level, assumed to be r. Duration: 1s
+20:00:02.000: [ClientGameManager] Handling bootstrap for remote player FallGuy [2] (x), playerID = 2, squadID = 0
+20:00:03.000: [ClientGameManager] Handling bootstrap for local player FallGuy [3] (x), playerID = 1, squadID = 0
+`)[0]!;
+  expect(show.rounds[0]!.present).toEqual([1, 2]);
+});
+
 test("the referee's own id is read from the local player line", () => {
   expect(parseLog(SHOW)[0]!.localPlayerId).toBe(1);
 });
