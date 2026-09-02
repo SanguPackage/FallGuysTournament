@@ -1,0 +1,27 @@
+{
+  "note": "Screens from the FOM 2026 event, sorted by eye. `trophy` is the pill index trophyPill must return; `first` is who that pill names. `qualified` is the top-right plate as read by eye — 0 means no first finisher exists yet, which is what makes NOT-a-race-wanner a negative.",
+  "folders": {
+    "race-first": { "screen": "toast" },
+    "death": { "screen": null },
+    "victory": { "screen": "winner" },
+    "qualified-board": { "screen": "grid" },
+    "playing": { "screen": null }
+  },
+  "files": {
+    "race-first/FallGuys_client_game_we7SgVnzVx.jpg": { "trophy": 1, "first": "unknowen_11", "qualified": "2/24" },
+    "race-first/FallGuys_client_game_ybZWg3CkaX.jpg": { "trophy": 0, "first": "Sono_seas", "qualified": "1/24" },
+    "race-first/FallGuys_client_game_zP671UNFBg.png": { "trophy": 0, "first": "Farukayaz2609", "qualified": "1/9", "banner": true },
+    "race-first/FallGuys_client_game_NU6RSpz3YV.jpg": { "trophy": 4, "first": "mil00000h", "qualified": "5/11", "banner": true },
+    "race-first/FallGuys_client_game_EkwUNtGCAI.jpg": { "trophy": 1, "first": "mil00000h", "qualified": "2/11", "banner": true },
+    "race-first/FallGuys_client_game_PjjZRjn3sc.png": { "trophy": 1, "first": "Serxav_9", "qualified": "2/23", "pauseMenu": true },
+    "race-first/FallGuys_client_game_QW4uC83fZ1.jpg": { "trophy": 0, "first": "GHL_R4ffy", "qualified": null, "banner": true },
+    "race-first/FallGuys_client_game_lZr34pKyKO.jpg": { "trophy": 0, "first": "S0rr0wsPray3rs15", "qualified": "1/16", "banner": true },
+    "race-first/FallGuys_client_game_7MhRb2vy4Z.png": { "trophy": 0, "first": "unknowen_11", "qualified": "1/15", "banner": true },
+    "race-first/NOT-a-race-wanner.png": { "trophy": null, "qualified": "0/9", "banner": true },
+
+    "death/FallGuys_client_game_gYKiCBTUFe.jpg": { "died": "Farukayaz2609", "eliminatedCount": "1/8" },
+
+    "victory/FallGuys_client_game_ekmlxMYdRM.jpg": { "winner": "GHL_R4ffy" },
+    "victory/FallGuys_client_game_2B0hQQAAxV.jpg": { "winner": "Diego_9942" }
+  }
+}
