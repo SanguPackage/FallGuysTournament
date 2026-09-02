@@ -614,6 +614,10 @@ function renderPublish(): void {
   const input = document.querySelector<HTMLInputElement>("#publish-message")!;
   if (!input.dataset.edited) input.value = defaultMessage(state.event);
 
+  const badge = document.querySelector<HTMLElement>("#publish-badge")!;
+  badge.textContent = state.autoPublish ? "publishing on" : "publishing off";
+  badge.className = state.autoPublish ? "badge on" : "badge off";
+
   document.querySelector("#publish-mode")!.textContent = state.autoPublish
     ? "Every save is committed and pushed. This button is only needed to publish under your own message."
     : "Publishing is off: saves stay on this machine. Restart with bun run live to publish as you go.";
