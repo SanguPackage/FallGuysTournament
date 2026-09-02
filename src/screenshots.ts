@@ -85,6 +85,9 @@ export function absoluteTimes(shows: ParsedShow[], date: string): ShowTimes[] {
   });
 }
 
+/** How long the victory screen is worth grabbing for once the last show has been won. */
+const WINNERS_GRACE = 5 * 60_000;
+
 function windowsFor(shows: ParsedShow[], date: string): Window[] {
   const spans = absoluteTimes(shows, date).map((times, index) => ({
     show: shows[index]!,
@@ -96,7 +99,10 @@ function windowsFor(shows: ParsedShow[], date: string): Window[] {
   spans.forEach((span, showIndex) => {
     if (span.startedAt === undefined) return;
     const ends = spans.slice(showIndex + 1).find((next) => next.startedAt !== undefined);
-    const showEnd = ends?.startedAt ?? Infinity;
+    // A show with no show after it is still being played, so it stays open — unless it was won,
+    // after which anything captured is from whatever the machine did next, not from the show.
+    const showEnd =
+      ends?.startedAt ?? (span.wonAt === undefined ? Infinity : span.wonAt + WINNERS_GRACE);
 
     windows.push({ from: span.startedAt, to: showEnd, showIndex, slot: "show" });
 

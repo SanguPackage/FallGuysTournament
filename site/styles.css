@@ -387,6 +387,8 @@ h2 {
 .rnd .winner.missing { color: #ffb4b4; font-weight: 600; }
 .rnd .through { color: #ffffff8c; font-weight: 700; font-size: 13px; text-align: right; }
 .rnd.final { background: #ffd23f1f; border: 2px solid #ffd23f5c; }
+.rnd .beans { grid-column: 1 / -1; margin-top: 0.15rem; }
+.rnd .beans .bn { font-size: 13px; padding: 0.18rem 0.55rem; }
 
 .beans { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.8rem; }
 
@@ -545,13 +547,14 @@ footer .it .name { font-family: "Bebas Neue", sans-serif; font-size: 21px; lette
 
   .rnd {
     grid-template-columns: 1.5rem 1fr auto;
-    grid-template-areas: "i map type" "i winner winner";
+    grid-template-areas: "i map type" "i winner winner" "beans beans beans";
     row-gap: 0.2rem;
   }
   .rnd .i { grid-area: i; }
   .rnd .map { grid-area: map; }
   .rnd .type { grid-area: type; }
   .rnd .winner { grid-area: winner; }
+  .rnd .beans { grid-area: beans; }
 
   .o {
     grid-template-columns: 2.2rem 1fr auto;

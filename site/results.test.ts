@@ -49,11 +49,11 @@ test("a race still waiting for its winner is not mistaken for a round that score
   expect(html).not.toContain("no points");
 });
 
-test("a show panel colours the field", () => {
+test("a show panel colours each round's badges", () => {
   const html = renderResults([SOLOS], ROSTER);
-  expect(html).toContain(`class="bn won"`);
-  expect(html).toContain(`class="bn through"`);
+  expect(html).toContain(`class="bn playing"`);
   expect(html).toContain(`class="bn out"`);
+  expect(html).toContain(`class="bn won"`);
 });
 
 test("a finished show is crowned with its winners", () => {
@@ -103,22 +103,6 @@ test("a show already typed in is not shown twice", () => {
   expect(html).not.toContain("Playing now");
 });
 
-test("the log alone is enough to list the show being played", () => {
-  expect(renderResults([], ROSTER, NOW)).toContain("Roll Out");
-});
-
-test("between rounds the show is still listed", () => {
-  const html = renderResults([SOLOS], ROSTER, { ...NOW, map: null, type: null });
-  expect(html).toContain("Playing now");
-  expect(html).toContain("Loading the next round");
-});
-
-test("the show being played carries the field like every other box", () => {
-  const html = renderResults([], ROSTER, NOW);
-  // Nothing has been read for it yet, so the whole field is still in.
-  expect([...html.matchAll(/class="bn playing"/g)]).toHaveLength(ROSTER.length);
-});
-
 test("every round the log has loaded for the show being played is listed", () => {
   const html = renderResults([], ROSTER, NOW);
   expect(html).toContain("Wall Guys");
@@ -145,4 +129,72 @@ test("a recorded round says how many the log counted through it", () => {
 test("a round nobody counted says nothing rather than zero", () => {
   const bare: Show = { name: "S", rounds: [{ map: "Whirlygig", type: "race" }] };
   expect(renderResults([bare], ROSTER)).not.toContain("through");
+});
+
+test("the log alone is enough to list the show being played", () => {
+  const html = renderResults([], ROSTER, NOW);
+  expect(html).toContain("Roll Out");
+  expect(html).toContain("Playing now");
+});
+
+test("nothing has been read for the show being played, so its field is still grey", () => {
+  const html = renderResults([], ROSTER, NOW);
+  // Three rounds, each greying the whole roster, because no board has been read for any of them.
+  expect([...html.matchAll(/class="bn playing"/g)]).toHaveLength(ROSTER.length * NOW.rounds.length);
+});
+
+test("between rounds the rounds already loaded are still listed", () => {
+  const html = renderResults([SOLOS], ROSTER, { ...NOW, map: null, type: null });
+  expect(html).toContain("Playing now");
+  expect(html).toContain("Wall Guys");
+  expect(html).not.toContain("on screen");
+});
+
+test("a show with nothing loaded at all says it is waiting", () => {
+  const html = renderResults([], ROSTER, {
+    ...NOW,
+    showNumber: 1,
+    map: null,
+    type: null,
+    rounds: [],
+  });
+  expect(html).toContain("Loading the next round");
+});
+
+test("a first typed into the live show shows up next to its round", () => {
+  const typed: Show = {
+    name: "Solos 2",
+    rounds: [{ map: "Wall Guys", type: "race", first: "Alpha", qualified: ["Alpha", "Bravo"] }],
+  };
+  const html = renderResults([SOLOS, typed], ROSTER, NOW);
+  expect(html).toMatch(/Wall Guys[\s\S]*?Alpha/);
+  expect(html).not.toMatch(/Wall Guys[\s\S]*?first not recorded/);
+});
+
+test("a round the log has loaded but nobody typed still appears on the live show", () => {
+  const typed: Show = { name: "Solos 2", rounds: [{ map: "Wall Guys", type: "race" }] };
+  expect(renderResults([SOLOS, typed], ROSTER, NOW)).toContain("Hoverboard Heroes");
+});
+
+test("the live show is drawn once, not once per source", () => {
+  const typed: Show = { name: "Solos 2", rounds: [{ map: "Wall Guys", type: "race" }] };
+  const html = renderResults([SOLOS, typed], ROSTER, NOW);
+  expect([...html.matchAll(/Solos 2/g)]).toHaveLength(1);
+});
+
+test("a round reds the players it knocked out", () => {
+  const html = renderResults([SOLOS], ROSTER);
+  // Charlie is on nobody's board, so Roll Out is where the roster lost them.
+  expect(html).toMatch(/Roll Out[\s\S]*?bn out[\s\S]*?Charlie/);
+});
+
+test("the final crowns its winner and reds the finalist it beat", () => {
+  const html = renderResults([SOLOS], ROSTER);
+  expect(html).toMatch(/Fall Mountain[\s\S]*?bn won[\s\S]*?Alpha/);
+  expect(html).toMatch(/Fall Mountain[\s\S]*?bn out[\s\S]*?Bravo/);
+});
+
+test("a show no longer carries one field under all its rounds", () => {
+  const html = renderResults([SOLOS], ROSTER);
+  expect([...html.matchAll(/class="beans"/g)]).toHaveLength(SOLOS.rounds.length);
 });

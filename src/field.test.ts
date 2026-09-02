@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { aliveInto, fieldOf } from "./field";
+import { aliveInto, fieldOf, roundFieldsOf } from "./field";
 import type { Player, Show } from "./types";
 
 const ROSTER: Player[] = [
@@ -132,6 +132,107 @@ test("winners lead, then the living, then the out, alphabetically inside each", 
     "Alpha",
     "Delta",
   ]);
+});
+
+function beansOf(show: Show): string[][] {
+  return roundFieldsOf(show, ROSTER).map((round) => round.map((p) => `${p.ingame}:${p.state}`));
+}
+
+test("round one reds everyone the roster lost, board or no board", () => {
+  const show: Show = {
+    name: "Solos",
+    rounds: [{ map: "Dizzy Heights", type: "race", qualified: ["Alpha", "Bravo"] }],
+  };
+  expect(beansOf(show)).toEqual([["Charlie:out", "Delta:out"]]);
+});
+
+test("a round only reds the players it took, not the ones already gone", () => {
+  const show: Show = {
+    name: "Solos",
+    rounds: [
+      { map: "Dizzy Heights", type: "race", qualified: ["Alpha", "Bravo", "Charlie"] },
+      { map: "Roll Out", type: "survival", qualified: ["Alpha"] },
+    ],
+  };
+  expect(beansOf(show)).toEqual([["Delta:out"], ["Bravo:out", "Charlie:out"]]);
+});
+
+test("a round nobody read a board for greys everyone still in", () => {
+  const show: Show = {
+    name: "Solos",
+    rounds: [
+      { map: "Dizzy Heights", type: "race", qualified: ["Alpha", "Bravo", "Charlie"] },
+      { map: "Roll Out", type: "survival" },
+    ],
+  };
+  expect(beansOf(show)).toEqual([
+    ["Delta:out"],
+    ["Alpha:playing", "Bravo:playing", "Charlie:playing"],
+  ]);
+});
+
+test("deaths nobody read surface on the next round that was read", () => {
+  const show: Show = {
+    name: "Solos",
+    rounds: [
+      { map: "Dizzy Heights", type: "race" },
+      { map: "Roll Out", type: "survival", qualified: ["Alpha"] },
+    ],
+  };
+  expect(beansOf(show)).toEqual([
+    ["Alpha:playing", "Bravo:playing", "Charlie:playing", "Delta:playing"],
+    ["Bravo:out", "Charlie:out", "Delta:out"],
+  ]);
+});
+
+test("the final crowns its winners and reds the finalists they beat", () => {
+  const show: Show = {
+    name: "Solos",
+    rounds: [
+      { map: "Dizzy Heights", type: "race", qualified: ["Alpha", "Bravo", "Charlie"] },
+      { map: "Fall Mountain", type: "final" },
+    ],
+    winners: ["Bravo"],
+  };
+  expect(beansOf(show)).toEqual([["Delta:out"], ["Bravo:won", "Alpha:out", "Charlie:out"]]);
+});
+
+test("a final still being played greys its finalists", () => {
+  const show: Show = {
+    name: "Solos",
+    rounds: [
+      { map: "Dizzy Heights", type: "race", qualified: ["Alpha", "Bravo"] },
+      { map: "Fall Mountain", type: "final" },
+    ],
+  };
+  expect(beansOf(show)).toEqual([
+    ["Charlie:out", "Delta:out"],
+    ["Alpha:playing", "Bravo:playing"],
+  ]);
+});
+
+test("a round that took nobody has no badges", () => {
+  const show: Show = {
+    name: "Solos",
+    rounds: [
+      { map: "Dizzy Heights", type: "race", qualified: ["Alpha", "Bravo", "Charlie", "Delta"] },
+    ],
+  };
+  expect(beansOf(show)).toEqual([[]]);
+});
+
+test("a show with no rounds has no badge rows", () => {
+  expect(roundFieldsOf({ name: "Solos", rounds: [] }, ROSTER)).toEqual([]);
+});
+
+test("a badge carries the rounds that player crossed first", () => {
+  const show: Show = {
+    name: "Solos",
+    rounds: [
+      { map: "Dizzy Heights", type: "race", first: "Delta", qualified: ["Alpha", "Bravo"] },
+    ],
+  };
+  expect(roundFieldsOf(show, ROSTER)[0]?.find((p) => p.ingame === "Delta")?.firsts).toEqual([1]);
 });
 
 test("who is still in going into a round is the roster minus every board before it", () => {

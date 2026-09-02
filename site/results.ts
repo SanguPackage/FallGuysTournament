@@ -1,21 +1,37 @@
-import type { LiveNow } from "../src/live";
+import { roundFieldsOf } from "../src/field";
+import { mergeLive, type LiveNow } from "../src/live";
 import type { Player, Round, Show } from "../src/types";
 import { escapeHtml } from "./render";
-import { renderShowField } from "./show-field";
+import { renderRoundBeans } from "./show-field";
 
-function winnerCell(round: Round, show: Show): string {
+function winnerCell(round: Round, show: Show, onScreen: boolean): string {
   if (round.type === "final") {
-    return show.winners?.length
-      ? `<span class="winner">👑 ${show.winners.map(escapeHtml).join(" &amp; ")}</span>`
+    if (show.winners?.length) {
+      return `<span class="winner">👑 ${show.winners.map(escapeHtml).join(" &amp; ")}</span>`;
+    }
+    return onScreen
+      ? `<span class="winner none">on screen</span>`
       : `<span class="winner none">—</span>`;
   }
   if (round.first) return `<span class="winner">${escapeHtml(round.first)}</span>`;
+  if (onScreen) return `<span class="winner none">on screen</span>`;
   return round.type === "race"
     ? `<span class="winner missing">first not recorded</span>`
     : `<span class="winner none">no points</span>`;
 }
 
-function renderShow(show: Show, number: number, live: boolean, players: Player[]): string {
+/**
+ * `onScreen` is the 1-based round the log says is being played, which only the machine running
+ * Fall Guys knows; `null` means nothing is loaded, or nothing is speaking for this show.
+ */
+function renderShow(
+  show: Show,
+  number: number,
+  live: boolean,
+  onScreen: number | null,
+  players: Player[],
+): string {
+  const beans = roundFieldsOf(show, players);
   const rounds = show.rounds
     .map(
       (round, index) => `
@@ -23,8 +39,9 @@ function renderShow(show: Show, number: number, live: boolean, players: Player[]
         <span class="i">${index + 1}</span>
         <span class="map">${escapeHtml(round.map)}</span>
         <span class="type"><span class="tag ${round.type}">${round.type}</span></span>
-        ${winnerCell(round, show)}
+        ${winnerCell(round, show, index + 1 === onScreen)}
         ${round.survivors === undefined ? "" : `<span class="through">${round.survivors} through</span>`}
+        ${renderRoundBeans(beans[index] ?? [])}
       </div>`,
     )
     .join("");
@@ -35,7 +52,12 @@ function renderShow(show: Show, number: number, live: boolean, players: Player[]
       ? `<span class="champ playing">● Playing now</span>`
       : "";
 
-  const field = renderShowField(show, players);
+  const body =
+    show.rounds.length > 0
+      ? `<div class="rounds">${rounds}</div>`
+      : live
+        ? `<p class="empty">Loading the next round…</p>`
+        : `<div class="rounds"></div>`;
 
   return `
     <div class="${live ? "show live" : "show"}">
@@ -45,50 +67,7 @@ function renderShow(show: Show, number: number, live: boolean, players: Player[]
           <h3>${escapeHtml(show.name)}</h3>
           ${badge}
         </header>
-        <div class="rounds">${rounds}</div>
-        ${field}
-      </div>
-    </div>`;
-}
-
-/**
- * The show on screen is not in event.json until it is typed in, so the log speaks for it and the
- * round being played shows up here rather than only once the show is saved.
- */
-function renderPlaying(now: LiveNow, players: Player[]): string {
-  const last = now.rounds.length - 1;
-  const rounds = now.rounds
-    .map((entry, index) => {
-      // Only the log speaks for this show, and it counts survivors without ever naming them.
-      const state = index === last ? "on screen" : "—";
-      const through =
-        entry.qualified === undefined
-          ? ""
-          : `<span class="through">${entry.qualified} through</span>`;
-
-      return `
-      <div class="rnd ${entry.type === "final" ? "final" : ""}">
-        <span class="i">${index + 1}</span>
-        <span class="map">${escapeHtml(entry.map)}</span>
-        <span class="type"><span class="tag ${entry.type}">${entry.type}</span></span>
-        <span class="winner none">${state}</span>
-        ${through}
-      </div>`;
-    })
-    .join("");
-
-  const round = now.map === null ? `<p class="empty">Loading the next round…</p>` : rounds;
-
-  return `
-    <div class="show live">
-      <div class="panel">
-        <header>
-          <span class="num">${now.showNumber}</span>
-          <h3>${escapeHtml(now.show)}</h3>
-          <span class="champ playing">● Playing now</span>
-        </header>
-        <div class="rounds">${round}</div>
-        ${renderShowField({ name: now.show, rounds: [] }, players)}
+        ${body}
       </div>
     </div>`;
 }
@@ -98,20 +77,22 @@ export function renderResults(
   players: Player[],
   now: LiveNow | null = null,
 ): string {
-  const unrecorded = now !== null && now.showNumber > shows.length;
-  const playing = unrecorded ? renderPlaying(now, players) : "";
+  // The log runs ahead of what has been typed in, so the show on screen may have no entry yet.
+  // Clamping keeps it on the end of the list rather than dropping it when a show went unrecorded.
+  const liveIndex = now === null ? -1 : Math.max(0, Math.min(now.showNumber - 1, shows.length));
+  const panels = [...shows];
+  if (now !== null) panels[liveIndex] = mergeLive(shows[liveIndex], now);
 
-  if (shows.length === 0) {
-    return playing || `<p class="empty">No shows played yet.</p>`;
-  }
+  if (panels.length === 0) return `<p class="empty">No shows played yet.</p>`;
 
-  const last = shows.length - 1;
-  const recorded = shows
-    .map((show, index) =>
-      renderShow(show, index + 1, !unrecorded && index === last && !show.winners?.length, players),
-    )
+  const onScreen = now !== null && now.map !== null ? now.rounds.length : null;
+  const current = liveIndex >= 0 ? liveIndex : panels.length - 1;
+
+  return panels
+    .map((show, index) => {
+      const live = index === current && !show.winners?.length;
+      return renderShow(show, index + 1, live, live ? onScreen : null, players);
+    })
     .reverse()
     .join("");
-
-  return playing + recorded;
 }

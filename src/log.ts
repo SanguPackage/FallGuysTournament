@@ -46,6 +46,35 @@ const BOOTSTRAP = /bootstrap for (?:local|remote) player .*playerID = (\d+)/;
 const PROGRESS = /HandleServerPlayerProgress PlayerId=(\d+) is succeeded=(True|False)/;
 const WINNER = /VictoryScene::winnerPlayerId:(\d+)/;
 
+/** The only lines carrying a date, and they carry it in local time next to the UTC clock stamp. */
+const DATED = /^(\d\d):(\d\d):(\d\d)\.\d+: (\d{4}-\d\d-\d\d)T(\d\d):(\d\d):(\d\d)/;
+
+const secondsOfDay = (h: string, m: string, s: string) =>
+  Number(h) * 3600 + Number(m) * 60 + Number(s);
+
+/**
+ * The UTC day every stamp in the log belongs to, which is the day a capture's mtime has to be
+ * measured against. Stamps are UTC with no date and the dated lines are local, so the gap between
+ * the two clocks on one such line is the offset that turns its local date back into the UTC one.
+ */
+export function logDate(text: string): string | undefined {
+  for (const line of text.split("\n")) {
+    const found = DATED.exec(line);
+    if (!found) continue;
+    const [, utcH, utcM, utcS, date, localH, localM, localS] = found;
+    const wall = Date.parse(`${date}T${localH}:${localM}:${localS}Z`);
+
+    // The two clocks are read a moment apart, and no zone is off by a fraction of a quarter hour.
+    let offset = secondsOfDay(localH!, localM!, localS!) - secondsOfDay(utcH!, utcM!, utcS!);
+    offset = Math.round(offset / 900) * 900;
+    if (offset > 14 * 3600) offset -= 86_400;
+    if (offset < -12 * 3600) offset += 86_400;
+
+    return new Date(wall - offset * 1000).toISOString().slice(0, 10);
+  }
+  return undefined;
+}
+
 export function parseLog(text: string): ParsedShow[] {
   const shows: ParsedShow[] = [];
   let lobbySize: number | undefined;

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { parseLog } from "./log";
+import { logDate, parseLog } from "./log";
 
 const SHOW = `
 20:25:00.656: [Matchmaking] [StatePrivateLobby] Send Start Match Command - players in queued reached: 4 players
@@ -195,4 +195,28 @@ test("a round nobody qualified from records no first", () => {
 20:00:09.000: ClientGameManager::HandleServerPlayerProgress PlayerId=2 is succeeded=False
 `)[0]!;
   expect(show.rounds[0]!.firstQualifiedAt).toBeUndefined();
+});
+
+test("the log's day is the UTC day its clock stamps belong to", () => {
+  const dated = `
+20:52:06.410: 2026-09-02T22:52:00.576 NativePlugin (INFORM): about to look with exists
+20:52:07.000: [Matchmaking] Send Start Match Command - players in queued reached: 4 players
+`;
+  expect(logDate(dated)).toBe("2026-09-02");
+});
+
+test("a session started after local midnight still reads as the UTC day before", () => {
+  expect(logDate("22:30:05.000: 2026-09-03T00:30:00.000 NativePlugin (INFORM): x\n")).toBe(
+    "2026-09-02",
+  );
+});
+
+test("a zone behind UTC rolls the day forward", () => {
+  expect(logDate("03:30:02.000: 2026-09-02T22:30:00.000 NativePlugin (INFORM): x\n")).toBe(
+    "2026-09-03",
+  );
+});
+
+test("a log with no dated line has no day", () => {
+  expect(logDate(SHOW)).toBeUndefined();
 });
