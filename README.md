@@ -210,6 +210,19 @@ Only blank fields are filled, and a filled field is ringed in green with the cap
 on hover. Type over one and it is yours — nothing later overwrites it, and clearing it on purpose
 does not bring the name back.
 
+### Scoring the reading
+
+```bash
+bun run scripts/ocr-score.ts
+```
+
+Reads the boards listed in [data/ocr-truth.json](data/ocr-truth.json) — named by eye, in board
+order — and reports how many names come back exactly, the character error rate, and how many reach
+the right roster entry. That last number is the one to move: a board's own names stand in for the
+roster, so matching is measurable without a capture of the tournament.
+
+Captures are never committed, so a board the file names that is not on this machine is skipped.
+
 Not read: the lobby's **View Names** screen, whose nametags follow the beans around in 3D and
 overlap into pileups in a full lobby, and any name not written in the Latin alphabet.
 
