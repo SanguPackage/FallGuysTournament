@@ -32,6 +32,10 @@ body {
 
 main { min-width: 0; }
 
+/* The captures only illustrate the shows, so the other tabs take the width instead. */
+.layout.wide { grid-template-columns: minmax(0, 1fr); }
+.layout.wide .shot-panel { display: none; }
+
 .shot-panel {
   position: sticky;
   top: 2rem;
@@ -94,7 +98,21 @@ h2 { margin: 0 0 0.75rem; font-size: 1.15rem; }
 /* Off is the quiet state that loses work, so it is the one that has to catch the eye. */
 .badge.off { background: var(--bad); color: #12121a; }
 
-.subtitle { margin: 0.25rem 0 2rem; color: var(--muted); }
+.tabs { display: flex; gap: 0.25rem; border-bottom: 1px solid var(--line); margin: 1.5rem 0 0; }
+.tabs button {
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--muted);
+  padding: 0.5rem 0.9rem;
+}
+.tabs button:hover { color: var(--fg); }
+.tabs button.on { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+.paths { display: grid; grid-template-columns: max-content 1fr; gap: 0.4rem 1rem; margin: 0; }
+.paths dt { color: var(--muted); font-size: 0.85rem; }
+.paths dd { margin: 0; word-break: break-all; }
 
 .empty, .hint { color: var(--muted); font-size: 0.85rem; }
 

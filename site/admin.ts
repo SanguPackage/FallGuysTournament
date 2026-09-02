@@ -59,6 +59,7 @@ type ShotSize = "thumb" | "fit" | "full";
  * and refolding and re-zooming a dozen captures afterwards would make that too expensive to do.
  */
 const COLLAPSED_KEY = "fallguys.admin.collapsed";
+const TAB_KEY = "fallguys.admin.tab";
 const SIZES_KEY = "fallguys.admin.sizes";
 const SCROLL_KEY = "fallguys.admin.scroll";
 
@@ -117,6 +118,19 @@ function restoreFocus(focus: Focus | undefined): void {
   if (!input) return;
   input.focus();
   if (focus.start !== null) input.setSelectionRange(focus.start, focus.end ?? focus.start);
+}
+
+function showTab(tab: string): void {
+  document.querySelectorAll<HTMLElement>("[data-tab]").forEach((button) => {
+    const on = button.dataset.tab === tab;
+    button.classList.toggle("on", on);
+    button.setAttribute("aria-selected", String(on));
+  });
+  document.querySelectorAll<HTMLElement>("[data-panel]").forEach((panel) => {
+    panel.hidden = panel.dataset.panel !== tab;
+  });
+  document.querySelector(".layout")!.classList.toggle("wide", tab !== "shows");
+  remember(TAB_KEY, [tab]);
 }
 
 function status(id: string, message: string, ok = true): void {
@@ -721,10 +735,15 @@ async function watchLog(): Promise<void> {
 async function main(): Promise<void> {
   state = (await (await fetch("/api/state")).json()) as State;
   selectedShow = state.event.shows.length;
-  document.querySelector("#log-path")!.textContent = [
-    state.logPath ? `Reading ${state.logPath}` : "No Fall Guys log found",
-    state.shotDir ? `Screenshots from ${state.shotDir}` : "No ShareX folder found",
-  ].join(" · ");
+  document.querySelector("#log-path")!.textContent =
+    state.logPath ?? "No Fall Guys log found. Set FALLGUYS_LOG and restart.";
+  document.querySelector("#shot-dir")!.textContent =
+    state.shotDir ?? "No ShareX folder found. Set SHAREX_DIR and restart.";
+
+  document.querySelectorAll<HTMLElement>("[data-tab]").forEach((button) => {
+    button.addEventListener("click", () => showTab(button.dataset.tab!));
+  });
+  showTab(stored<string>(TAB_KEY)[0] ?? "shows");
 
   const panel = document.querySelector<HTMLElement>("#shots")!;
   let pending: ReturnType<typeof setTimeout> | undefined;
