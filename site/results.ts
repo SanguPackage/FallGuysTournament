@@ -1,3 +1,4 @@
+import type { LiveNow } from "../src/live";
 import type { Round, Show } from "../src/types";
 import { escapeHtml } from "./render";
 
@@ -50,12 +51,50 @@ function renderShow(show: Show, number: number, live: boolean): string {
     </div>`;
 }
 
-export function renderResults(shows: Show[]): string {
-  if (shows.length === 0) return `<p class="empty">No shows played yet.</p>`;
+/**
+ * The show on screen is not in event.json until it is typed in, so the log speaks for it and the
+ * round being played shows up here rather than only once the show is saved.
+ */
+function renderPlaying(now: LiveNow): string {
+  const round =
+    now.map === null
+      ? `<p class="empty">Loading the next round…</p>`
+      : `
+      <div class="rnd ${now.type === "final" ? "final" : ""}">
+        <span class="i">${now.round}</span>
+        <span class="map">${escapeHtml(now.map)}</span>
+        <span class="type"><span class="tag ${now.type}">${now.type}</span></span>
+        <span class="winner none">on screen</span>
+      </div>`;
+
+  return `
+    <div class="show live">
+      <div class="panel">
+        <header>
+          <span class="num">${now.showNumber}</span>
+          <h3>${escapeHtml(now.show)}</h3>
+          <span class="champ playing">● Playing now</span>
+        </header>
+        <div class="rounds">${round}</div>
+      </div>
+    </div>`;
+}
+
+export function renderResults(shows: Show[], now: LiveNow | null = null): string {
+  const unrecorded = now !== null && now.showNumber > shows.length;
+  const playing = unrecorded ? renderPlaying(now) : "";
+
+  if (shows.length === 0) {
+    return playing || `<p class="empty">No shows played yet.</p>`;
+  }
 
   const last = shows.length - 1;
-  return shows
-    .map((show, index) => renderShow(show, index + 1, index === last && !show.winners?.length))
+  const recorded = shows
+    .map((show, index) =>
+      renderShow(show, index + 1, !unrecorded && index === last && !show.winners?.length),
+    )
     .reverse()
     .join("");
+
+  return playing + recorded;
 }

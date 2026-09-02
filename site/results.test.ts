@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import type { LiveNow } from "../src/live";
 import type { Show } from "../src/types";
 import { renderResults } from "./results";
 
@@ -66,4 +67,35 @@ test("map names are escaped", () => {
   const html = renderResults([{ name: "<b>", rounds: [{ map: "A&B", type: "race" }] }]);
   expect(html).not.toContain("<b>");
   expect(html).toContain("A&amp;B");
+});
+
+const NOW: LiveNow = {
+  show: "Solos 2",
+  showNumber: 2,
+  round: 3,
+  map: "Roll Out",
+  type: "race",
+  startedAt: "01:27:40",
+};
+
+test("the round on screen is listed before anything recorded", () => {
+  const html = renderResults([SOLOS], NOW);
+  expect(html).toContain("Playing now");
+  expect(html).toContain("Roll Out");
+  expect(html.indexOf("Solos 2")).toBeLessThan(html.indexOf("Solos<"));
+});
+
+test("a show already typed in is not shown twice", () => {
+  const html = renderResults([SOLOS], { ...NOW, showNumber: 1 });
+  expect(html).not.toContain("Playing now");
+});
+
+test("the log alone is enough to list the show being played", () => {
+  expect(renderResults([], NOW)).toContain("Roll Out");
+});
+
+test("between rounds the show is still listed", () => {
+  const html = renderResults([SOLOS], { ...NOW, map: null, type: null });
+  expect(html).toContain("Playing now");
+  expect(html).toContain("Loading the next round");
 });
