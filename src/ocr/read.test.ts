@@ -17,6 +17,16 @@ test(
 );
 
 test(
+  "a short name on the winner plate is read like any other",
+  async () => {
+    const read = await readShot("src/ocr/samples/winner-short.jpg");
+    expect(read.screen).toBe("winner");
+    expect(assign(read.tokens.map(cleanToken), ["Luka_6_5"])[0]!.name).toBe("Luka_6_5");
+  },
+  120_000,
+);
+
+test(
   "the toast names whoever holds the trophy",
   async () => {
     const read = await readShot("src/ocr/samples/toast.jpg");

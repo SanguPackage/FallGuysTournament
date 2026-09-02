@@ -1,4 +1,4 @@
-import { createWorker, type Worker } from "tesseract.js";
+import { createWorker, PSM, type Worker } from "tesseract.js";
 import { frameFrom, type Frame } from "./frame";
 import { nameBand, qualifiedCards } from "./grid";
 import { identify, type Screen } from "./recognizers";
@@ -18,7 +18,11 @@ const WINNER_PLATE = { x: 855 / 1920, y: 915 / 1080, w: 260 / 1920, h: 44 / 1080
 
 /** The toast pills are pale, so their text needs a higher cutoff than the rest. */
 const CUTOFF = { grid: 190, winner: 190, toast: 195 } as const;
-const SCALE = { grid: 6, winner: 6, toast: 8 } as const;
+/**
+ * Enough to read a 15px band, no more: the winner plate's text is already tall, and blown up six
+ * times Tesseract returns nothing at all for some names while reading others perfectly.
+ */
+const SCALE = { grid: 6, winner: 2, toast: 8 } as const;
 
 let worker: Worker | undefined;
 
@@ -33,9 +37,17 @@ export async function closeReader(): Promise<void> {
   worker = undefined;
 }
 
-async function textIn(frame: Frame, box: Box, cutoff: number, scale: number): Promise<string> {
+async function textIn(
+  frame: Frame,
+  box: Box,
+  cutoff: number,
+  scale: number,
+  mode: PSM = PSM.AUTO,
+): Promise<string> {
   const png = await maskToPng(frame, box, cutoff, scale);
-  const { data } = await (await ocrWorker()).recognize(png);
+  const worker = await ocrWorker();
+  await worker.setParameters({ tessedit_pageseg_mode: mode });
+  const { data } = await worker.recognize(png);
   return data.text.trim().replace(/\s+/g, " ");
 }
 
@@ -64,7 +76,15 @@ export async function readShot(path: string): Promise<ShotRead> {
   }
 
   if (screen === "winner") {
-    return { screen, tokens: [await textIn(frame, winnerBox(frame), CUTOFF.winner, SCALE.winner)] };
+    // One name on one line: left to work it out, Tesseract sometimes decides there is no text.
+    const plate = await textIn(
+      frame,
+      winnerBox(frame),
+      CUTOFF.winner,
+      SCALE.winner,
+      PSM.SINGLE_LINE,
+    );
+    return { screen, tokens: [plate] };
   }
 
   const pill = trophyPill(frame)!;
