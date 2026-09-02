@@ -384,6 +384,9 @@ function renderShots(): void {
   target.replaceChildren(
     el("h2", {}, [`Show ${selectedShow + 1} · ${SLOT_LABELS[selection.slot]}`]),
     ...shotImages(shotsForSlot(state.shots, selectedShow, selection)),
+    ...(selection.slot === "all"
+      ? []
+      : [catchAll(SLOT_LABELS.all, shotsForSlot(state.shots, selectedShow, { slot: "all" }))]),
     catchAll(
       SLOT_LABELS.unmatched,
       shotsForSlot(state.shots, selectedShow, { slot: "unmatched" }),
