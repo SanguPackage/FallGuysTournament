@@ -19,8 +19,9 @@ Simultaneous winners split the 5, rounded down.
 ## Running the admin
 
 ```bash
-bun run live   # every save is committed and pushed
-bun run dev    # saves stay on this machine
+bun run live            # every save is committed and pushed
+bun run dev             # saves stay on this machine
+bun run live --record    # and record the screen — see below
 ```
 
 Both serve the admin on <http://localhost:3000/admin> and the board beside it.
@@ -212,17 +213,22 @@ folder against each file's modified time, so restarting the server does not re-r
 
 ## Capturing the screens automatically
 
-`bun run live` records the screen for the whole event and cuts the frames the reader needs out of
-the recording afterwards, so nothing has to be shot by hand. The screen naming who finished first
-can be gone in a fraction of a second when a dozen beans qualify together, and no capture that
-reacts to an event can catch it.
+Asked for with `--record`, the server records the screen for the whole event and cuts the frames the
+reader needs out of the recording afterwards, so nothing has to be shot by hand. The screen naming
+who finished first can be gone in a fraction of a second when a dozen beans qualify together, and no
+capture that reacts to an event can catch it.
 
 Frames are found by the clock stamp **inside** the log line, never by when the line arrived, so a
 log that flushed late still names the right frame. The same recording is cut into one mp4 per show.
 
+**Nothing is recorded without `--record`.** It grabs a whole monitor and writes gigabytes an hour,
+so neither `bun run dev` nor `bun run live` starts it on its own.
+
 ```bash
-CAPTURE_OUTPUT=1 bun run live
+CAPTURE_OUTPUT=1 bun run live --record
 ```
+
+The console says `Recording  on` with the folder, or `off`, on every start.
 
 | Setting          | Default                                  | What it is                                          |
 |------------------|------------------------------------------|-----------------------------------------------------|
