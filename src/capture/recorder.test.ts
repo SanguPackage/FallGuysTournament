@@ -18,32 +18,38 @@ function fakeSpawn(exits: number[]) {
   return { spawn, calls };
 }
 
-const argvFor = (audio: boolean) => (audio ? ["ff", "-i", "audio"] : ["ff", "silent"]);
+const argvFor = (audio: boolean, runDir: string) =>
+  audio ? ["ff", "-i", "audio", runDir] : ["ff", "silent", runDir];
+
+function runs() {
+  let n = 0;
+  return () => `/caps/segments/run-${++n}`;
+}
 
 test("recording starts with audio and reports itself running", async () => {
   const { spawn, calls } = fakeSpawn([-1]);
-  const recorder = new Recorder({ argvFor, spawn, now: () => 1000 });
+  const recorder = new Recorder({ argvFor, newRun: runs(), spawn, now: () => 1000 });
   recorder.start();
   await Bun.sleep(5);
-  expect(calls).toEqual([["ff", "-i", "audio"]]);
+  expect(calls).toEqual([["ff", "-i", "audio", "/caps/segments/run-1"]]);
   expect(recorder.status()).toEqual({ running: true, audio: true, since: 1000 });
 });
 
 test("an audio device that will not open falls back to video only rather than to nothing", async () => {
   const { spawn, calls } = fakeSpawn([1, -1]);
-  const recorder = new Recorder({ argvFor, spawn, now: () => 2000 });
+  const recorder = new Recorder({ argvFor, newRun: runs(), spawn, now: () => 2000 });
   recorder.start();
   await Bun.sleep(20);
   expect(calls).toEqual([
-    ["ff", "-i", "audio"],
-    ["ff", "silent"],
+    ["ff", "-i", "audio", "/caps/segments/run-1"],
+    ["ff", "silent", "/caps/segments/run-2"],
   ]);
   expect(recorder.status()).toEqual({ running: true, audio: false, since: 2000 });
 });
 
 test("a recorder that has been stopped does not restart itself", async () => {
   const { spawn, calls } = fakeSpawn([1, 1, -1]);
-  const recorder = new Recorder({ argvFor, spawn, now: () => 0, retryMs: 1 });
+  const recorder = new Recorder({ argvFor, newRun: runs(), spawn, now: () => 0, retryMs: 1 });
   recorder.start();
   await Bun.sleep(5);
   recorder.stop();
@@ -55,11 +61,42 @@ test("a recorder that has been stopped does not restart itself", async () => {
 
 test("a recording that dies is retried, and the failure is on the status", async () => {
   const { spawn } = fakeSpawn([1, 1, 1, 1]);
-  const recorder = new Recorder({ argvFor, spawn, now: () => 0, retryMs: 1 });
+  const recorder = new Recorder({ argvFor, newRun: runs(), spawn, now: () => 0, retryMs: 1 });
   recorder.start();
   await Bun.sleep(20);
   const status = recorder.status();
   expect(status.running).toBe(false);
   expect(status.error).toContain("exit 1");
+  recorder.stop();
+});
+
+test("each spawn records into a folder of its own", async () => {
+  const { spawn, calls } = fakeSpawn([1, -1]);
+  const recorder = new Recorder({ argvFor, newRun: runs(), spawn, now: () => 2000, retryMs: 1 });
+  recorder.start();
+  await Bun.sleep(20);
+  expect(calls.map((argv) => argv.at(-1))).toEqual([
+    "/caps/segments/run-1",
+    "/caps/segments/run-2",
+  ]);
+  recorder.stop();
+});
+
+test("every run is remembered with the clock it started on, so a crash loses nothing", async () => {
+  const { spawn } = fakeSpawn([1, -1]);
+  let clock = 5000;
+  const recorder = new Recorder({
+    argvFor,
+    newRun: runs(),
+    spawn,
+    now: () => (clock += 1000),
+    retryMs: 1,
+  });
+  recorder.start();
+  await Bun.sleep(20);
+  expect(recorder.runs()).toEqual([
+    { dir: "/caps/segments/run-1", startedAt: 6000 },
+    { dir: "/caps/segments/run-2", startedAt: 8000 },
+  ]);
   recorder.stop();
 });

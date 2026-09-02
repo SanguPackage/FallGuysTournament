@@ -12,8 +12,17 @@ export interface RecorderStatus {
   error?: string;
 }
 
+export interface Run {
+  /** The folder this spawn's segments and CSV are in. */
+  dir: string;
+  /** Wall clock the spawn started, which its segment times are measured from. */
+  startedAt: number;
+}
+
 export interface RecorderOptions {
-  argvFor: (audio: boolean) => string[];
+  argvFor: (audio: boolean, runDir: string) => string[];
+  /** A folder for the next spawn. Called once per spawn and never reused. */
+  newRun: () => string;
   spawn: (argv: string[]) => Spawned;
   now: () => number;
   /** How long to wait before starting a recording again after one died. */
@@ -29,6 +38,7 @@ export class Recorder {
   private audio = true;
   private since?: number;
   private error?: string;
+  private readonly runList: Run[] = [];
   private readonly retryMs: number;
 
   constructor(private readonly options: RecorderOptions) {
@@ -38,6 +48,11 @@ export class Recorder {
   /** When the running recording began. Segment times are relative to this. */
   startedAt(): number | undefined {
     return this.since;
+  }
+
+  /** Every spawn this recorder has made. A crash-respawn adds one rather than replacing it. */
+  runs(): Run[] {
+    return [...this.runList];
   }
 
   status(): RecorderStatus {
@@ -66,7 +81,9 @@ export class Recorder {
   private async loop(): Promise<void> {
     while (!this.stopped) {
       const startedAt = this.options.now();
-      const process = this.options.spawn(this.options.argvFor(this.audio));
+      const dir = this.options.newRun();
+      this.runList.push({ dir, startedAt });
+      const process = this.options.spawn(this.options.argvFor(this.audio, dir));
       this.process = process;
       this.since = startedAt;
       this.error = undefined;
