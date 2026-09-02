@@ -84,6 +84,11 @@ const NOW: LiveNow = {
   map: "Roll Out",
   type: "race",
   startedAt: "01:27:40",
+  rounds: [
+    { map: "Wall Guys", type: "race", qualified: 14 },
+    { map: "Hoverboard Heroes", type: "survival", qualified: 9 },
+    { map: "Roll Out", type: "race" },
+  ],
 };
 
 test("the round on screen is listed before anything recorded", () => {
@@ -112,4 +117,21 @@ test("the show being played carries the field like every other box", () => {
   const html = renderResults([], ROSTER, NOW);
   // Nothing has been read for it yet, so the whole field is still in.
   expect([...html.matchAll(/class="bn playing"/g)]).toHaveLength(ROSTER.length);
+});
+
+test("every round the log has loaded for the show being played is listed", () => {
+  const html = renderResults([], ROSTER, NOW);
+  expect(html).toContain("Wall Guys");
+  expect(html).toContain("Hoverboard Heroes");
+  expect(html).toContain("Roll Out");
+});
+
+test("a round the log has already counted through says how many got out of it", () => {
+  const html = renderResults([], ROSTER, NOW);
+  expect(html).toMatch(/Wall Guys[\s\S]*?14 through/);
+});
+
+test("the round on screen is marked rather than counted", () => {
+  const html = renderResults([], ROSTER, NOW);
+  expect(html).toMatch(/Roll Out[\s\S]*?on screen/);
 });

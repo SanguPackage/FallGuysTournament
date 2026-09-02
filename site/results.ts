@@ -55,16 +55,26 @@ function renderShow(show: Show, number: number, live: boolean, players: Player[]
  * round being played shows up here rather than only once the show is saved.
  */
 function renderPlaying(now: LiveNow, players: Player[]): string {
-  const round =
-    now.map === null
-      ? `<p class="empty">Loading the next round…</p>`
-      : `
-      <div class="rnd ${now.type === "final" ? "final" : ""}">
-        <span class="i">${now.round}</span>
-        <span class="map">${escapeHtml(now.map)}</span>
-        <span class="type"><span class="tag ${now.type}">${now.type}</span></span>
-        <span class="winner none">on screen</span>
+  const last = now.rounds.length - 1;
+  const rounds = now.rounds
+    .map((entry, index) => {
+      // Only the log speaks for this show, and it counts survivors without ever naming them.
+      const through =
+        entry.qualified === undefined
+          ? `<span class="winner none">${index === last ? "on screen" : "—"}</span>`
+          : `<span class="winner none">${entry.qualified} through</span>`;
+
+      return `
+      <div class="rnd ${entry.type === "final" ? "final" : ""}">
+        <span class="i">${index + 1}</span>
+        <span class="map">${escapeHtml(entry.map)}</span>
+        <span class="type"><span class="tag ${entry.type}">${entry.type}</span></span>
+        ${through}
       </div>`;
+    })
+    .join("");
+
+  const round = now.map === null ? `<p class="empty">Loading the next round…</p>` : rounds;
 
   return `
     <div class="show live">

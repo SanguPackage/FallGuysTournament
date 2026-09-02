@@ -90,6 +90,11 @@ const NOW = {
   map: "Hex-A-Terrestrial",
   type: "survival" as const,
   startedAt: "21:04:11",
+  rounds: [
+    { map: "Wall Guys", type: "race" as const, qualified: 14 },
+    { map: "Tip Toe", type: "race" as const, qualified: 9 },
+    { map: "Hex-A-Terrestrial", type: "survival" as const },
+  ],
 };
 
 test("without the log the status is whatever was recorded", () => {

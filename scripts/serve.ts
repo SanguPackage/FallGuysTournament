@@ -317,6 +317,11 @@ const server = Bun.serve({
         map: round?.name ?? null,
         type: round ? (round.isFinal ? "final" : round.type) : null,
         startedAt: round?.startedAt ?? null,
+        rounds: playing.rounds.map((entry) => ({
+          map: entry.name,
+          type: entry.isFinal ? ("final" as const) : entry.type,
+          ...(entry.qualified.length > 0 ? { qualified: entry.qualified.length } : {}),
+        })),
       };
       return json(live);
     }

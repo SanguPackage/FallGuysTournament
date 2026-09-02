@@ -52,6 +52,13 @@ export function showNameNow(event: TournamentEvent, index: number, fromLog: stri
   return event.shows[index]?.name.trim() || fromLog;
 }
 
+export interface LiveRound {
+  map: string;
+  type: RoundType;
+  /** How many the log saw qualify. Absent while the round is still being played. */
+  qualified?: number;
+}
+
 /** What the Fall Guys log says is on screen right now. Only the machine running the game knows this. */
 export interface LiveNow {
   /** The show being played, named from what has been recorded for it where that exists. */
@@ -62,6 +69,8 @@ export interface LiveNow {
   map: string | null;
   type: RoundType | null;
   startedAt: string | null;
+  /** Every round the log has loaded for this show, oldest first. The last is the one on screen. */
+  rounds: LiveRound[];
 }
 
 /**
