@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { captureFolders, captureSettings, FFMPEG_DEFAULT, runFolder } from "./paths";
+import { captureFolders, captureSettings, FFMPEG_DEFAULT, runFolder, runsIn, runStartedAt } from "./paths";
 
 const exists = (paths: string[]) => async (path: string) => paths.includes(path);
 
@@ -61,4 +61,32 @@ test("a run folder is named for the local clock, down to the second", () => {
 test("two runs a second apart get different folders", () => {
   const at = new Date(2026, 8, 2, 21, 41, 3).getTime();
   expect(runFolder(at)).not.toBe(runFolder(at + 1000));
+});
+
+test("a run folder's name reads back as the clock it was named for", () => {
+  const at = new Date(2026, 8, 2, 21, 41, 3).getTime();
+  expect(runStartedAt(runFolder(at))).toBe(at);
+});
+
+test("the suffix a collision adds does not change the clock read back", () => {
+  const at = new Date(2026, 8, 2, 21, 41, 3).getTime();
+  expect(runStartedAt(`${runFolder(at)}-2`)).toBe(at);
+});
+
+test("a folder that is not a run is not read as one", () => {
+  expect(runStartedAt("scratch")).toBeUndefined();
+});
+
+test("runs left on disk by a server that has exited are still runs", () => {
+  const runs = runsIn("/caps/segments", ["2026-09-02T21h41m03", "notes.txt"], []);
+  expect(runs).toEqual([
+    { dir: "/caps/segments/2026-09-02T21h41m03", startedAt: new Date(2026, 8, 2, 21, 41, 3).getTime() },
+  ]);
+});
+
+test("a spawn this process made beats the same folder read off disk", () => {
+  const spawned = { dir: "/caps/segments/2026-09-02T21h41m03", startedAt: 1_772_000_000_123 };
+  const runs = runsIn("/caps/segments", ["2026-09-02T21h41m03"], [spawned]);
+  // The name is only good to the second; the recorder saw the spawn to the millisecond.
+  expect(runs).toEqual([spawned]);
 });

@@ -16,13 +16,13 @@ import { frameFrom } from "../src/ocr/frame";
 import { clipKey, momentKey, momentsIn, showClips } from "../src/capture/moments";
 import { parseSegments, type Segment } from "../src/capture/segments";
 import { recordArgv } from "../src/capture/command";
-import { captureFolders, captureSettings, runFolder } from "../src/capture/paths";
+import { captureFolders, captureSettings, runFolder, runsIn } from "../src/capture/paths";
 import { toWindows } from "../src/capture/win-path";
 import { Recorder } from "../src/capture/recorder";
 import { Ledger, type LedgerState } from "../src/capture/ledger";
 import { Serial } from "../src/capture/serial";
 import { captureMoment, cutShowClip } from "../src/capture/pipeline";
-import { mkdir } from "node:fs/promises";
+import { mkdir, readdir } from "node:fs/promises";
 import { existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { showNameNow, type LiveNow } from "../src/live";
 import type { ParsedShow } from "../src/log";
@@ -211,8 +211,9 @@ const recorder = new Recorder({
  * recording now is never in here, and a run that died before closing one contributes nothing.
  */
 async function segmentsNow(): Promise<Segment[]> {
+  const names = await readdir(folders.segments).catch(() => []);
   const segments: Segment[] = [];
-  for (const run of recorder.runs()) {
+  for (const run of runsIn(folders.segments, names, recorder.runs())) {
     const csv = await Bun.file(`${run.dir}/segments.csv`)
       .text()
       .catch(() => "");
