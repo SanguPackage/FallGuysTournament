@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import type { ShowInOrder } from "../site/rules";
-import { liveStatus, showNameNow, withLiveLog } from "./live";
+import { liveStatus, mergeLive, showNameNow, withLiveLog, type LiveNow } from "./live";
 import type { Round, Show, TournamentEvent } from "./types";
 
 const ORDER: ShowInOrder[] = [
@@ -154,4 +154,85 @@ test("finishing a show does not hand its name back to the log", () => {
 test("a show nobody has written down yet goes by what the log calls it", () => {
   expect(showNameNow(event([]), 0, "Solos 1")).toBe("Solos 1");
   expect(showNameNow(event([{ name: "  ", rounds: [] }]), 0, "Solos 1")).toBe("Solos 1");
+});
+
+const LOG: LiveNow = {
+  show: "Solos 2",
+  showNumber: 2,
+  round: 3,
+  map: "Roll Out",
+  type: "race",
+  startedAt: "01:27:40",
+  rounds: [
+    { map: "Wall Guys", type: "race", qualified: 14 },
+    { map: "Hoverboard Heroes", type: "survival", qualified: 9 },
+    { map: "Roll Out", type: "race" },
+  ],
+};
+
+test("a show nobody has typed in yet is the log's rounds under the log's name", () => {
+  expect(mergeLive(undefined, LOG)).toEqual({
+    name: "Solos 2",
+    rounds: [
+      { map: "Wall Guys", type: "race", survivors: 14 },
+      { map: "Hoverboard Heroes", type: "survival", survivors: 9 },
+      { map: "Roll Out", type: "race" },
+    ],
+  });
+});
+
+test("what has been recorded wins over the log, round for round", () => {
+  const recorded: Show = {
+    name: "Grand Final",
+    rounds: [{ map: "Wall Guys", type: "hunt", first: "Alpha", qualified: ["Alpha"] }],
+  };
+  const merged = mergeLive(recorded, LOG);
+  expect(merged.name).toBe("Grand Final");
+  expect(merged.rounds[0]).toEqual({
+    map: "Wall Guys",
+    type: "hunt",
+    first: "Alpha",
+    qualified: ["Alpha"],
+    survivors: 14,
+  });
+});
+
+test("rounds the log has loaded past what is typed in are appended", () => {
+  const recorded: Show = { name: "Solos 2", rounds: [{ map: "Wall Guys", type: "race" }] };
+  expect(mergeLive(recorded, LOG).rounds.map((round) => round.map)).toEqual([
+    "Wall Guys",
+    "Hoverboard Heroes",
+    "Roll Out",
+  ]);
+});
+
+test("a recorded count is not overwritten by the log's", () => {
+  const recorded: Show = {
+    name: "Solos 2",
+    rounds: [{ map: "Wall Guys", type: "race", survivors: 13 }],
+  };
+  expect(mergeLive(recorded, LOG).rounds[0]?.survivors).toBe(13);
+});
+
+test("recorded rounds the log never reported keep their place", () => {
+  const recorded: Show = {
+    name: "Solos 2",
+    rounds: [
+      { map: "Wall Guys", type: "race" },
+      { map: "Hoverboard Heroes", type: "survival" },
+      { map: "Roll Out", type: "race" },
+      { map: "Hex-A-Gone", type: "final" },
+    ],
+  };
+  expect(mergeLive(recorded, LOG).rounds.map((round) => round.map)).toEqual([
+    "Wall Guys",
+    "Hoverboard Heroes",
+    "Roll Out",
+    "Hex-A-Gone",
+  ]);
+});
+
+test("winners survive the merge", () => {
+  const recorded: Show = { name: "Solos 2", rounds: [], winners: ["Alpha"] };
+  expect(mergeLive(recorded, LOG).winners).toEqual(["Alpha"]);
 });

@@ -1,5 +1,5 @@
 import type { ShowInOrder } from "../site/rules";
-import type { Round, RoundType, TournamentEvent } from "./types";
+import type { Round, RoundType, Show, TournamentEvent } from "./types";
 
 export interface LiveStatus {
   state: "not-started" | "playing" | "between";
@@ -97,5 +97,33 @@ export function withLiveLog(
     roundLive: onScreen,
     lastRound: onScreen ? { map: now.map!, type: now.type! } : status.lastRound,
     nextShow: orderIndex === -1 ? undefined : order[orderIndex + 1]?.show,
+  };
+}
+
+/**
+ * The log and the admin each know half of the show being played: the log has every round the
+ * moment it loads but never a name, the admin has the names but only once they are typed. This
+ * lays the log under what has been recorded so the panel never has to choose.
+ */
+export function mergeLive(show: Show | undefined, now: LiveNow): Show {
+  const rounds: Round[] = now.rounds.map((entry, index) => {
+    const recorded = show?.rounds[index];
+    if (!recorded) {
+      return {
+        map: entry.map,
+        type: entry.type,
+        ...(entry.qualified === undefined ? {} : { survivors: entry.qualified }),
+      };
+    }
+    return recorded.survivors === undefined && entry.qualified !== undefined
+      ? { ...recorded, survivors: entry.qualified }
+      : recorded;
+  });
+
+  return {
+    ...show,
+    // Same rule as showNameNow: a recorded name sticks, the log's playlist only stands in.
+    name: show?.name.trim() || now.show,
+    rounds: [...rounds, ...(show?.rounds.slice(now.rounds.length) ?? [])],
   };
 }
