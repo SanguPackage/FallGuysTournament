@@ -6,6 +6,26 @@ Participant list: https://www.fom.be/compos/view/507
 
 Rules handed to the FOM board: [docs/rules.md](docs/rules.md)
 
+## Tournament day
+
+Fall Guys is on a different monitor at every venue, and recording the wrong one is silent
+until the shows are over.
+
+1. Set `event.date` in `data/event.json` to the day being played.
+2. Start the game and put it on the screen it will stay on.
+3. Record ten seconds of each monitor until one of them is the game:
+   ```bash
+   CAPTURE_OUTPUT=0 bun run dev
+   ```
+   The admin's Info tab names the folder. Play back the newest `seg-*.mkv` under
+   `segments/<newest>/`.
+4. Put the one that worked in `.env`, which every `bun run` reads:
+   ```bash
+   echo CAPTURE_OUTPUT=1 >> .env
+   ```
+5. `bun run live`, and confirm the header badge says **recording**.
+6. Play one round and confirm a frame with a trophy pill turns up in the capture panel.
+
 ## Scoring
 
 | Achievement                          | Points |
@@ -275,9 +295,7 @@ runs about 1.7 Mbps, so budget a few gigabytes an hour and leave 30GB free.
    "/mnt/c/Program Files/ShareX/ffmpeg.exe" -list_devices true -f dshow -i dummy
    ```
    Without it the recording still happens, silently, and the badge says `recording — no sound`.
-2. Find the monitor Fall Guys is on, set `CAPTURE_OUTPUT`, record ten seconds and watch it back.
-   Getting this wrong records the admin screen instead of the game.
-3. Play one round and confirm a frame with a trophy pill turns up in the capture panel.
+2. Pick the monitor and prove the captures work: [Tournament day](#tournament-day).
 
 This machine has no NVENC or AMF encoder, so the recording uses Quick Sync (`h264_qsv`).
 
