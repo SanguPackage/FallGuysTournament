@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { fieldOf } from "./field";
+import { aliveInto, fieldOf } from "./field";
 import type { Player, Show } from "./types";
 
 const ROSTER: Player[] = [
@@ -132,4 +132,28 @@ test("winners lead, then the living, then the out, alphabetically inside each", 
     "Alpha",
     "Delta",
   ]);
+});
+
+test("who is still in going into a round is the roster minus every board before it", () => {
+  const show: Show = {
+    name: "Solos",
+    rounds: [
+      { map: "Dizzy Heights", type: "race", qualified: ["Alpha", "Bravo", "Charlie"] },
+      { map: "Roll Out", type: "survival", qualified: ["Alpha", "Bravo"] },
+      { map: "Fall Mountain", type: "final" },
+    ],
+  };
+  const roster = ["Alpha", "Bravo", "Charlie", "Delta"];
+  expect(aliveInto(show, roster, 0)).toEqual(roster);
+  expect(aliveInto(show, roster, 1)).toEqual(["Alpha", "Bravo", "Charlie"]);
+  expect(aliveInto(show, roster, 2)).toEqual(["Alpha", "Bravo"]);
+  expect(aliveInto(show, roster, 3)).toEqual(["Alpha", "Bravo"]);
+});
+
+test("a round nobody has read a board off drops nobody", () => {
+  const show: Show = {
+    name: "Solos",
+    rounds: [{ map: "Dizzy Heights", type: "race" }, { map: "Roll Out", type: "survival" }],
+  };
+  expect(aliveInto(show, ["Alpha", "Bravo"], 2)).toEqual(["Alpha", "Bravo"]);
 });

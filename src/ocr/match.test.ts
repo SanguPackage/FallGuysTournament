@@ -67,3 +67,20 @@ test("nobody qualifies twice, so a roster name is used at most once", () => {
   const got = assign(["BigMoosellps", "BigMooseLips"], REAL);
   expect(got.filter((m) => m.name === "BigMooseLips").length).toBe(1);
 });
+
+test("a read too rough for the first pass is placed once the pool has thinned", () => {
+  const roster = ["mykyel972", "coldgin1974"];
+  expect(assign(["La mvkval972"], roster)[0]!.name).toBe("mykyel972");
+});
+
+test("the second pass still declines a stranger, which every open lobby is full of", () => {
+  const roster = ["Pigbro42", "Rlewy19", "SonicCHTR", "hannahbanana0724"];
+  expect(assign(["R Diego_9942"], roster)[0]!.name).toBeUndefined();
+  expect(assign(["MiNi CRYPTO"], roster)[0]!.name).toBeUndefined();
+  expect(assign(["an A Cann aoat es"], roster)[0]!.name).toBeUndefined();
+});
+
+test("a name the first pass claimed is gone from the pool the second pass rescues from", () => {
+  const got = assign(["mykyel972", "La mvkval972"], ["mykyel972", "coldgin1974"]);
+  expect(got.map((m) => m.name)).toEqual(["mykyel972", undefined]);
+});
