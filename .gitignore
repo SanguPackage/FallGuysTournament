@@ -4,3 +4,6 @@ dist/
 # Raw Player.log files contain the local client public IP address
 data/logs/*.log
 .playwright-mcp/
+.claude/settings.local.json
+.claude/worktrees/
+.ocr-cache/
