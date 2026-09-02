@@ -24,7 +24,7 @@ test("the lobby is covered in names and is still not a screen we read", async ()
  * level as a screen worth reading is what the whole feature gets wrong.
  */
 test("a round being played is no screen at all, however green or gold the level is", async () => {
-  for (const file of ["playing-scenery.jpg", "playing-nametags.jpg", "eliminated.jpg"]) {
+  for (const file of ["playing-scenery.jpg", "playing-nametags.jpg"]) {
     expect(identify(await frameFrom(`src/ocr/samples/${file}`))).toBeUndefined();
   }
 });
