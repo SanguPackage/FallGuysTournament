@@ -3,7 +3,7 @@ process.env.TZ = "Europe/Brussels";
 
 import { expect, test } from "bun:test";
 import { parseLog } from "../log";
-import { momentKey, momentsIn, showClips } from "./moments";
+import { clipKey, momentKey, momentsIn, showClips } from "./moments";
 
 const DATE = "2026-09-05";
 const at = (clock: string) => Date.parse(`${DATE}T${clock}Z`);
@@ -102,6 +102,18 @@ test("a moment's key is stable and tells the three kinds apart", () => {
   const moments = momentsIn(parseLog(SHOW), DATE);
   const keys = moments.map(momentKey);
   expect(new Set(keys).size).toBe(keys.length);
-  expect(keys).toContain("0:first:1");
-  expect(keys).toContain("0:winner:-");
+  expect(keys).toContain(`${DATE}:0:first:1`);
+  expect(keys).toContain(`${DATE}:0:winner:-`);
+});
+
+test("a ledger key names the event, so a later one does not read as already captured", () => {
+  const shows = parseLog(SHOW);
+  const mine = momentKey(momentsIn(shows, DATE)[0]!);
+  expect(mine).toStartWith(`${DATE}:`);
+  expect(momentKey(momentsIn(shows, "2026-09-12")[0]!)).not.toBe(mine);
+});
+
+test("a clip key names the event too", () => {
+  const [clip] = showClips(parseLog(SHOW), DATE);
+  expect(clipKey(clip!)).toBe(`${DATE}:0:clip`);
 });
