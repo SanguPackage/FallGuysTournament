@@ -1,4 +1,6 @@
+import { aliveInto } from "../field";
 import type { PlacedShot, ShowTimes } from "../screenshots";
+import type { Show } from "../types";
 import { assign, cleanToken } from "./match";
 import type { ShotRead } from "./read";
 
@@ -27,6 +29,7 @@ export function fillsFor(
   reads: Record<string, ShotRead>,
   roster: string[],
   times: ShowTimes[] = [],
+  shows: Show[] = [],
 ): SlotFill[] {
   const fills: SlotFill[] = [];
 
@@ -34,7 +37,14 @@ export function fillsFor(
     const read = reads[shot.file];
     if (!read?.screen || shot.showIndex === undefined || read.tokens.length === 0) continue;
 
-    const assigned = assign(read.tokens.map(cleanToken), roster).filter((match) => match.value);
+    // Only a show the admin has ticked off is read as complete: until then a board with half its
+    // names typed in would drop the rest of the lobby out of the pool, answer key and all.
+    const show = shows[shot.showIndex];
+    const pool = show?.checked
+      ? aliveInto(show, roster, shot.roundIndex ?? show.rounds.length)
+      : roster;
+
+    const assigned = assign(read.tokens.map(cleanToken), pool).filter((match) => match.value);
     if (assigned.length === 0) continue;
     const names = assigned.map((match) => match.value);
     const matched = assigned.map((match) => match.name !== undefined);

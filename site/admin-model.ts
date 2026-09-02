@@ -1,6 +1,7 @@
 import type { ParsedShow } from "../src/log";
 import { score } from "../src/scoring";
 import { finalistsOf, SCORES_FIRST } from "../src/rounds";
+import { aliveInto } from "../src/field";
 
 export { ROUND_TYPES, SCORES_FIRST } from "../src/rounds";
 import type { Players, Round, RoundType, Show, TournamentEvent } from "../src/types";
@@ -190,6 +191,11 @@ export function defaultMessage(event: TournamentEvent): string {
   return last ? `data: record show ${event.shows.length} — ${last.name}` : "data: update players";
 }
 
+/** A row with no FOM name is one still being typed, and saving it would publish a blank player. */
+export function everyPlayerNamed(players: Players): boolean {
+  return players.players.every((player) => player.fom.trim().length > 0);
+}
+
 /** Every name the admin has already typed into a show, so it can be picked rather than retyped. */
 export function namesInShows(event: TournamentEvent): string[] {
   const names = event.shows.flatMap((show) => [
@@ -222,6 +228,53 @@ export function namesByPoints(event: TournamentEvent, players: Players): string[
   return [...new Set([...competing, ...namesInShows(event)])]
     .filter((name) => !away.has(name))
     .sort((a, b) => (points.get(b) ?? 0) - (points.get(a) ?? 0) || a.localeCompare(b));
+}
+
+/** Which name field is being typed into, so the pool can be cut down to what could go in it. */
+export type NameSlot =
+  | { slot: "first"; roundIndex: number }
+  | { slot: "qualified"; roundIndex: number; at: number }
+  | { slot: "winners"; at: number };
+
+/** A board with a slot still empty is one being typed, and eliminates nobody. */
+function completeBoards(draft: ShowDraft): Show {
+  return {
+    name: draft.name,
+    winners: [],
+    rounds: draft.rounds.map((round) => {
+      const names = round.qualified.map((name) => name.trim());
+      const complete = names.length > 0 && names.every(Boolean);
+      return { map: round.map, type: round.type, ...(complete ? { qualified: names } : {}) };
+    }),
+  };
+}
+
+/**
+ * Everyone a slot could still hold: whoever the boards before it left in, less the names already
+ * standing beside it. Whoever crossed a round first qualified out of it, so `first` is offered
+ * that round's own survivors rather than the people who went into it.
+ */
+export function candidatesFor(draft: ShowDraft, names: string[], slot: NameSlot): string[] {
+  const show = completeBoards(draft);
+  const into =
+    slot.slot === "qualified"
+      ? slot.roundIndex
+      : slot.slot === "first"
+        ? slot.roundIndex + 1
+        : show.rounds.length;
+
+  const beside =
+    slot.slot === "qualified"
+      ? (draft.rounds[slot.roundIndex]?.qualified ?? [])
+      : slot.slot === "winners"
+        ? draft.winners
+        : [];
+  const at = "at" in slot ? slot.at : -1;
+  const taken = new Set(
+    beside.flatMap((name, index) => (index === at ? [] : [name.trim()])).filter(Boolean),
+  );
+
+  return aliveInto(show, names, into).filter((name) => !taken.has(name));
 }
 
 /** The same keys `nameInput` files its fields under, so a source can be looked up per field. */

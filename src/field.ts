@@ -36,6 +36,20 @@ function byState(a: FieldPlayer, b: FieldPlayer): number {
 }
 
 /**
+ * Who is still in going into a round: the roster minus everyone a board before it left off. A
+ * round nobody has read a board off drops nobody, so a show only half typed in narrows nothing.
+ */
+export function aliveInto(show: Show, roster: string[], roundIndex: number): string[] {
+  let alive = roster;
+  for (const round of show.rounds.slice(0, roundIndex)) {
+    if (!round.qualified) continue;
+    const through = new Set(round.qualified);
+    alive = alive.filter((name) => through.has(name));
+  }
+  return alive;
+}
+
+/**
  * A player knocked out in round 1 is named on no screen at all, so the roster is the baseline red
  * is measured against: everyone at the LAN plays every show.
  */

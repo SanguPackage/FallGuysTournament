@@ -9,6 +9,12 @@ const CONFUSABLE: Record<string, string> = {
 };
 
 const ACCEPT = 0.45;
+/**
+ * The bar for the second pass, which runs against a pool the first has already thinned. Above
+ * this the event's own captures start claiming public-lobby strangers as roster players: the
+ * roughest real read sits at 0.467 and the nearest stranger at 0.556.
+ */
+const RESCUE = 0.5;
 /** How far clear the winner must be. Below this the two candidates are the same read. */
 const MARGIN = 0.08;
 
@@ -70,34 +76,51 @@ function distance(a: string, b: string): number {
 }
 
 /**
- * One roster name per token, best pairing first. Every player is registered, so the roster is the
- * answer key rather than a spelling aid — but only once the text is split per name, or two
- * near-identical entries both match the same blurry token. A name already taken is not offered
- * again, nobody qualifies twice, and a token whose winner does not beat the runner-up is left as
- * read rather than guessed at.
+ * One roster name per token, best pairing first. A name already taken is not offered again,
+ * nobody qualifies twice, and a token whose winner does not beat the runner-up is left alone
+ * rather than guessed at.
  */
-export function assign(tokens: string[], roster: string[]): Assignment[] {
-  const ranked = tokens.map((token) =>
-    roster.map((name) => ({ name, d: distance(token, name) })).sort((a, b) => a.d - b.d),
-  );
+function claim(
+  tokens: string[],
+  roster: string[],
+  accept: number,
+  taken: Set<string>,
+  won: Map<number, string>,
+): void {
+  const pool = roster.filter((name) => !taken.has(name));
 
-  const pairs = ranked
-    .flatMap((candidates, index) => {
+  const pairs = tokens
+    .flatMap((token, index) => {
+      if (won.has(index)) return [];
+      const candidates = pool
+        .map((name) => ({ name, d: distance(token, name) }))
+        .sort((a, b) => a.d - b.d);
       const best = candidates[0];
       const runnerUp = candidates[1];
-      if (!best || best.d > ACCEPT) return [];
+      if (!best || best.d > accept) return [];
       if (runnerUp !== undefined && runnerUp.d - best.d < MARGIN) return [];
       return [{ index, name: best.name, d: best.d }];
     })
     .sort((a, b) => a.d - b.d);
 
-  const taken = new Set<string>();
-  const won = new Map<number, string>();
   for (const pair of pairs) {
     if (taken.has(pair.name) || won.has(pair.index)) continue;
     taken.add(pair.name);
     won.set(pair.index, pair.name);
   }
+}
+
+/**
+ * Every player is registered, so the roster is the answer key rather than a spelling aid — but
+ * only once the text is split per name, or two near-identical entries both match the same blurry
+ * token. Names are claimed twice: the confident pass first, then a looser one over whatever the
+ * first left, which is now competing against a pool short of everyone already placed.
+ */
+export function assign(tokens: string[], roster: string[]): Assignment[] {
+  const taken = new Set<string>();
+  const won = new Map<number, string>();
+  claim(tokens, roster, ACCEPT, taken, won);
+  claim(tokens, roster, RESCUE, taken, won);
 
   return tokens.map((token, index) => {
     const name = won.get(index);

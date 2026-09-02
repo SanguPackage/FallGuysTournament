@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { fillsFor } from "./autofill";
 import type { PlacedShot, ShowTimes } from "../screenshots";
 import type { ShotRead } from "./read";
+import type { Show } from "../types";
 
 const ROSTER = ["Diego_9942", "Serxav_9", "BigMooseLips"];
 
@@ -110,4 +111,41 @@ test("a fill says which of its names the roster claimed", () => {
   const [fill] = fillsFor([shot], reads, ["Diego_9942", "Serxav_9"]);
   expect(fill!.names).toEqual(["Diego_9942", "RanidHives05"]);
   expect(fill!.matched).toEqual([true, false]);
+});
+
+const KNOCKED_OUT: Show = {
+  name: "Solos",
+  rounds: [
+    { map: "Dizzy Heights", type: "race", qualified: ["Serxav_9", "BigMooseLips"] },
+    { map: "Roll Out", type: "survival" },
+  ],
+  checked: true,
+};
+
+test("a show nobody has ticked off narrows nothing, since its boards are half read", () => {
+  const shots = [shot("g.jpg", { slot: "round", roundIndex: 1 })];
+  const reads: Record<string, ShotRead> = { "g.jpg": { screen: "grid", tokens: ["Diego_9942"] } };
+  const open = { ...KNOCKED_OUT, checked: undefined };
+  expect(fillsFor(shots, reads, ROSTER, [], [open])[0]!.matched).toEqual([true]);
+});
+
+test("a name the boards of a ticked show already dropped is not offered for a later round", () => {
+  const shots = [shot("g.jpg", { slot: "round", roundIndex: 1 })];
+  const reads: Record<string, ShotRead> = { "g.jpg": { screen: "grid", tokens: ["Diego_9942"] } };
+  expect(fillsFor(shots, reads, ROSTER, [], [KNOCKED_OUT])).toEqual([
+    {
+      showIndex: 0,
+      slot: "qualified",
+      roundIndex: 1,
+      names: ["Diego_9942"],
+      matched: [false],
+      from: "g.jpg",
+    },
+  ]);
+});
+
+test("the winner screen is matched against whoever the last board left standing", () => {
+  const shots = [shot("w.jpg", { slot: "winners" })];
+  const reads: Record<string, ShotRead> = { "w.jpg": { screen: "winner", tokens: ["R- Diego_9942"] } };
+  expect(fillsFor(shots, reads, ROSTER, [], [KNOCKED_OUT])[0]!.matched).toEqual([false]);
 });

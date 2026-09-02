@@ -111,7 +111,11 @@ async function writeJson(
 ): Promise<Response> {
   const body = await request.json();
   await Bun.write(path, `${JSON.stringify(body, null, 2)}\n`);
-  if (!AUTO_PUBLISH) return json({ saved: path });
+
+  // Publishing commits the whole of data/, so a save that another is about to follow asks with
+  // `?publish=0` and the pair lands in one commit rather than two.
+  const quiet = new URL(request.url).searchParams.get("publish") === "0";
+  if (!AUTO_PUBLISH || quiet) return json({ saved: path });
 
   const subject = describe(body as never);
   const published = await publish(subject);
@@ -308,7 +312,7 @@ const server = Bun.serve({
         times,
         shotDir: shotDir ?? null,
         shots,
-        fills: fillsFor(shots, readsFor(shots), roster, times),
+        fills: fillsFor(shots, readsFor(shots), roster, times, event.shows),
         autoPublish: AUTO_PUBLISH,
         capture: RECORD ? recorder.status() : null,
         problems: await checkData(),
