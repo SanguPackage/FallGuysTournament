@@ -31,9 +31,9 @@ test("the capture folder, monitor and audio device come from the environment", a
   expect(settings.audioDevice).toBe("loop-thing");
 });
 
-test("defaults are the first monitor, /mnt/c/FallGuysCapture and the usual loopback device", async () => {
+test("defaults are the first monitor, /mnt/c/temp/FallGuysCapture and the usual loopback device", async () => {
   const settings = await captureSettings({}, exists([FFMPEG_DEFAULT]));
-  expect(settings.dir).toBe("/mnt/c/FallGuysCapture");
+  expect(settings.dir).toBe("/mnt/c/temp/FallGuysCapture");
   expect(settings.output).toBe(0);
   expect(settings.audioDevice).toBe("virtual-audio-capturer");
 });

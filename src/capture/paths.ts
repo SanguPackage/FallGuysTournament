@@ -1,7 +1,7 @@
 /** ShareX ships the ffmpeg the screen recorder uses, so there is nothing to install. */
 export const FFMPEG_DEFAULT = "/mnt/c/Program Files/ShareX/ffmpeg.exe";
 /** Not the repo: it is inside Dropbox, and this is tens of gigabytes. */
-export const CAPTURE_DIR_DEFAULT = "/mnt/c/FallGuysCapture";
+export const CAPTURE_DIR_DEFAULT = "/mnt/c/temp/FallGuysCapture";
 /** What the screen-capture-recorder installer registers. Taps the default output, changing nothing. */
 export const AUDIO_DEFAULT = "virtual-audio-capturer";
 

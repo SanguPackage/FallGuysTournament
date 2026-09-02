@@ -252,7 +252,7 @@ Either way the console says `Recording  on` with the folder, or `off`, on every 
 | Setting          | Default                                  | What it is                                          |
 |------------------|------------------------------------------|-----------------------------------------------------|
 | `CAPTURE_OUTPUT` | `0`                                      | Which monitor to record, numbered from 0            |
-| `CAPTURE_DIR`    | `/mnt/c/FallGuysCapture`                 | Where segments, clips and frames go                 |
+| `CAPTURE_DIR`    | `/mnt/c/temp/FallGuysCapture`            | Where segments, clips and frames go                 |
 | `CAPTURE_AUDIO`  | `virtual-audio-capturer`                 | dshow device to record sound from; `off` for silent |
 | `FFMPEG_PATH`    | `/mnt/c/Program Files/ShareX/ffmpeg.exe` | ShareX ships the one this uses                      |
 
