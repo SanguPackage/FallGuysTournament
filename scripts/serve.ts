@@ -1,4 +1,4 @@
-import { parseLog } from "../src/log";
+import { logDate, parseLog } from "../src/log";
 import { absoluteTimes, placeShots } from "../src/screenshots";
 import { listShots, resolveShot } from "../src/shot-folder";
 import { findLog, findScreenshotDir } from "../src/windows-path";
@@ -46,13 +46,23 @@ const AUTO_PUBLISH = Bun.argv.includes("--publish");
  */
 const RECORD = !Bun.argv.includes("--no-record");
 
-/** The log is a convenience: it prefills rounds. Losing it must not stop the admin loading. */
-async function parsedShows(logPath: string | undefined) {
-  if (!logPath) return [];
+/**
+ * The log is a convenience: it prefills rounds. Losing it must not stop the admin loading.
+ *
+ * `date` is the day the log was written, which is what every stamp in it is measured from. It
+ * beats the event's own date, which is typed by hand and is a day out as soon as a session runs
+ * past midnight — and a day out puts every capture in the last show that is still open.
+ */
+async function parsedShows(
+  logPath: string | undefined,
+): Promise<{ shows: ParsedShow[]; date?: string }> {
+  if (!logPath) return { shows: [] };
   try {
-    return parseLog(await Bun.file(logPath).text());
+    const text = await Bun.file(logPath).text();
+    const date = logDate(text);
+    return { shows: parseLog(text), ...(date === undefined ? {} : { date }) };
   } catch {
-    return [];
+    return { shows: [] };
   }
 }
 
@@ -220,13 +230,14 @@ function clipName(shows: ParsedShow[], showIndex: number, date: string): string 
  * log that flushed late still names the right frame.
  */
 async function sweepCaptures(): Promise<void> {
-  const shows = await parsedShows(await findLog());
+  const { shows, date } = await parsedShows(await findLog());
   if (shows.length === 0) return;
   const event = (await Bun.file(EVENT_PATH).json()) as TournamentEvent;
+  const day = date ?? event.date;
   const segments = await segmentsNow();
   if (segments.length === 0) return;
 
-  for (const moment of momentsIn(shows, event.date)) {
+  for (const moment of momentsIn(shows, day)) {
     if (!ledger.pending(momentKey(moment))) continue;
     captureJobs.add(async () => {
       await captureMoment(moment, segments, ledger, {
@@ -241,9 +252,9 @@ async function sweepCaptures(): Promise<void> {
     });
   }
 
-  for (const clip of showClips(shows, event.date)) {
+  for (const clip of showClips(shows, day)) {
     if (!ledger.pending(clipKey(clip))) continue;
-    const name = clipName(shows, clip.showIndex, event.date);
+    const name = clipName(shows, clip.showIndex, day);
     captureJobs.add(async () => {
       const cut = await cutShowClip(clip, segments, name, ledger, {
         ffmpeg: capture.ffmpeg!,
@@ -274,10 +285,11 @@ const server = Bun.serve({
     if (pathname === "/api/state") {
       const logPath = await findLog();
       const shotDir = await findScreenshotDir();
-      const shows = await parsedShows(logPath);
+      const { shows, date } = await parsedShows(logPath);
       const event = (await Bun.file(EVENT_PATH).json()) as TournamentEvent;
-      const shots = await placed(shotDir, shows, event.date);
-      const times = absoluteTimes(shows, event.date);
+      const day = date ?? event.date;
+      const shots = await placed(shotDir, shows, day);
+      const times = absoluteTimes(shows, day);
       queueReads(shotDir, shots);
       const players = (await Bun.file(PLAYERS_PATH).json()) as Players;
       const roster = players.players.flatMap((player) =>
@@ -321,10 +333,10 @@ const server = Bun.serve({
      */
     if (request.method === "POST" && pathname === "/api/reread") {
       const { showIndex } = (await request.json()) as { showIndex: number };
-      const shows = await parsedShows(await findLog());
+      const { shows, date } = await parsedShows(await findLog());
       const event = (await Bun.file(EVENT_PATH).json()) as TournamentEvent;
       const shotDir = await findScreenshotDir();
-      const shots = (await placed(shotDir, shows, event.date)).filter(
+      const shots = (await placed(shotDir, shows, date ?? event.date)).filter(
         (shot) => shot.showIndex === showIndex,
       );
       reader.forget(shots.map((shot) => cacheKey(shot.file, shot.takenAt)));
@@ -344,7 +356,7 @@ const server = Bun.serve({
      * file, so the published board falls back to what was recorded.
      */
     if (pathname === "/live.json") {
-      const played = await parsedShows(await findLog());
+      const { shows: played } = await parsedShows(await findLog());
       const playing = played.at(-1);
       if (!playing) return json(null);
 
