@@ -116,11 +116,22 @@ h2 { margin: 0 0 0.75rem; font-size: 1.15rem; }
 
 .empty, .hint { color: var(--muted); font-size: 0.85rem; }
 
-nav { display: flex; gap: 1.25rem; margin-bottom: 1.5rem; font-size: 0.9rem; }
-nav a { color: var(--muted); }
-nav [aria-current] { color: var(--accent); font-weight: 700; }
+h1 .back {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.3rem;
+  background: var(--field);
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 400;
+  vertical-align: middle;
+  text-decoration: none;
+}
+h1 .back:hover { border-color: var(--muted); color: var(--fg); }
 
 section { margin: 2rem 0; }
+/* The tab already names the panel, so its first section carries no heading to space away from. */
+[data-panel] > section:first-child { margin-top: 1rem; }
 
 input[type="text"],
 select {
