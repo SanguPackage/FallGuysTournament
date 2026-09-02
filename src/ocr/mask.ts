@@ -1,5 +1,5 @@
 import { Jimp } from "jimp";
-import type { Frame } from "./frame";
+import { px, type Frame } from "./frame";
 import type { Box } from "./geometry";
 
 /**
@@ -17,15 +17,16 @@ export async function maskToPng(
   cutoff: number,
   scale: number,
 ): Promise<Buffer> {
-  const width = box.w + MARGIN * 2;
-  const height = box.h + MARGIN * 2;
+  const margin = Math.max(1, px(frame, MARGIN));
+  const width = box.w + margin * 2;
+  const height = box.h + margin * 2;
   const image = new Jimp({ width, height, color: 0xffffffff });
 
   for (let y = 0; y < box.h; y++) {
     for (let x = 0; x < box.w; x++) {
       const [r, g, b] = frame.at(box.x + x, box.y + y);
       const value = Math.min(r, g, b) > cutoff ? 0 : 255;
-      const i = ((y + MARGIN) * width + (x + MARGIN)) * 4;
+      const i = ((y + margin) * width + (x + margin)) * 4;
       image.bitmap.data[i] = value;
       image.bitmap.data[i + 1] = value;
       image.bitmap.data[i + 2] = value;

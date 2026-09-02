@@ -7,6 +7,14 @@ export interface Frame {
   at(x: number, y: number): readonly [number, number, number];
 }
 
+/**
+ * A length written as 1080p pixels, in the pixels of the frame at hand. Every screen the game draws
+ * scales with the window, so a measurement taken off one capture only holds as a share of it.
+ */
+export function px(frame: Frame, at1080: number): number {
+  return Math.round((at1080 / 1080) * frame.height);
+}
+
 export function frameFromBitmap(bitmap: {
   width: number;
   height: number;

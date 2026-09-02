@@ -52,3 +52,25 @@ test("a name band stops short of the level badge, which is no part of the name",
     expect(box.x + box.w).toBeLessThan(cardBox(frame, card).x + cardBox(frame, card).w);
   }
 });
+
+/**
+ * The nameplate was measured off a 1080p capture and written in those pixels, so on a 4K one it cut
+ * a band half the height it should and clipped the glyphs. Tesseract read a handful of names
+ * perfectly and returned noise for the rest.
+ */
+test("the name band is the same share of the capture at any size", async () => {
+  const shares = await Promise.all(
+    [
+      "fixtures/qualified-board/FallGuys_client_game_fxbNfcffFv.jpg",
+      "fixtures/qualified-board/FallGuys_client_game_3ztjsDJfdF.jpg",
+    ].map(async (path) => {
+      const frame = await frameFrom(path);
+      const cards = qualifiedCards(frame);
+      const band = nameBand(frame, cards[0]!, cards);
+      return { size: `${frame.width}x${frame.height}`, share: band.h / frame.height };
+    }),
+  );
+
+  expect(shares.map((s) => s.size)).toEqual(["3840x2160", "1920x1080"]);
+  expect(shares[0]!.share).toBeCloseTo(shares[1]!.share, 3);
+});

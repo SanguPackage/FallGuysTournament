@@ -1,4 +1,4 @@
-import type { Frame } from "./frame";
+import { px, type Frame } from "./frame";
 import type { Box } from "./geometry";
 
 /** Measured off a 1920x1080 capture, held as fractions so another size still lands. */
@@ -105,7 +105,7 @@ function badgeLeft(frame: Frame, box: Box, right: number): number | undefined {
     if (gold) {
       leftmost = x;
       gap = 0;
-    } else if (leftmost !== undefined && (gap += 1) > BADGE_GAP) {
+    } else if (leftmost !== undefined && (gap += 1) > px(frame, BADGE_GAP)) {
       break;
     }
   }
@@ -113,21 +113,32 @@ function badgeLeft(frame: Frame, box: Box, right: number): number | undefined {
   return leftmost;
 }
 
+/** The nameplate sits above its card: this far up, and this tall. */
+const BAND_ABOVE = 15;
+const BAND_HEIGHT = 18;
+/** Past the card's right edge, so a name that overhangs it is not clipped. */
+const BAND_OVERHANG = 4;
+/** Between the name and the badge, so the badge's own outline is not read as a letter. */
+const BADGE_CLEARANCE = 2;
+
 export function nameBand(frame: Frame, card: Card, alsoQualified: Card[] = []): Box {
   const box = cardBox(frame, card);
-  const edge = box.x + box.w + 4;
+  const overhang = px(frame, BAND_OVERHANG);
+  const edge = box.x + box.w + overhang;
   const reach = Math.round(cellWidth(frame) * 2.2);
+  const y = box.y - px(frame, BAND_ABOVE);
+  const h = px(frame, BAND_HEIGHT);
 
   const neighbour = alsoQualified
     .filter((other) => other.row === card.row && other.col < card.col)
     .sort((a, b) => b.col - a.col)[0];
-  const floor = neighbour ? cardBox(frame, neighbour).x + cardBox(frame, neighbour).w + 4 : 0;
+  const floor = neighbour ? cardBox(frame, neighbour).x + cardBox(frame, neighbour).w + overhang : 0;
 
   const x = Math.max(edge - reach, floor);
-  const badge = badgeLeft(frame, { x, y: box.y - 15, w: edge - x, h: 18 }, edge);
-  const right = badge === undefined ? edge : badge - 2;
+  const badge = badgeLeft(frame, { x, y, w: edge - x, h }, edge);
+  const right = badge === undefined ? edge : badge - px(frame, BADGE_CLEARANCE);
 
-  return { x, y: box.y - 15, w: Math.max(right - x, 1), h: 18 };
+  return { x, y, w: Math.max(right - x, 1), h };
 }
 
 function greenShare(frame: Frame, card: Card): number {

@@ -19,10 +19,16 @@ const WINNER_PLATE = { x: 855 / 1920, y: 915 / 1080, w: 260 / 1920, h: 44 / 1080
 /** The toast pills are pale, so their text needs a higher cutoff than the rest. */
 const CUTOFF = { grid: 190, winner: 190, toast: 195 } as const;
 /**
- * Enough to read a 15px band, no more: the winner plate's text is already tall, and blown up six
- * times Tesseract returns nothing at all for some names while reading others perfectly.
+ * How tall each band is blown up to before Tesseract sees it. There is a window either side: too
+ * small and it reads nothing, too large and it returns nothing at all for some names while reading
+ * others perfectly. A fixed multiplier only holds at one capture size, so this is a target height
+ * and the multiplier follows from the band actually in hand.
  */
-const SCALE = { grid: 6, winner: 2, toast: 8 } as const;
+const TARGET_HEIGHT = { grid: 108, winner: 88, toast: 192 } as const;
+
+function scaleFor(screen: Screen, box: Box): number {
+  return Math.max(1, Math.round(TARGET_HEIGHT[screen] / box.h));
+}
 
 let worker: Worker | undefined;
 
@@ -69,7 +75,8 @@ export async function readShot(path: string): Promise<ShotRead> {
     const cards = qualifiedCards(frame);
     const tokens: string[] = [];
     for (const card of cards) {
-      const raw = await textIn(frame, nameBand(frame, card, cards), CUTOFF.grid, SCALE.grid);
+      const band = nameBand(frame, card, cards);
+      const raw = await textIn(frame, band, CUTOFF.grid, scaleFor("grid", band));
       tokens.push(dropLevel(cleanToken(raw)));
     }
     return { screen, tokens };
@@ -81,15 +88,12 @@ export async function readShot(path: string): Promise<ShotRead> {
       frame,
       winnerBox(frame),
       CUTOFF.winner,
-      SCALE.winner,
+      scaleFor("winner", winnerBox(frame)),
       PSM.SINGLE_LINE,
     );
     return { screen, tokens: [plate] };
   }
 
-  const pill = trophyPill(frame)!;
-  return {
-    screen,
-    tokens: [await textIn(frame, pillBox(frame, pill), CUTOFF.toast, SCALE.toast)],
-  };
+  const pill = pillBox(frame, trophyPill(frame)!);
+  return { screen, tokens: [await textIn(frame, pill, CUTOFF.toast, scaleFor("toast", pill))] };
 }
