@@ -12,8 +12,12 @@ export const ROUND_TYPES: readonly RoundType[] = [
   "unknown",
 ];
 
-/** The round types the game qualifies players from one at a time, so a first can be recorded. */
-export const SCORES_FIRST = new Set<RoundType>(["race", "hunt"]);
+/**
+ * The round types the game qualifies players from one at a time, so a first can be recorded.
+ * A round no table names is included: it is more often a race than not, and a field the admin can
+ * see and clear beats one that is never offered.
+ */
+export const SCORES_FIRST = new Set<RoundType>(["race", "hunt", "unknown"]);
 
 export interface RoundInfo {
   name: string;

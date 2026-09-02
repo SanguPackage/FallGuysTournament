@@ -293,7 +293,7 @@ test("a hunt round's first across the line scores like a race", () => {
 });
 
 test("a first recorded on a round nobody can finish first in scores nothing", () => {
-  for (const type of ["survival", "logic", "team", "unknown"] as const) {
+  for (const type of ["survival", "logic", "team"] as const) {
     const event = emptyEvent();
     event.shows.push({ name: "Solos", rounds: [{ map: "Roll Out", type, first: "Alpha" }] });
     expect(pointsFor(score(event, players), "Alpha")).toBe(0);
@@ -304,4 +304,13 @@ test("a round with no first recorded scores nothing, whatever its type", () => {
   const event = emptyEvent();
   event.shows.push({ name: "Solos", rounds: [{ map: "Tail Tag", type: "hunt" }] });
   expect(pointsFor(score(event, players), "Alpha")).toBe(0);
+});
+
+test("a round no table names still scores its first, since it is usually a race", () => {
+  const event = emptyEvent();
+  event.shows.push({
+    name: "Solos",
+    rounds: [{ map: "knockout_mystery", type: "unknown", first: "Alpha" }],
+  });
+  expect(pointsFor(score(event, players), "Alpha")).toBe(3);
 });
