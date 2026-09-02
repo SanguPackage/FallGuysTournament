@@ -1,52 +1,54 @@
 {
   "name": "FOM 2026",
-  "date": "2026-09-01",
+  "date": "2026-09-02",
   "shows": [
     {
-      "name": "Solos",
+      "name": "Solos 1",
       "rounds": [
         {
-          "map": "Wall Guys",
-          "type": "race",
-          "first": "Optinux_Prime",
+          "map": "Leading Light",
+          "type": "hunt",
+          "first": "McNugget Buddy",
+          "qualified": [
+            "Gameian30",
+            "TyGraumann81",
+            "SwiftPack225703",
+            "HurriedHarry5058",
+            "Detailedibex9938",
+            "spibblej",
+            "GiganticFlea4049",
+            "JoJoTheGod08",
+            "BlueBatBlood",
+            "Zqxts",
+            "Colithebolt8221",
+            "RedBeard368515",
+            "MonetaryMole3958",
+            "iiamdarealchyna",
+            "RASSHADOW",
+            "YaminDavid",
+            "McNugget Buddy",
+            "Luv2Miss",
+            "MaximumPower159",
+            "RanidHives05",
+            "REELEEYGA"
+          ],
           "survivors": 21
         },
         {
-          "map": "Hoverboard Heroes",
+          "map": "Frantic Factory",
+          "type": "hunt",
+          "survivors": 14
+        },
+        {
+          "map": "Stompin' Ground",
           "type": "survival",
-          "survivors": 7
-        },
-        {
-          "map": "Starchart",
-          "type": "race",
-          "survivors": 5
-        },
-        {
-          "map": "Thin Ice",
-          "type": "final"
-        }
-      ],
-      "winners": [],
-      "checked": true
-    },
-    {
-      "name": "Day at the Races Solo",
-      "rounds": [
-        {
-          "map": "Airtime",
-          "type": "hunt",
-          "first": "Serxav_9",
-          "survivors": 23
-        },
-        {
-          "map": "Pegwin Pool Party",
-          "type": "hunt",
-          "survivors": 17
-        },
-        {
-          "map": "Tail Tag",
-          "type": "hunt",
-          "survivors": 12
+          "qualified": [
+            "GiganticFlea4049",
+            "TyGraumann81",
+            "spibblej",
+            "YaminDavid"
+          ],
+          "survivors": 4
         },
         {
           "map": "Hex-A-Terrestrial",
@@ -54,113 +56,8 @@
         }
       ],
       "winners": [
-        "Diego_9942"
-      ],
-      "checked": true
-    },
-    {
-      "name": "Solos 3",
-      "rounds": [
-        {
-          "map": "Hoverboard Heroes",
-          "type": "survival",
-          "survivors": 15
-        },
-        {
-          "map": "Snowball Survival",
-          "type": "survival",
-          "survivors": 5
-        },
-        {
-          "map": "Roll Out",
-          "type": "survival",
-          "survivors": 4
-        },
-        {
-          "map": "Kraken Slam",
-          "type": "final"
-        }
-      ],
-      "winners": [],
-      "checked": true
-    },
-    {
-      "name": "knockout_mode 1",
-      "rounds": [
-        {
-          "map": "knockout_door_dash",
-          "type": "unknown",
-          "survivors": 23
-        },
-        {
-          "map": "knockout_stompinground",
-          "type": "unknown",
-          "survivors": 13
-        },
-        {
-          "map": "knockout_chickengulch_filler",
-          "type": "unknown",
-          "survivors": 9
-        },
-        {
-          "map": "knockout_jump_showdown",
-          "type": "final"
-        }
-      ],
-      "winners": [],
-      "checked": true
-    },
-    {
-      "name": "knockout_mode 2",
-      "rounds": [
-        {
-          "map": "knockout_spacerace",
-          "type": "unknown",
-          "survivors": 24
-        },
-        {
-          "map": "knockout_skifall_filler",
-          "type": "unknown",
-          "survivors": 15
-        },
-        {
-          "map": "knockout_starchart",
-          "type": "unknown",
-          "survivors": 10
-        },
-        {
-          "map": "knockout_blunderblocks",
-          "type": "final"
-        }
-      ],
-      "winners": [],
-      "checked": true
-    },
-    {
-      "name": "knockout_mode 3",
-      "rounds": [
-        {
-          "map": "knockout_trackattack",
-          "type": "unknown",
-          "survivors": 24
-        },
-        {
-          "map": "knockout_tail_tag",
-          "type": "unknown",
-          "survivors": 16
-        },
-        {
-          "map": "knockout_slimescraper",
-          "type": "unknown",
-          "survivors": 6
-        },
-        {
-          "map": "knockout_rollerderby_final",
-          "type": "final"
-        }
-      ],
-      "winners": [],
-      "checked": true
+        "YaminDavid"
+      ]
     }
   ],
   "penalties": []
