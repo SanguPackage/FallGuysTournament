@@ -3,6 +3,8 @@ dist/
 
 # Raw Player.log files contain the local client public IP address
 data/logs/*.log
+# ...except the one the fixtures are placed against.
+!data/logs/2026-09-02-test-show.log
 .playwright-mcp/
 .claude/settings.local.json
 .claude/worktrees/
