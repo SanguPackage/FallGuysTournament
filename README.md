@@ -168,6 +168,44 @@ The log stamps every line with a **UTC** clock and no date, so the day comes fro
 `event.json` and every time on the admin page is converted to `Europe/Brussels`. A log started
 the day before the event would shift every window.
 
+## Reading names off the captures
+
+The admin reads the captures and fills the names it finds into fields that are still blank. Three
+screens are read:
+
+| Screen                 | Fills               | Read from                                     |
+|------------------------|---------------------|-----------------------------------------------|
+| Qualification board    | `finalists`         | the name over every green card                 |
+| Winner screen          | `winners`           | the nameplate under the bean                   |
+| Qualified toast        | `rounds[n].first`   | the pill wearing the gold trophy               |
+
+The trophy is what marks first place, not the pill's position — the column does not run in finish
+order.
+
+The board comes up after **every** round, so it only means finalists when it is the one following
+the round before the final. That is the same placement the capture panel uses.
+
+Names are matched against the `ingame` names in `data/players.json`. Everyone playing the
+tournament is registered, so the roster is the answer key rather than a spelling aid: each name
+read is given the one roster entry it is closest to, and a name already used on that board is not
+offered again. Where two entries are equally close the field is left as read rather than guessed
+at — so two players whose in-game names differ by a single character cannot be told apart, which
+is worth a glance over `players.json` once everyone has reported.
+
+A name the roster does not hold goes in as it was read. That is what happens when testing outside
+the tournament, where players are not registered.
+
+Only blank fields are filled, and a filled field is ringed in green with the capture it came from
+on hover. Type over one and it is yours — nothing later overwrites it, and clearing it on purpose
+does not bring the name back.
+
+Not read: the lobby's **View Names** screen, whose nametags follow the beans around in 3D and
+overlap into pileups in a full lobby, and any name not written in the Latin alphabet.
+
+The first run downloads Tesseract's English model, about 5MB, into `.ocr-cache/`. **Do that once
+before the event** — nothing afterwards needs the network. Read names are cached in the same
+folder against each file's modified time, so restarting the server does not re-read everything.
+
 ## Tests
 
 ```bash
