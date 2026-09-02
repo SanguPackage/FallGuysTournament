@@ -19,7 +19,13 @@ async function folder(): Promise<string> {
 
 test("only the event's own month is read, images only", async () => {
   expect(await listShots(await folder(), "2026-09")).toEqual([
-    { file: "2026-09/one.png", takenAt: TAKEN.getTime() },
+    { file: "2026-09/one.png", takenAt: TAKEN.getTime(), source: "sharex" },
+  ]);
+});
+
+test("a listing says which root it came from", async () => {
+  expect(await listShots(await folder(), "2026-09", "auto")).toEqual([
+    { file: "2026-09/one.png", takenAt: TAKEN.getTime(), source: "auto" },
   ]);
 });
 

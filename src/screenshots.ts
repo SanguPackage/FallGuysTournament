@@ -1,9 +1,13 @@
 import type { ParsedShow } from "./log";
 
+/** Which folder a capture came out of: ShareX's, or the frames cut from the recording. */
+export type ShotSource = "sharex" | "auto";
+
 export interface Shot {
   /** Path relative to the screenshot root, which is all the admin page ever learns. */
   file: string;
   takenAt: number;
+  source: ShotSource;
 }
 
 export type Selection =
