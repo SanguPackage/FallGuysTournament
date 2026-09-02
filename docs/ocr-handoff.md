@@ -16,62 +16,38 @@ Continue work on the OCR behind the admin's autofill. Everything below was estab
 Names are matched against `ingame` in `data/players.json`. Everyone is registered, so the roster
 is the answer key, not a spelling aid. A name no roster entry claims is filled in but marked red.
 
+## Where the board reader stands
+
+Every name written in the Latin alphabet on the three boards `fixtures/manifest.json` holds an
+answer for now reads and matches: 48 of 48, `src/ocr/board.test.ts`. Across the six boards with a
+truth to check against it is 52 of 56, the four misses all Greek.
+
 ## Open defects, in the order worth fixing
 
-### 1. A qualified player is missed entirely
+### 1. A name not written in the Latin alphabet is never read
 
-`fixtures/` has the board: 23 QUALIFIED, and the reader returns 22 names. **`Clwn7490` is never
-read** — the rightmost card of the top row. Truth for that board, in board order:
+`ΥΨΗΛΑΝΤΗΣ ΠΙΠΑΣ` reads as `YYHAANTHI MAI`: Tesseract carries the English model only, so it spells
+Greek in whatever Latin letters the shapes resemble. The matcher then has nothing to work with, and
+these are the only names on the boards it cannot place. Loading `ell` alongside `eng` is the
+obvious move; the reader picks one language at `createWorker` in `src/ocr/read.ts`.
 
-```
-TopHat282 hannahbanana0724 WiCKED-Xiii dxniel_f13 Clwn7490
-SonicCHTR NatTheGnat_ ErnieAdams_ SnaggTMD PlotTwistxo IG_ARATHNIDOツ
-RLewy19 captainspork1983 coldgin1974 Dash2dgam1ng Nalga_izquierda4 lemonlimecooler
-Danjaneer Pigbro42 CloudyHeron8350 DrivingZebra1233 TurtleSavior90 mykyel972
-```
+### 2. Fourteen fixture frames fail on purpose
 
-First find out which half is wrong: does `qualifiedCards` return 22 or 23? If 23, the band for
-that card reads empty and the geometry is the problem; if 22, the card itself is not detected.
-A name silently absent is worse than a garbled one — it scores nobody and looks like a clean read.
-
-### 2. The band bleeds into the card to its left
-
-Every remaining miss is the same shape — junk prefixed from the neighbour:
-
-| Read                  | Should be          |
-|-----------------------|--------------------|
-| `a Piehrnd`           | `Pigbro42`         |
-| `La mvkval972`        | `mykyel972`        |
-| `a Danian`            | `Danjaneer`        |
-| `Pichrad`             | `Pigbro42`         |
-| `3 rk198 5po captain` | `captainspork1983` |
-
-`nameBand` (`src/ocr/grid.ts`) reaches `cellWidth * 2.2` to the left and stops at `floor`, the
-right edge of the previous **qualified** card. When the neighbour is an eliminated (pink X) card
-there is no floor, so the band runs across it and picks up whatever is there. The floor should
-come from the previous cell, qualified or not.
-
-### 3. Trailing digits get trimmed
-
-`RASSHADOW69` reads as `RASSHADOW`. The badge beside it is `1`, so `badgeLeft`/`dropLevel` took
-three characters where it should have taken one. Only visible on unmatched names — the roster
-match hides it everywhere else, so it may be eating digits far more widely than it appears.
+All `auto-` cuts from the FOM event: 8 boards the grid reader no longer detects after two commits
+tightened it, 5 gameplay frames `isWinner` claims, and 1 toast lost to orange scenery in the trophy
+strip. They are recorded rather than skipped. Do not "fix" them by loosening the classifier without
+checking the fixtures still pass.
 
 ## How to measure
 
 ```bash
-bun test src/ocr/fixtures.test.ts     # what identify() must answer per screen
+bun test src/ocr/                     # board reads, geometry, and what identify() must answer
 bun run scripts/ocr-score.ts          # character error rate and match rate
 ```
 
 `fixtures/` holds real screens sorted by eye, with `manifest.json` giving the expected answer:
 which pill carries the trophy, who it names, and each board read by hand. Both 1920x1080 and
 3840x2160 captures are in there deliberately — see the gotchas.
-
-**Two fixture folders fail on purpose** (14 frames, all `auto-` cuts from the FOM event): 8 boards
-the grid reader no longer detects after two commits tightened it, 5 gameplay frames `isWinner`
-claims, and 1 toast lost to orange scenery in the trophy strip. They are recorded rather than
-skipped. Do not "fix" them by loosening the classifier without checking the fixtures still pass.
 
 ## Gotchas that cost hours
 
@@ -90,10 +66,21 @@ skipped. Do not "fix" them by loosening the classifier without checking the fixt
 
 ## Already fixed — do not redo
 
+- The board's row geometry: a row is 145 tall and the top one starts at 235, not 144 and 225.
+  Nothing on the top row noticed the difference and every row below it did — by the bottom row the
+  name band had slid up onto the card's controller icon, which Tesseract read as a leading
+  character of its own (`Pigbro42` as `a Piehrnd`), and off the descenders of `g`, `j` and `y`.
+- The level badge scan: it looked for gold, and the open sky to the right of the board is gold, so
+  on the last column it found a "badge" a third of the way across the card and cut the band to
+  28 pixels, which reads as nothing at all. It is gone. The nameplate — name, then badge — is
+  centred over its own card and never leaves it, so the band is simply the card's own column, and
+  `dropLevel` takes the badge's number off the end. `RASSHADOW69` keeps its digits again.
+- A band is read as one line. Left to work it out, Tesseract broke a short name into blocks and
+  returned them out of order: `spibblej 21` as `1 lej 2 spibb`.
 - The eliminated-banner guard: it measured magenta, never matched a banner, and voided frames whose
   trophy was readable. Deleted.
 - `isWinner` claiming toasts: `identify` now tells a round from a show's end by the QUALIFIED plate.
-- 1080p-only geometry: the band, badge gap and margin are shares of the frame, and the OCR upscale
+- 1080p-only geometry: the band and its margin are shares of the frame, and the OCR upscale
   targets a glyph height. This took one show from ~7 of 21 names to 17 of 17 registered players.
 - Autofill filling from a capture taken before the round's first qualifier.
 - Captures abandoned before their footage was written (`MAX_ATTEMPTS` spent on segments that had

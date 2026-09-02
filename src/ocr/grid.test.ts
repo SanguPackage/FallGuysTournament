@@ -37,19 +37,29 @@ test("a name band sits just above its card", async () => {
   const box = nameBand(frame, { row: 0, col: 4 });
   const card = cardBox(frame, { row: 0, col: 4 });
   expect(box.y + box.h).toBeLessThanOrEqual(card.y + 4);
-  expect(box.h).toBe(18);
+  expect(box.h).toBe(19);
 });
 
-test("a name band stops short of the level badge, which is no part of the name", async () => {
-  const frame = await frameFrom("src/ocr/samples/grid-5.jpg");
-  for (const card of [
-    { row: 0, col: 4 },
-    { row: 1, col: 2 },
-    { row: 2, col: 2 },
-  ]) {
-    const box = nameBand(frame, card);
-    // The badge is a gold pill hard against the card's right edge, so the band must end left of it.
-    expect(box.x + box.w).toBeLessThan(cardBox(frame, card).x + cardBox(frame, card).w);
+test("a card box sits on the card, on every row", async () => {
+  // An eliminated card is flat magenta, so its own edges are exactly where the row's are. One per
+  // row is all this board offers: the rest are green, whose bean art has edges of its own.
+  const frame = await frameFrom("fixtures/qualified-board/FallGuys_client_game_NZVl4PC1mk.png");
+  const pink: Array<[number, number]> = [
+    [0, 0],
+    [1, 1],
+    [2, 3],
+    [3, 0],
+  ];
+
+  for (const [row, col] of pink) {
+    const box = cardBox(frame, { row, col });
+    const x = box.x + Math.round(box.w / 2);
+    const filled = [];
+    for (let y = box.y - 20; y < box.y + box.h + 20; y++) {
+      const [r, g, b] = frame.at(x, y);
+      if (r > 180 && b > 120 && g < 110) filled.push(y);
+    }
+    expect([row, filled.at(0), filled.at(-1)]).toEqual([row, box.y, box.y + box.h - 1]);
   }
 });
 
@@ -66,7 +76,7 @@ test("the name band is the same share of the capture at any size", async () => {
     ].map(async (path) => {
       const frame = await frameFrom(path);
       const cards = qualifiedCards(frame);
-      const band = nameBand(frame, cards[0]!, cards);
+      const band = nameBand(frame, cards[0]!);
       return { size: `${frame.width}x${frame.height}`, share: band.h / frame.height };
     }),
   );

@@ -4,8 +4,9 @@ import type { Box } from "./geometry";
 /** Measured off a 1920x1080 capture, held as fractions so another size still lands. */
 const LEFT = 435 / 1920;
 const RIGHT = 1492 / 1920;
-const TOP = 225 / 1080;
-const PITCH = 144 / 1080;
+const TOP = 235 / 1080;
+const PITCH = 145 / 1080;
+const CARD_HEIGHT = 122 / 1080;
 export const COLS = 8;
 export const ROWS = 4;
 
@@ -67,86 +68,51 @@ function cellWidth(frame: Frame): number {
 
 export function cardBox(frame: Frame, card: Card): Box {
   const cw = cellWidth(frame);
-  const pitch = PITCH * frame.height;
   return {
     x: Math.round(LEFT * frame.width + cw * card.col),
-    y: Math.round(TOP * frame.height + pitch * card.row),
+    y: Math.round((TOP + PITCH * card.row) * frame.height),
     w: Math.round(cw),
-    h: Math.round(pitch),
+    h: Math.round(CARD_HEIGHT * frame.height),
   };
 }
 
 /**
- * The name sits in a thin band directly above its card, ending at the card's crown badge and
- * reaching left as far as a long name needs. A qualified card to the left has a name of its own in
- * that space, so the band stops at its badge rather than swallowing it.
+ * How far above the card the name starts, and how tall it is. There is barely a pixel between the
+ * bottom of the card's controller icon and the top of the name, and the descenders of `g`, `j` and
+ * `y` run to within five pixels of the card, so the band has no room to spare at either end.
  */
-/** The level badge's gold pill. Its white digits survive the same isolation the name does. */
-function isBadge(r: number, g: number, b: number): boolean {
-  return r > 175 && g > 120 && g < 215 && b < 140;
-}
-
-/** Runs of non-gold inside the pill: its own digits are white, so the run must survive them. */
-const BADGE_GAP = 8;
+const BAND_ABOVE = 23;
+const BAND_HEIGHT = 19;
+/** Past the card either side, so a nameplate that overhangs it is not clipped. */
+const BAND_OVERHANG = 4;
 
 /**
- * The left edge of the level badge, scanning in from the right, or nothing on a card that wears
- * none. The pill sits hard against the card's right edge, so what is left of it is the name.
+ * The band above a card holding its nameplate — the name, then the crown's level badge. The pair
+ * is centred over the card and never runs past it, so the band is the card's own column and
+ * nothing outside it is worth reading: on the rightmost column that is open sky. The badge stays
+ * in, being a number after a space, which `dropLevel` takes off.
  */
-function badgeLeft(frame: Frame, box: Box, right: number): number | undefined {
-  let leftmost: number | undefined;
-  let gap = 0;
-
-  for (let x = right - 1; x >= box.x; x -= 1) {
-    let gold = false;
-    for (let y = box.y; y < box.y + box.h && !gold; y += 2) {
-      if (isBadge(...frame.at(x, y))) gold = true;
-    }
-    if (gold) {
-      leftmost = x;
-      gap = 0;
-    } else if (leftmost !== undefined && (gap += 1) > px(frame, BADGE_GAP)) {
-      break;
-    }
-  }
-
-  return leftmost;
-}
-
-/** The nameplate sits above its card: this far up, and this tall. */
-const BAND_ABOVE = 15;
-const BAND_HEIGHT = 18;
-/** Past the card's right edge, so a name that overhangs it is not clipped. */
-const BAND_OVERHANG = 4;
-/** Between the name and the badge, so the badge's own outline is not read as a letter. */
-const BADGE_CLEARANCE = 2;
-
-export function nameBand(frame: Frame, card: Card, alsoQualified: Card[] = []): Box {
+export function nameBand(frame: Frame, card: Card): Box {
   const box = cardBox(frame, card);
   const overhang = px(frame, BAND_OVERHANG);
-  const edge = box.x + box.w + overhang;
-  const reach = Math.round(cellWidth(frame) * 2.2);
-  const y = box.y - px(frame, BAND_ABOVE);
-  const h = px(frame, BAND_HEIGHT);
-
-  const neighbour = alsoQualified
-    .filter((other) => other.row === card.row && other.col < card.col)
-    .sort((a, b) => b.col - a.col)[0];
-  const floor = neighbour ? cardBox(frame, neighbour).x + cardBox(frame, neighbour).w + overhang : 0;
-
-  const x = Math.max(edge - reach, floor);
-  const badge = badgeLeft(frame, { x, y, w: edge - x, h }, edge);
-  const right = badge === undefined ? edge : badge - px(frame, BADGE_CLEARANCE);
-
-  return { x, y, w: Math.max(right - x, 1), h };
+  return {
+    x: box.x - overhang,
+    y: box.y - px(frame, BAND_ABOVE),
+    w: box.w + overhang * 2,
+    h: px(frame, BAND_HEIGHT),
+  };
 }
+
+/** Off the card's rounded corners and its frame, which are no part of the fill. */
+const CARD_INSET = 6;
 
 function greenShare(frame: Frame, card: Card): number {
   const box = cardBox(frame, card);
   const inset = Math.round(box.w * 0.12);
+  const top = px(frame, CARD_INSET);
   let hit = 0;
   let total = 0;
-  for (let y = box.y + 14; y < box.y + box.h - 14; y += 3) {
+  for (let y = box.y + top; y < box.y + box.h - top; y += 3) {
     for (let x = box.x + inset; x < box.x + box.w - inset; x += 3) {
       total += 1;
       if (isGreen(...frame.at(x, y))) hit += 1;

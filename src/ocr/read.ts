@@ -75,8 +75,10 @@ export async function readShot(path: string): Promise<ShotRead> {
     const cards = qualifiedCards(frame);
     const tokens: string[] = [];
     for (const card of cards) {
-      const band = nameBand(frame, card, cards);
-      const raw = await textIn(frame, band, CUTOFF.grid, scaleFor("grid", band));
+      const band = nameBand(frame, card);
+      // A nameplate is one line. Left to decide for itself, Tesseract breaks a short name into
+      // blocks and hands them back out of order — `spibblej 21` as `1 lej 2 spibb`.
+      const raw = await textIn(frame, band, CUTOFF.grid, scaleFor("grid", band), PSM.SINGLE_LINE);
       tokens.push(dropLevel(cleanToken(raw)));
     }
     return { screen, tokens };
