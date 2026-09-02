@@ -183,12 +183,17 @@ function renderPlayers(): void {
       return input;
     };
 
-    const admin = el("input", { type: "checkbox", title: "Admins are left off the leaderboard" });
-    admin.checked = player.admin === true;
-    admin.addEventListener("change", () => {
-      if (admin.checked) player.admin = true;
-      else delete player.admin;
-    });
+    /** Only the unusual answer is written, so the file stays quiet about everyone ordinary. */
+    const flag = (key: "admin" | "joined", label: string, title: string, fallback: boolean) => {
+      const box = el("input", { type: "checkbox", title });
+      box.checked = player[key] ?? fallback;
+      box.addEventListener("change", () => {
+        if (box.checked === fallback) delete player[key];
+        else player[key] = box.checked;
+        refreshDatalists();
+      });
+      return el("label", { class: "admin-flag" }, [box, ` ${label}`]);
+    };
 
     const remove = el("button", { type: "button", class: "danger" }, ["Delete"]);
     remove.addEventListener("click", () => {
@@ -201,7 +206,8 @@ function renderPlayers(): void {
       field("fom", "FOM name"),
       field("ingame", "Fall Guys name"),
       field("discord", "Discord"),
-      el("label", { class: "admin-flag" }, [admin, " admin"]),
+      flag("joined", "joined", "Only players in the lobby are scored or offered as a name", true),
+      flag("admin", "admin", "Admins are left off the leaderboard", false),
       remove,
     ]);
   });
@@ -211,6 +217,7 @@ function renderPlayers(): void {
       el("span", {}, ["FOM name"]),
       el("span", {}, ["Fall Guys name"]),
       el("span", {}, ["Discord"]),
+      el("span", {}, ["Joined"]),
       el("span", {}, ["Admin"]),
       el("span", {}, []),
     ]),

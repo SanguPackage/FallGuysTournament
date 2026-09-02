@@ -609,3 +609,14 @@ test("a show ticked off carries that through a reopen and a save", () => {
 test("a show nobody has ticked off saves without the flag", () => {
   expect(toShow(complete())).not.toHaveProperty("checked");
 });
+
+test("someone who did not join is never offered, since they are not in the lobby", () => {
+  const absent: Players = {
+    players: [...roster.players, { fom: "E", ingame: "Echo", joined: false }],
+  };
+  expect(namesByPoints(scored, absent)).not.toContain("Echo");
+});
+
+test("joining is the default, so a player without the flag is still offered", () => {
+  expect(namesByPoints(scored, roster)).toContain("Alpha");
+});

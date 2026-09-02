@@ -161,15 +161,15 @@ export function namesInShows(event: TournamentEvent): string[] {
 }
 
 /**
- * Every known name, best scorer first. The people most likely to be typed next are the ones
+ * Every playing name, best scorer first. The people most likely to be typed next are the ones
  * already winning, so they sit at the top of the dropdown.
  */
 export function namesByPoints(event: TournamentEvent, players: Players): string[] {
   const competing: string[] = [];
-  const admins = new Set<string>();
+  const away = new Set<string>();
   for (const player of players.players) {
     if (!player.ingame) continue;
-    if (player.admin) admins.add(player.ingame);
+    if (player.admin || player.joined === false) away.add(player.ingame);
     else competing.push(player.ingame);
   }
 
@@ -180,7 +180,7 @@ export function namesByPoints(event: TournamentEvent, players: Players): string[
   );
 
   return [...new Set([...competing, ...namesInShows(event)])]
-    .filter((name) => !admins.has(name))
+    .filter((name) => !away.has(name))
     .sort((a, b) => (points.get(b) ?? 0) - (points.get(a) ?? 0) || a.localeCompare(b));
 }
 

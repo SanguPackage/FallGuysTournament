@@ -111,3 +111,8 @@ test("a checked flag that is not true or false is caught", () => {
   const shows = [{ name: "Solos", rounds: [], checked: "yes" }];
   expect(checkEvent({ ...event, shows })).toEqual(["shows[0].checked is not true or false"]);
 });
+
+test("a joined flag that is not true or false is caught", () => {
+  const broken = { players: [{ fom: "Ann", joined: "yes" }] };
+  expect(checkPlayers(broken)).toEqual(["players[0].joined is not true or false"]);
+});

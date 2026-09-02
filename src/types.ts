@@ -46,6 +46,8 @@ export interface Player {
   discord?: string;
   /** Admins run the event rather than competing, so they are left off the leaderboard. */
   admin?: boolean;
+  /** Absent or true for everyone playing. False keeps a registered no-show out of the tournament. */
+  joined?: boolean;
 }
 
 export interface Players {
