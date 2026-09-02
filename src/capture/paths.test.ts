@@ -1,0 +1,53 @@
+import { expect, test } from "bun:test";
+import { captureFolders, captureSettings, FFMPEG_DEFAULT } from "./paths";
+
+const exists = (paths: string[]) => async (path: string) => paths.includes(path);
+
+test("ShareX's bundled ffmpeg is used when nothing says otherwise", async () => {
+  const settings = await captureSettings({}, exists([FFMPEG_DEFAULT]));
+  expect(settings.ffmpeg).toBe(FFMPEG_DEFAULT);
+});
+
+test("FFMPEG_PATH wins over the bundled one", async () => {
+  const settings = await captureSettings(
+    { FFMPEG_PATH: "/mnt/d/tools/ffmpeg.exe" },
+    exists([FFMPEG_DEFAULT, "/mnt/d/tools/ffmpeg.exe"]),
+  );
+  expect(settings.ffmpeg).toBe("/mnt/d/tools/ffmpeg.exe");
+});
+
+test("no ffmpeg anywhere is reported rather than guessed at", async () => {
+  const settings = await captureSettings({}, exists([]));
+  expect(settings.ffmpeg).toBeUndefined();
+});
+
+test("the capture folder, monitor and audio device come from the environment", async () => {
+  const settings = await captureSettings(
+    { CAPTURE_DIR: "/mnt/d/caps", CAPTURE_OUTPUT: "1", CAPTURE_AUDIO: "loop-thing" },
+    exists([FFMPEG_DEFAULT]),
+  );
+  expect(settings.dir).toBe("/mnt/d/caps");
+  expect(settings.output).toBe(1);
+  expect(settings.audioDevice).toBe("loop-thing");
+});
+
+test("defaults are the first monitor, /mnt/c/FallGuysCapture and the usual loopback device", async () => {
+  const settings = await captureSettings({}, exists([FFMPEG_DEFAULT]));
+  expect(settings.dir).toBe("/mnt/c/FallGuysCapture");
+  expect(settings.output).toBe(0);
+  expect(settings.audioDevice).toBe("virtual-audio-capturer");
+});
+
+test("CAPTURE_AUDIO=off records silently", async () => {
+  const settings = await captureSettings({ CAPTURE_AUDIO: "off" }, exists([FFMPEG_DEFAULT]));
+  expect(settings.audioDevice).toBeUndefined();
+});
+
+test("a CAPTURE_OUTPUT that is not a number falls back to the first monitor", async () => {
+  const settings = await captureSettings({ CAPTURE_OUTPUT: "left" }, exists([FFMPEG_DEFAULT]));
+  expect(settings.output).toBe(0);
+});
+
+test("the folders under the capture dir stay in WSL form", () => {
+  expect(captureFolders("/mnt/c/FallGuysCapture").segments).toBe("/mnt/c/FallGuysCapture/segments");
+});
