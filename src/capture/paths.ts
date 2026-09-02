@@ -53,3 +53,16 @@ export function captureFolders(dir: string) {
     captures: at("captures"),
   };
 }
+
+/**
+ * One spawn's folder. Local time, because the event is a local evening. Seconds are in it because
+ * ffmpeg can die and be respawned inside the same minute, and two spawns sharing a folder is the
+ * overwrite this whole layout exists to prevent.
+ */
+export function runFolder(at: number): string {
+  const date = new Date(at);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const day = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  const clock = `${pad(date.getHours())}h${pad(date.getMinutes())}m${pad(date.getSeconds())}`;
+  return `${day}T${clock}`;
+}

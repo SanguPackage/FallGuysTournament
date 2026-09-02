@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { captureFolders, captureSettings, FFMPEG_DEFAULT } from "./paths";
+import { captureFolders, captureSettings, FFMPEG_DEFAULT, runFolder } from "./paths";
 
 const exists = (paths: string[]) => async (path: string) => paths.includes(path);
 
@@ -50,4 +50,15 @@ test("a CAPTURE_OUTPUT that is not a number falls back to the first monitor", as
 
 test("the folders under the capture dir stay in WSL form", () => {
   expect(captureFolders("/mnt/c/FallGuysCapture").segments).toBe("/mnt/c/FallGuysCapture/segments");
+});
+
+test("a run folder is named for the local clock, down to the second", () => {
+  // Built from local parts so the expectation holds in any timezone.
+  const at = new Date(2026, 8, 2, 21, 41, 3).getTime();
+  expect(runFolder(at)).toBe("2026-09-02T21h41m03");
+});
+
+test("two runs a second apart get different folders", () => {
+  const at = new Date(2026, 8, 2, 21, 41, 3).getTime();
+  expect(runFolder(at)).not.toBe(runFolder(at + 1000));
 });
