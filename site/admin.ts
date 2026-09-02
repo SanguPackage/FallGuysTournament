@@ -36,6 +36,8 @@ interface State {
   fills: SlotFill[];
   /** Whether a save also commits and pushes, which is the flag the server was started with. */
   autoPublish: boolean;
+  /** Null when the server is not recording. */
+  capture: { running: boolean; audio: boolean; since?: number; error?: string } | null;
   /** Anything in data/ that would break the published board. Blocks publishing while non-empty. */
   problems: DataProblem[];
 }
@@ -281,7 +283,7 @@ function shotImages(shots: PlacedShot[]): Node[] {
 
     const size = sizes.get(shot.file) ?? "thumb";
     const image = el("img", {
-      src: `/api/shot?f=${encodeURIComponent(shot.file)}`,
+      src: `/api/shot?f=${encodeURIComponent(shot.file)}&s=${shot.source}`,
       alt: name,
       class: size,
     });
@@ -623,6 +625,22 @@ function renderPublish(): void {
     : "Publishing is off: saves stay on this machine. Restart with bun run live to publish as you go.";
 }
 
+/** A recording that died silently costs the night's captures, so its state is on screen. */
+function renderCapture(): void {
+  const badge = document.querySelector<HTMLElement>("#capture-badge")!;
+  const capture = state.capture;
+  badge.hidden = capture === null;
+  if (!capture) return;
+
+  badge.textContent = capture.running
+    ? capture.audio
+      ? "recording"
+      : "recording — no sound"
+    : "NOT RECORDING";
+  badge.className = capture.running ? "badge on" : "badge off";
+  badge.title = capture.error ?? "";
+}
+
 /** A field the board cannot read is a blank page for everyone watching, so it is said out loud. */
 function renderProblems(): void {
   const banner = document.querySelector<HTMLElement>("#data-problems")!;
@@ -640,6 +658,7 @@ function render(): void {
   renderShows();
   renderProblems();
   renderPublish();
+  renderCapture();
   renderShots();
   markSelected();
   restoreFocus(focus);
@@ -650,7 +669,16 @@ function render(): void {
  * poll: players and drafts are whatever is being typed here.
  */
 async function watchLog(): Promise<void> {
-  let seen = JSON.stringify([state.shows, state.shots, state.times, state.problems, state.fills]);
+  // The recorder is in here so a recording that died turns the badge red on the next poll rather
+  // than leaving it reading "recording" for the rest of the night.
+  let seen = JSON.stringify([
+    state.shows,
+    state.shots,
+    state.times,
+    state.problems,
+    state.fills,
+    state.capture,
+  ]);
   setInterval(async () => {
     let next: State;
     try {
@@ -660,7 +688,14 @@ async function watchLog(): Promise<void> {
       return;
     }
     status("watch-status", `Watching the log · ${next.shows.length} shows`);
-    const signature = JSON.stringify([next.shows, next.shots, next.times, next.problems, next.fills]);
+    const signature = JSON.stringify([
+      next.shows,
+      next.shots,
+      next.times,
+      next.problems,
+      next.fills,
+      next.capture,
+    ]);
     if (signature === seen) return;
     seen = signature;
     state.shows = next.shows;
@@ -669,6 +704,7 @@ async function watchLog(): Promise<void> {
     state.fills = next.fills;
     state.order = next.order;
     state.problems = next.problems;
+    state.capture = next.capture;
     render();
   }, WATCH_MS);
 }
