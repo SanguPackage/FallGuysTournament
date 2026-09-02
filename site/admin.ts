@@ -2,6 +2,7 @@ import type { ParsedShow } from "../src/log";
 import type { Players, TournamentEvent } from "../src/types";
 import {
   applyFills,
+  candidatesFor,
   resyncRound,
   resyncWinners,
   captureBadge,
@@ -18,6 +19,7 @@ import {
   syncDraft,
   toShow,
   validate,
+  type NameSlot,
   type ShowDraft,
 } from "./admin-model";
 import type { DataProblem } from "../src/data-check";
@@ -407,9 +409,25 @@ function resyncButton(forget: () => void): HTMLButtonElement {
   return button;
 }
 
-function nameInput(key: string, value: string, onChange: (value: string) => void): HTMLInputElement {
-  const input = el("input", { type: "text", list: "registered", value, placeholder: "name" });
+/**
+ * The dropdown is filled on focus rather than up front: what could still go in a slot changes with
+ * every name typed into the ones beside it, and none of that redraws the form.
+ */
+function nameInput(
+  draft: ShowDraft,
+  slot: NameSlot,
+  key: string,
+  value: string,
+  onChange: (value: string) => void,
+): HTMLInputElement {
+  const input = el("input", { type: "text", list: "candidates", value, placeholder: "name" });
   input.dataset.focusKey = key;
+  input.addEventListener("focus", () => {
+    const list = document.querySelector("#candidates")!;
+    list.replaceChildren(
+      ...candidatesFor(draft, knownNames(), slot).map((name) => el("option", { value: name })),
+    );
+  });
   const source = fillMemo.sources.get(key);
   if (source && value) {
     // Everyone playing is registered, so text no roster entry claimed is a reading to check, not a
@@ -497,9 +515,15 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
       cells.push(
         el("label", {}, [
           "first ",
-          nameInput(`show:${index}:round:${roundIndex}:first`, entry.first, (value) => {
-            entry.first = value;
-          }),
+          nameInput(
+            draft,
+            { slot: "first", roundIndex },
+            `show:${index}:round:${roundIndex}:first`,
+            entry.first,
+            (value) => {
+              entry.first = value;
+            },
+          ),
         ]),
       );
     }
@@ -531,9 +555,15 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
     // The final has no board of its own — the winner screen stands in — so it gets no block.
     if (entry.type !== "final") {
       const qualified = entry.qualified.map((value, slot) =>
-        nameInput(`show:${index}:round:${roundIndex}:qualified:${slot}`, value, (next) => {
-          entry.qualified[slot] = next;
-        }),
+        nameInput(
+          draft,
+          { slot: "qualified", roundIndex, at: slot },
+          `show:${index}:round:${roundIndex}:qualified:${slot}`,
+          value,
+          (next) => {
+            entry.qualified[slot] = next;
+          },
+        ),
       );
       cells.push(
         el("div", { class: "field qualified" }, [
@@ -547,9 +577,15 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
   });
 
   const winners = draft.winners.map((value, slot) =>
-    nameInput(`show:${index}:winner:${slot}`, value, (next) => {
-      draft.winners[slot] = next;
-    }),
+    nameInput(
+      draft,
+      { slot: "winners", at: slot },
+      `show:${index}:winner:${slot}`,
+      value,
+      (next) => {
+        draft.winners[slot] = next;
+      },
+    ),
   );
 
   const addWinner = el("button", { type: "button" }, ["+ winner"]);

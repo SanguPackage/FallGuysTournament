@@ -10,6 +10,7 @@ import {
   resyncWinners,
   namesInShows,
   draftFromShow,
+  candidatesFor,
   everyPlayerNamed,
   suggestShowName,
   syncDraft,
@@ -781,4 +782,60 @@ test("a roster with a blank FOM name is a row still being typed, not one to save
   expect(everyPlayerNamed({ players: [{ fom: "A" }, { fom: "  " }] })).toBe(false);
   expect(everyPlayerNamed({ players: [{ fom: "A" }, { fom: "B" }] })).toBe(true);
   expect(everyPlayerNamed({ players: [] })).toBe(true);
+});
+
+const FIELD = ["Alpha", "Bravo", "Charlie", "Delta"];
+
+function typing(): ShowDraft {
+  return {
+    name: "Solos",
+    rounds: [
+      { map: "Dizzy Heights", type: "race", first: "", qualified: ["Alpha", "Bravo", "Charlie"] },
+      { map: "Roll Out", type: "survival", first: "", qualified: ["", ""] },
+      { map: "Fall Mountain", type: "final", first: "", qualified: [] },
+    ],
+    winners: [""],
+  };
+}
+
+test("a slot offers everyone the boards before it left in", () => {
+  const at = candidatesFor(typing(), FIELD, { slot: "qualified", roundIndex: 1, at: 0 });
+  expect(at).toEqual(["Alpha", "Bravo", "Charlie"]);
+});
+
+test("a name typed into the board beside it is not offered twice", () => {
+  const draft = typing();
+  draft.rounds[1]!.qualified[1] = "Bravo";
+  expect(candidatesFor(draft, FIELD, { slot: "qualified", roundIndex: 1, at: 0 })).toEqual([
+    "Alpha",
+    "Charlie",
+  ]);
+});
+
+test("the slot being typed into still offers what it already holds", () => {
+  const draft = typing();
+  draft.rounds[1]!.qualified[0] = "Bravo";
+  expect(candidatesFor(draft, FIELD, { slot: "qualified", roundIndex: 1, at: 0 })).toContain(
+    "Bravo",
+  );
+});
+
+test("a board short of a name is one still being typed, so it eliminates nobody", () => {
+  const draft = typing();
+  draft.rounds[0]!.qualified[2] = "";
+  expect(candidatesFor(draft, FIELD, { slot: "qualified", roundIndex: 1, at: 0 })).toEqual(FIELD);
+});
+
+test("whoever crossed first qualified, so first is offered that round's own survivors", () => {
+  expect(candidatesFor(typing(), FIELD, { slot: "first", roundIndex: 0 })).toEqual([
+    "Alpha",
+    "Bravo",
+    "Charlie",
+  ]);
+});
+
+test("a winner is offered only whoever reached the final", () => {
+  const draft = typing();
+  draft.rounds[1]!.qualified = ["Alpha", "Bravo"];
+  expect(candidatesFor(draft, FIELD, { slot: "winners", at: 0 })).toEqual(["Alpha", "Bravo"]);
 });
