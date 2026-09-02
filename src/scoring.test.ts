@@ -314,3 +314,10 @@ test("a round no table names still scores its first, since it is usually a race"
   });
   expect(pointsFor(score(event, players), "Alpha")).toBe(3);
 });
+
+test("someone who did not join is left off the leaderboard", () => {
+  const absent: Players = {
+    players: [{ ingame: "Alpha", fom: "Ann" }, { ingame: "Echo", fom: "Eve", joined: false }],
+  };
+  expect(score(emptyEvent(), absent).map((r) => r.fom)).toEqual(["Ann"]);
+});

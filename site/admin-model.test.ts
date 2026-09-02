@@ -596,3 +596,27 @@ test("a fill for another show is ignored", () => {
   expect(applyFills(draft, other, 0, newFillMemo())).toBe(false);
   expect(draft.finalists).toEqual(["", ""]);
 });
+
+test("a show ticked off carries that through a reopen and a save", () => {
+  const draft = draftFromShow(
+    { name: "Solos", rounds: [], finalists: [], winners: [], checked: true },
+    { showId: "s", rounds: [], winnerId: undefined },
+  );
+  expect(draft.checked).toBe(true);
+  expect(toShow(draft).checked).toBe(true);
+});
+
+test("a show nobody has ticked off saves without the flag", () => {
+  expect(toShow(complete())).not.toHaveProperty("checked");
+});
+
+test("someone who did not join is never offered, since they are not in the lobby", () => {
+  const absent: Players = {
+    players: [...roster.players, { fom: "E", ingame: "Echo", joined: false }],
+  };
+  expect(namesByPoints(scored, absent)).not.toContain("Echo");
+});
+
+test("joining is the default, so a player without the flag is still offered", () => {
+  expect(namesByPoints(scored, roster)).toContain("Alpha");
+});

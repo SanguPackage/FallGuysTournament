@@ -51,6 +51,8 @@ let selection: Selection = { slot: "all" };
 let selectedShow = 0;
 /** The saved show reopened for editing, if any. Otherwise the next unrecorded show is the form. */
 let editing: number | null = null;
+/** Forms folded away with Close. The next show to record opens on its own, until it is closed. */
+const closed = new Set<number>();
 /** How large each capture is being shown, and which are collapsed, so a rebuild keeps them that way. */
 type ShotSize = "thumb" | "fit" | "full";
 
@@ -59,6 +61,7 @@ type ShotSize = "thumb" | "fit" | "full";
  * and refolding and re-zooming a dozen captures afterwards would make that too expensive to do.
  */
 const COLLAPSED_KEY = "fallguys.admin.collapsed";
+const TAB_KEY = "fallguys.admin.tab";
 const SIZES_KEY = "fallguys.admin.sizes";
 const SCROLL_KEY = "fallguys.admin.scroll";
 
@@ -117,6 +120,19 @@ function restoreFocus(focus: Focus | undefined): void {
   if (!input) return;
   input.focus();
   if (focus.start !== null) input.setSelectionRange(focus.start, focus.end ?? focus.start);
+}
+
+function showTab(tab: string): void {
+  document.querySelectorAll<HTMLElement>("[data-tab]").forEach((button) => {
+    const on = button.dataset.tab === tab;
+    button.classList.toggle("on", on);
+    button.setAttribute("aria-selected", String(on));
+  });
+  document.querySelectorAll<HTMLElement>("[data-panel]").forEach((panel) => {
+    panel.hidden = panel.dataset.panel !== tab;
+  });
+  document.querySelector(".layout")!.classList.toggle("wide", tab !== "shows");
+  remember(TAB_KEY, [tab]);
 }
 
 function status(id: string, message: string, ok = true): void {
@@ -185,12 +201,17 @@ function renderPlayers(): void {
       return input;
     };
 
-    const admin = el("input", { type: "checkbox", title: "Admins are left off the leaderboard" });
-    admin.checked = player.admin === true;
-    admin.addEventListener("change", () => {
-      if (admin.checked) player.admin = true;
-      else delete player.admin;
-    });
+    /** Only the unusual answer is written, so the file stays quiet about everyone ordinary. */
+    const flag = (key: "admin" | "joined", label: string, title: string, fallback: boolean) => {
+      const box = el("input", { type: "checkbox", title });
+      box.checked = player[key] ?? fallback;
+      box.addEventListener("change", () => {
+        if (box.checked === fallback) delete player[key];
+        else player[key] = box.checked;
+        refreshDatalists();
+      });
+      return el("label", { class: "admin-flag" }, [box, ` ${label}`]);
+    };
 
     const remove = el("button", { type: "button", class: "danger" }, ["Delete"]);
     remove.addEventListener("click", () => {
@@ -203,7 +224,8 @@ function renderPlayers(): void {
       field("fom", "FOM name"),
       field("ingame", "Fall Guys name"),
       field("discord", "Discord"),
-      el("label", { class: "admin-flag" }, [admin, " admin"]),
+      flag("joined", "joined", "Only players in the lobby are scored or offered as a name", true),
+      flag("admin", "admin", "Admins are left off the leaderboard", false),
       remove,
     ]);
   });
@@ -213,6 +235,7 @@ function renderPlayers(): void {
       el("span", {}, ["FOM name"]),
       el("span", {}, ["Fall Guys name"]),
       el("span", {}, ["Discord"]),
+      el("span", {}, ["Joined"]),
       el("span", {}, ["Admin"]),
       el("span", {}, []),
     ]),
@@ -386,6 +409,19 @@ function nameInput(key: string, value: string, onChange: (value: string) => void
   return input;
 }
 
+/**
+ * Shows are stored by their position in the log, so recording one out of order leaves a gap that
+ * has to be filled or every later index would shift.
+ */
+function fillGapsBefore(index: number): void {
+  for (let earlier = 0; earlier < index; earlier += 1) {
+    const parsed = state.shows[earlier];
+    state.event.shows[earlier] ??= parsed
+      ? toShow(draftFor(parsed, suggestShowName(state.shows, earlier)))
+      : { name: "", rounds: [] };
+  }
+}
+
 function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
   const saved = state.event.shows[index];
   const draft =
@@ -488,6 +524,7 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
   stopEditing.addEventListener("click", () => {
     drafts.delete(index);
     editing = null;
+    closed.add(index);
     render();
   });
 
@@ -499,15 +536,8 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
     const found = validate(draft);
     problems.replaceChildren(...found.map((problem) => el("li", {}, [problem])));
     if (found.length > 0) return;
-    const before = [...state.event.shows];
-    // Shows are stored by their position in the log, so recording one out of order leaves a gap
-    // that has to be filled or every later index would shift.
-    for (let earlier = 0; earlier < index; earlier += 1) {
-      const parsedEarlier = state.shows[earlier];
-      state.event.shows[earlier] ??= parsedEarlier
-        ? toShow(draftFor(parsedEarlier))
-        : { name: "", rounds: [] };
-    }
+    const before = structuredClone(state.event.shows);
+    fillGapsBefore(index);
     state.event.shows[index] = toShow(draft);
     try {
       const published = await save("/api/event", state.event);
@@ -551,7 +581,7 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
       { slot: "winners" },
     ),
     problems,
-    el("div", { class: "actions" }, [saveButton, ...(saved ? [stopEditing] : [])]),
+    el("div", { class: "actions" }, [saveButton, stopEditing]),
   ]);
 }
 
@@ -569,7 +599,8 @@ function renderShows(): void {
     return;
   }
 
-  const open = editing ?? state.event.shows.length;
+  const next = state.event.shows.length;
+  const open = editing ?? (closed.has(next) ? -1 : next);
 
   const rows = state.shows.map((parsed, index) => {
     if (index === open) return renderShowForm(parsed, index);
@@ -592,18 +623,47 @@ function renderShows(): void {
     const gaps = missingFrom(show, parsed);
     if (gaps.length > 0) cells.push(el("span", { class: "gaps" }, [`needs ${gaps.join(", ")}`]));
 
-    const edit = el("button", { type: "button", class: "push" }, ["Edit"]);
+    const tick = el("button", { type: "button", class: show?.checked ? "tick on" : "tick" }, ["\u2713"]);
+    tick.title = show?.checked
+      ? "Checked — click to undo"
+      : show
+        ? "Mark this show as checked"
+        : "Record this show as the log has it, checked";
+    tick.addEventListener("click", async (event) => {
+      event.stopPropagation();
+      const before = structuredClone(state.event.shows);
+      if (show?.checked) {
+        delete state.event.shows[index]!.checked;
+      } else {
+        fillGapsBefore(index);
+        state.event.shows[index] = {
+          ...(show ?? toShow(draftFor(parsed, suggestShowName(state.shows, index)))),
+          checked: true,
+        };
+      }
+      render();
+      try {
+        const published = await save("/api/event", state.event);
+        if (published) status("publish-status", published.message, published.pushed);
+      } catch (error) {
+        state.event.shows = before;
+        render();
+        status("publish-status", `Could not save: ${error}`, false);
+      }
+    });
+
+    const edit = el("button", { type: "button" }, ["Edit"]);
     edit.addEventListener("click", (event) => {
       event.stopPropagation();
       editing = index;
       render();
     });
-    cells.push(edit);
+    tick.classList.add("push");
+    cells.push(tick, edit);
 
+    const classes = ["show-done", ...(show ? [] : ["waiting"]), ...(show?.checked ? ["ok"] : [])];
     return selectable(
-      el("div", { class: show ? "show-done" : "show-done waiting" }, [
-        el("div", { class: "show-head" }, cells),
-      ]),
+      el("div", { class: classes.join(" ") }, [el("div", { class: "show-head" }, cells)]),
       index,
       { slot: "all" },
     );
@@ -687,7 +747,6 @@ async function watchLog(): Promise<void> {
       status("watch-status", "Lost the server. Retrying…", false);
       return;
     }
-    status("watch-status", `Watching the log · ${next.shows.length} shows`);
     const signature = JSON.stringify([
       next.shows,
       next.shots,
@@ -712,10 +771,15 @@ async function watchLog(): Promise<void> {
 async function main(): Promise<void> {
   state = (await (await fetch("/api/state")).json()) as State;
   selectedShow = state.event.shows.length;
-  document.querySelector("#log-path")!.textContent = [
-    state.logPath ? `Reading ${state.logPath}` : "No Fall Guys log found",
-    state.shotDir ? `Screenshots from ${state.shotDir}` : "No ShareX folder found",
-  ].join(" · ");
+  document.querySelector("#log-path")!.textContent =
+    state.logPath ?? "No Fall Guys log found. Set FALLGUYS_LOG and restart.";
+  document.querySelector("#shot-dir")!.textContent =
+    state.shotDir ?? "No ShareX folder found. Set SHAREX_DIR and restart.";
+
+  document.querySelectorAll<HTMLElement>("[data-tab]").forEach((button) => {
+    button.addEventListener("click", () => showTab(button.dataset.tab!));
+  });
+  showTab(stored<string>(TAB_KEY)[0] ?? "shows");
 
   const panel = document.querySelector<HTMLElement>("#shots")!;
   let pending: ReturnType<typeof setTimeout> | undefined;
@@ -784,7 +848,6 @@ async function main(): Promise<void> {
   });
 
   render();
-  status("watch-status", `Watching the log · ${state.shows.length} shows`);
   void watchLog();
 }
 

@@ -38,6 +38,10 @@ export function checkEvent(value: unknown): string[] {
         }
       }
 
+      if (show.checked !== undefined && typeof show.checked !== "boolean") {
+        problems.push(`${at}.checked is not true or false`);
+      }
+
       if (!Array.isArray(show.rounds)) return void problems.push(`${at}.rounds is not an array`);
       show.rounds.forEach((round, roundIndex) => {
         const on = `${at}.rounds[${roundIndex}]`;
@@ -81,8 +85,10 @@ export function checkPlayers(value: unknown): string[] {
         problems.push(`${at}.${key} is not a string`);
       }
     }
-    if (player.admin !== undefined && typeof player.admin !== "boolean") {
-      problems.push(`${at}.admin is not true or false`);
+    for (const key of ["admin", "joined"] as const) {
+      if (player[key] !== undefined && typeof player[key] !== "boolean") {
+        problems.push(`${at}.${key} is not true or false`);
+      }
     }
   });
   return problems;

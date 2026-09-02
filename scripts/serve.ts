@@ -23,7 +23,7 @@ import { Ledger, type LedgerState } from "../src/capture/ledger";
 import { Serial } from "../src/capture/serial";
 import { captureMoment, cutShowClip } from "../src/capture/pipeline";
 import { mkdir } from "node:fs/promises";
-import type { LiveNow } from "../src/live";
+import { showNameNow, type LiveNow } from "../src/live";
 import type { ParsedShow } from "../src/log";
 import type { Players, TournamentEvent } from "../src/types";
 import type { Shot, ShotSource } from "../src/screenshots";
@@ -249,7 +249,9 @@ const server = Bun.serve({
       const shots = await placed(shotDir, shows, event.date);
       queueReads(shotDir, shots);
       const players = (await Bun.file(PLAYERS_PATH).json()) as Players;
-      const roster = players.players.flatMap((player) => (player.ingame ? [player.ingame] : []));
+      const roster = players.players.flatMap((player) =>
+        player.ingame && player.joined !== false ? [player.ingame] : [],
+      );
 
       return json({
         players,
@@ -302,13 +304,14 @@ const server = Bun.serve({
       const round = playing.rounds.at(-1);
 
       // A recorded show without winners is the one still being typed in; anything else means the
-      // lobby has moved on to the next show in the plan.
+      // lobby has moved on to a show nobody has written down yet.
       const last = event.shows.at(-1);
       const typing = last !== undefined && !last.winners?.length;
+      const index = typing ? event.shows.length - 1 : event.shows.length;
 
       const live: LiveNow = {
-        show: typing ? last.name : suggestShowName(played, played.length - 1),
-        showNumber: typing ? event.shows.length : event.shows.length + 1,
+        show: showNameNow(event, index, suggestShowName(played, played.length - 1)),
+        showNumber: index + 1,
         round: playing.rounds.length,
         map: round?.name ?? null,
         type: round ? (round.isFinal ? "final" : round.type) : null,
