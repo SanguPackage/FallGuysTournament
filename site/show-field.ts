@@ -3,23 +3,26 @@ import type { LiveStatus } from "../src/live";
 import type { Player, Show, TournamentEvent } from "../src/types";
 import { escapeHtml } from "./render";
 
-function note(player: FieldPlayer): string {
+function outNote(player: FieldPlayer): string {
   if (player.outAt !== undefined) return `out R${player.outAt}`;
+  return firstsNote(player);
+}
+
+function firstsNote(player: FieldPlayer): string {
   return player.firsts.length > 0 ? `⚡${player.firsts.join(" ⚡")}` : "";
 }
 
-function chip(player: FieldPlayer): string {
+function chip(player: FieldPlayer, detail: string): string {
   const crown = player.state === "won" ? "👑 " : "";
-  const detail = note(player);
   return `<span class="bn ${player.state}">${crown}<b>${escapeHtml(player.ingame)}</b>${
     detail ? `<small>${detail}</small>` : ""
   }</span>`;
 }
 
-export function renderShowField(show: Show, players: Player[]): string {
-  const field = fieldOf(show, players);
-  if (field.length === 0) return "";
-  return `<div class="beans">${field.map(chip).join("")}</div>`;
+/** Badges for one round. The row already says which round it is, so the chips do not repeat it. */
+export function renderRoundBeans(beans: FieldPlayer[]): string {
+  if (beans.length === 0) return "";
+  return `<div class="beans">${beans.map((p) => chip(p, firstsNote(p))).join("")}</div>`;
 }
 
 function tally(show: Show, field: FieldPlayer[]): string {
@@ -52,7 +55,10 @@ export function renderShowNow(
   const number = event.shows.indexOf(show) + 1;
 
   const field = fieldOf(show, players);
-  const grid = field.length === 0 ? "" : `<div class="beans">${field.map(chip).join("")}</div>`;
+  const grid =
+    field.length === 0
+      ? ""
+      : `<div class="beans">${field.map((p) => chip(p, outNote(p))).join("")}</div>`;
 
   return `
     <div class="panel shownow">

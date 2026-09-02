@@ -1,7 +1,8 @@
 import { expect, test } from "bun:test";
 import type { LiveStatus } from "../src/live";
 import type { Player, Show, TournamentEvent } from "../src/types";
-import { renderShowField, renderShowNow } from "./show-field";
+import { roundFieldsOf } from "../src/field";
+import { renderRoundBeans, renderShowNow } from "./show-field";
 
 const ROSTER: Player[] = [
   { fom: "Alpha_FOM", ingame: "Alpha" },
@@ -18,34 +19,27 @@ const FINISHED: Show = {
   winners: ["Alpha"],
 };
 
-test("every player in the field gets a chip", () => {
-  const html = renderShowField(FINISHED, ROSTER);
-  expect(html).toContain("Alpha");
-  expect(html).toContain("Bravo");
-  expect(html).toContain("Charlie");
+test("each badge carries its state as a class", () => {
+  const rounds = roundFieldsOf(FINISHED, ROSTER);
+  expect(renderRoundBeans(rounds[0]!)).toContain(`class="bn out"`);
+  expect(renderRoundBeans(rounds[1]!)).toContain(`class="bn won"`);
 });
 
-test("a chip carries its state as a class", () => {
-  const html = renderShowField(FINISHED, ROSTER);
-  expect(html).toContain(`class="bn won"`);
-  expect(html).toContain(`class="bn through"`);
-  expect(html).toContain(`class="bn out"`);
+test("a badge does not repeat the round it is sitting on", () => {
+  expect(renderRoundBeans(roundFieldsOf(FINISHED, ROSTER)[0]!)).not.toContain("out R1");
 });
 
-test("a knocked-out chip says which round did it", () => {
-  expect(renderShowField(FINISHED, ROSTER)).toContain("out R1");
+test("rounds crossed first are marked on the badge", () => {
+  expect(renderRoundBeans(roundFieldsOf(FINISHED, ROSTER)[1]!)).toContain("⚡1");
 });
 
-test("rounds crossed first are marked on the chip", () => {
-  expect(renderShowField(FINISHED, ROSTER)).toContain("⚡1");
-});
-
-test("an empty roster renders nothing", () => {
-  expect(renderShowField(FINISHED, [])).toBe("");
+test("a round that took nobody renders nothing", () => {
+  expect(renderRoundBeans([])).toBe("");
 });
 
 test("a name is escaped", () => {
-  const html = renderShowField(FINISHED, [{ fom: "X", ingame: "<script>" }]);
+  const beans = roundFieldsOf(FINISHED, [{ fom: "X", ingame: "<script>" }]);
+  const html = renderRoundBeans(beans[0]!);
   expect(html).not.toContain("<script>");
   expect(html).toContain("&lt;script&gt;");
 });
