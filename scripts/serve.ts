@@ -340,6 +340,7 @@ const server = Bun.serve({
         shows,
         times,
         shotDir: shotDir ?? null,
+        captureDir: capture.dir,
         shots,
         fills: fillsFor(shots, readsFor(shots), roster, times, event.shows),
         autoPublish: AUTO_PUBLISH,

@@ -37,6 +37,8 @@ interface State {
   shows: ParsedShow[];
   times: ShowTimes[];
   shotDir: string | null;
+  /** Where the recorder writes. Always set: it falls back to a default rather than going missing. */
+  captureDir: string;
   shots: PlacedShot[];
   /** Names read off the captures, for whatever fields are still blank. */
   fills: SlotFill[];
@@ -899,6 +901,7 @@ async function main(): Promise<void> {
     state.logPath ?? "No Fall Guys log found. Set FALLGUYS_LOG and restart.";
   document.querySelector("#shot-dir")!.textContent =
     state.shotDir ?? "No ShareX folder found. Set SHAREX_DIR and restart.";
+  document.querySelector("#capture-dir")!.textContent = state.captureDir;
 
   document.querySelectorAll<HTMLElement>("[data-tab]").forEach((button) => {
     button.addEventListener("click", () => showTab(button.dataset.tab!));
