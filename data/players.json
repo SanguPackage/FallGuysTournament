@@ -2,19 +2,23 @@
   "players": [
     {
       "fom": "Optinux_Prime",
-      "ingame": "Optinux_Prime"
+      "ingame": ""
     },
     {
-      "fom": "ATR_Muska"
+      "fom": "ATR_Muska",
+      "ingame": ""
     },
     {
-      "fom": "Greatfather"
+      "fom": "Greatfather",
+      "ingame": ""
     },
     {
-      "fom": "reach1"
+      "fom": "reach1",
+      "ingame": ""
     },
     {
-      "fom": "muffinman."
+      "fom": "muffinman.",
+      "ingame": ""
     },
     {
       "fom": "Wouter_Van_Schandevijl",
@@ -22,49 +26,64 @@
       "ingame": "AnotherAccount58"
     },
     {
-      "fom": "Misterstino"
+      "fom": "Misterstino",
+      "ingame": ""
     },
     {
-      "fom": "GingerBot"
+      "fom": "GingerBot",
+      "ingame": ""
     },
     {
-      "fom": "Elbanditos"
+      "fom": "Elbanditos",
+      "ingame": ""
     },
     {
-      "fom": "Dighim"
+      "fom": "Dighim",
+      "ingame": ""
     },
     {
-      "fom": "Piatrix"
+      "fom": "Piatrix",
+      "ingame": ""
     },
     {
-      "fom": "PartyMain"
+      "fom": "PartyMain",
+      "ingame": ""
     },
     {
-      "fom": "ATR_ADHDaddy"
+      "fom": "ATR_ADHDaddy",
+      "ingame": ""
     },
     {
-      "fom": "MyloMns"
+      "fom": "MyloMns",
+      "ingame": ""
     },
     {
-      "fom": "bo0n"
+      "fom": "bo0n",
+      "ingame": ""
     },
     {
-      "fom": "OOpman"
+      "fom": "OOpman",
+      "ingame": ""
     },
     {
-      "fom": "Capital B"
+      "fom": "Capital B",
+      "ingame": ""
     },
     {
-      "fom": "Cruelwingia"
+      "fom": "Cruelwingia",
+      "ingame": ""
     },
     {
-      "fom": "wolfgang"
+      "fom": "wolfgang",
+      "ingame": ""
     },
     {
-      "fom": "Ramdom"
+      "fom": "Ramdom",
+      "ingame": ""
     },
     {
-      "fom": "Voltex1"
+      "fom": "Voltex1",
+      "ingame": ""
     }
   ]
 }
