@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { fillsFor } from "./autofill";
-import type { PlacedShot } from "../screenshots";
+import type { PlacedShot, ShowTimes } from "../screenshots";
 import type { ShotRead } from "./read";
 
 const ROSTER = ["Diego_9942", "Serxav_9", "BigMooseLips"];
@@ -62,4 +62,29 @@ test("a capture placed in no show fills nothing", () => {
     "x.jpg": { screen: "winner", tokens: ["Diego_9942"] },
   };
   expect(fillsFor([{ file: "x.jpg", takenAt: 0, source: "sharex" }], reads, ROSTER)).toEqual([]);
+});
+
+/**
+ * `fixtures/race-first/NOT-a-race-wanner.png` is this case: a capture from ten seconds before
+ * anyone finished Chicken Gulch, its plate reading QUALIFIED 0/9. It carries a crowned name in the
+ * pill column all the same, and reading it would award the round to a bean who went out.
+ */
+test("a capture from before the first qualifier names nobody first", () => {
+  const shot: PlacedShot = {
+    file: "NOT-a-race-wanner.png",
+    takenAt: Date.parse("2026-09-02T01:47:32Z"),
+    source: "sharex",
+    showIndex: 0,
+    slot: "round",
+    roundIndex: 2,
+  };
+  const reads = { [shot.file]: { screen: "toast" as const, tokens: ["shalaby_nino"] } };
+  const times: ShowTimes[] = [
+    { rounds: [], firsts: [undefined, undefined, Date.parse("2026-09-02T01:47:42Z")], ends: [] },
+  ];
+
+  expect(fillsFor([shot], reads, ["shalaby_nino"], times)).toEqual([]);
+  // The same capture ten seconds later is the real thing.
+  expect(fillsFor([{ ...shot, takenAt: Date.parse("2026-09-02T01:47:44Z") }], reads, ["shalaby_nino"], times))
+    .toHaveLength(1);
 });

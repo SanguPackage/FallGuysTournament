@@ -1,4 +1,4 @@
-import type { PlacedShot } from "../screenshots";
+import type { PlacedShot, ShowTimes } from "../screenshots";
 import { assign, cleanToken } from "./match";
 import type { ShotRead } from "./read";
 
@@ -11,10 +11,17 @@ export interface SlotFill {
   from: string;
 }
 
+/**
+ * How late the log may stamp the qualify it is reporting. The pill cannot be on screen before
+ * anyone has finished, so a capture earlier than that names something else.
+ */
+const STAMP_GRACE = 2_000;
+
 export function fillsFor(
   shots: PlacedShot[],
   reads: Record<string, ShotRead>,
   roster: string[],
+  times: ShowTimes[] = [],
 ): SlotFill[] {
   const fills: SlotFill[] = [];
 
@@ -47,6 +54,11 @@ export function fillsFor(
     }
 
     if (shot.roundIndex !== undefined) {
+      // Until the round's first qualifier the plate reads 0 and there is no pill: whatever was read
+      // is the eliminated banner, or a nametag the level happened to park in the column.
+      const firstAt = times[shot.showIndex]?.firsts[shot.roundIndex];
+      if (firstAt !== undefined && shot.takenAt < firstAt - STAMP_GRACE) continue;
+
       fills.push({
         showIndex: shot.showIndex,
         slot: "first",
