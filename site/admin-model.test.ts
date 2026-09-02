@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import {
   applyFills,
+  captureBadge,
   newFillMemo,
   defaultMessage,
   draftFor,
@@ -661,4 +662,23 @@ test("someone who did not join is never offered, since they are not in the lobby
 
 test("joining is the default, so a player without the flag is still offered", () => {
   expect(namesByPoints(scored, roster)).toContain("Alpha");
+});
+
+test("a server started with --no-record says so rather than showing nothing", () => {
+  expect(captureBadge(null)).toEqual({ text: "recording off", ok: false, title: "" });
+});
+
+test("a recording that is running says so, and mentions losing its sound", () => {
+  expect(captureBadge({ running: true, audio: true })).toEqual({
+    text: "recording",
+    ok: true,
+    title: "",
+  });
+  expect(captureBadge({ running: true, audio: false }).text).toBe("recording — no sound");
+});
+
+test("a recording that died shouts, since it is not the same as never having asked for one", () => {
+  const died = captureBadge({ running: false, audio: true, error: "ffmpeg exit 1" });
+  expect(died).toEqual({ text: "NOT RECORDING", ok: false, title: "ffmpeg exit 1" });
+  expect(died.text).not.toBe(captureBadge(null).text);
 });

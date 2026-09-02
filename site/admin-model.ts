@@ -5,6 +5,29 @@ import { finalistsOf, SCORES_FIRST } from "../src/rounds";
 export { ROUND_TYPES, SCORES_FIRST } from "../src/rounds";
 import type { Players, Round, RoundType, Show, TournamentEvent } from "../src/types";
 import type { SlotFill } from "../src/ocr/autofill";
+import type { RecorderStatus } from "../src/capture/recorder";
+
+export interface Badge {
+  text: string;
+  ok: boolean;
+  /** Hover text: the ffmpeg exit that killed the recording, when one did. */
+  title: string;
+}
+
+/**
+ * `null` is a server started with `--no-record`, which is a choice; a recorder that is not running
+ * is one that died mid-event, which costs the night's captures. Reading the same would hide the
+ * second behind the first, so the dead one shouts and the deliberate one does not.
+ */
+export function captureBadge(capture: RecorderStatus | null): Badge {
+  if (!capture) return { text: "recording off", ok: false, title: "" };
+  if (!capture.running) return { text: "NOT RECORDING", ok: false, title: capture.error ?? "" };
+  return {
+    text: capture.audio ? "recording" : "recording — no sound",
+    ok: true,
+    title: capture.error ?? "",
+  };
+}
 
 export interface RoundDraft {
   map: string;

@@ -2,6 +2,7 @@ import type { ParsedShow } from "../src/log";
 import type { Players, TournamentEvent } from "../src/types";
 import {
   applyFills,
+  captureBadge,
   newFillMemo,
   defaultMessage,
   draftFor,
@@ -689,17 +690,11 @@ function renderPublish(): void {
 /** A recording that died silently costs the night's captures, so its state is on screen. */
 function renderCapture(): void {
   const badge = document.querySelector<HTMLElement>("#capture-badge")!;
-  const capture = state.capture;
-  badge.hidden = capture === null;
-  if (!capture) return;
-
-  badge.textContent = capture.running
-    ? capture.audio
-      ? "recording"
-      : "recording — no sound"
-    : "NOT RECORDING";
-  badge.className = capture.running ? "badge on" : "badge off";
-  badge.title = capture.error ?? "";
+  const { text, ok, title } = captureBadge(state.capture);
+  badge.hidden = false;
+  badge.textContent = text;
+  badge.className = ok ? "badge on" : "badge off";
+  badge.title = title;
 }
 
 /** A field the board cannot read is a blank page for everyone watching, so it is said out loud. */
