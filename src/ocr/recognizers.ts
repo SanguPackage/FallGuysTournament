@@ -1,5 +1,5 @@
 import type { Frame } from "./frame";
-import { qualifiedCards } from "./grid";
+import { hasQualifiedBanner, qualifiedCards } from "./grid";
 import { trophyPill } from "./toast";
 
 export type Screen = "grid" | "winner" | "toast";
@@ -36,7 +36,7 @@ function isWinner(frame: Frame): boolean {
 }
 
 export function identify(frame: Frame): Screen | undefined {
-  if (qualifiedCards(frame).length > 0) return "grid";
+  if (hasQualifiedBanner(frame) && qualifiedCards(frame).length > 0) return "grid";
   if (isWinner(frame)) return "winner";
   if (trophyPill(frame) !== undefined) return "toast";
   return undefined;

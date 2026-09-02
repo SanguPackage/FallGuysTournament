@@ -26,11 +26,18 @@ export interface ShowClip {
   to: number;
 }
 
-/** Milliseconds either side of the stamp, so a negative `from` starts before it. */
+/**
+ * Milliseconds either side of the stamp, so a negative `from` starts before it.
+ *
+ * The board does not follow the last result promptly: the beans that went out have to finish
+ * falling, and fireworks play over the ones left standing before the screen comes up at all. So the
+ * window runs long and the classifier decides — a frame with no board in it is thrown away, which
+ * makes waiting too long free and stopping too early fatal.
+ */
 const WINDOW: Record<MomentKind, { from: number; to: number; fps: number }> = {
   first: { from: -500, to: 1500, fps: 30 },
-  finalists: { from: 1000, to: 6000, fps: 2 },
-  winner: { from: 2000, to: 8000, fps: 2 },
+  finalists: { from: 1000, to: 30_000, fps: 2 },
+  winner: { from: 2000, to: 20_000, fps: 2 },
 };
 
 /** How far past the last thing that happened a clip runs, so the screen that follows is in it. */

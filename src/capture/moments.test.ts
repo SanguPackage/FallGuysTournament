@@ -32,7 +32,7 @@ test("the finalists moment follows the round before the final, not the final", (
   expect(finalists!.at).toBe(at("20:00:44"));
   expect([finalists!.from, finalists!.to, finalists!.fps]).toEqual([
     at("20:00:44") + 1000,
-    at("20:00:44") + 6000,
+    at("20:00:44") + 30_000,
     2,
   ]);
 });
@@ -43,7 +43,7 @@ test("the winner moment comes off the victory scene", () => {
   expect([winner!.at, winner!.from, winner!.to, winner!.fps]).toEqual([
     at("20:01:35"),
     at("20:01:35") + 2000,
-    at("20:01:35") + 8000,
+    at("20:01:35") + 20_000,
     2,
   ]);
 });
