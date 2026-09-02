@@ -276,6 +276,7 @@ const server = Bun.serve({
       const shows = await parsedShows(logPath);
       const event = (await Bun.file(EVENT_PATH).json()) as TournamentEvent;
       const shots = await placed(shotDir, shows, event.date);
+      const times = absoluteTimes(shows, event.date);
       queueReads(shotDir, shots);
       const players = (await Bun.file(PLAYERS_PATH).json()) as Players;
       const roster = players.players.flatMap((player) =>
@@ -291,10 +292,10 @@ const server = Bun.serve({
         order: parseShowOrder(await Bun.file("docs/rules.md").text()),
         logPath: logPath ?? null,
         shows,
-        times: absoluteTimes(shows, event.date),
+        times,
         shotDir: shotDir ?? null,
         shots,
-        fills: fillsFor(shots, readsFor(shots), roster),
+        fills: fillsFor(shots, readsFor(shots), roster, times),
         autoPublish: AUTO_PUBLISH,
         capture: RECORD ? recorder.status() : null,
         problems: await checkData(),
