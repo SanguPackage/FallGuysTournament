@@ -1,5 +1,6 @@
 import type { Frame } from "./frame";
 import { hasQualifiedBanner, qualifiedCards } from "./grid";
+import { onRoundHud } from "./hud";
 import { trophyPill } from "./toast";
 
 export type Screen = "grid" | "winner" | "toast";
@@ -37,7 +38,9 @@ function isWinner(frame: Frame): boolean {
 
 export function identify(frame: Frame): Screen | undefined {
   if (hasQualifiedBanner(frame) && qualifiedCards(frame).length > 0) return "grid";
+  // A round still being played and the screen that ends it cannot both be on screen, and the
+  // level's own colours fool `isWinner` far more often than the plate goes missing.
+  if (onRoundHud(frame)) return trophyPill(frame) !== undefined ? "toast" : undefined;
   if (isWinner(frame)) return "winner";
-  if (trophyPill(frame) !== undefined) return "toast";
   return undefined;
 }
