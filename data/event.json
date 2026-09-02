@@ -57,7 +57,50 @@
       ],
       "winners": [
         "YaminDavid"
-      ]
+      ],
+      "checked": true
+    },
+    {
+      "name": "Solos 2",
+      "rounds": [
+        {
+          "map": "Big Shots",
+          "type": "survival",
+          "survivors": 23
+        },
+        {
+          "map": "Hoop Chute",
+          "type": "hunt",
+          "survivors": 14
+        },
+        {
+          "map": "The Slimescraper",
+          "type": "race",
+          "survivors": 10
+        },
+        {
+          "map": "Blast Ball",
+          "type": "final"
+        }
+      ],
+      "winners": [],
+      "checked": true
+    },
+    {
+      "name": "Solos 3",
+      "rounds": [
+        {
+          "map": "Roll Out",
+          "type": "survival",
+          "survivors": 23
+        },
+        {
+          "map": "Starchart",
+          "type": "final"
+        }
+      ],
+      "winners": [],
+      "checked": true
     }
   ],
   "penalties": []
