@@ -39,10 +39,11 @@ const LEDGER_PATH = ".ocr-cache/captured.json";
 const AUTO_PUBLISH = Bun.argv.includes("--publish");
 
 /**
- * Off unless asked for by name: recording eats gigabytes an hour and grabs a monitor, so it is
- * never something a plain `bun run live` should start doing.
+ * On unless refused: a show that was not recorded cannot be recovered, and remembering a flag is
+ * exactly the thing that gets forgotten on the night. `--no-record` is for working on the admin
+ * without grabbing a monitor.
  */
-const RECORD = Bun.argv.includes("--record");
+const RECORD = !Bun.argv.includes("--no-record");
 
 /** The log is a convenience: it prefills rounds. Losing it must not stop the admin loading. */
 async function parsedShows(logPath: string | undefined) {
