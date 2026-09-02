@@ -14,15 +14,16 @@ import { fillsFor } from "../src/ocr/autofill";
 import { identify } from "../src/ocr/recognizers";
 import { frameFrom } from "../src/ocr/frame";
 import { clipKey, momentKey, momentsIn, showClips } from "../src/capture/moments";
-import { parseSegments } from "../src/capture/segments";
+import { parseSegments, type Segment } from "../src/capture/segments";
 import { recordArgv } from "../src/capture/command";
-import { captureFolders, captureSettings } from "../src/capture/paths";
+import { captureFolders, captureSettings, runFolder } from "../src/capture/paths";
 import { toWindows } from "../src/capture/win-path";
 import { Recorder } from "../src/capture/recorder";
 import { Ledger, type LedgerState } from "../src/capture/ledger";
 import { Serial } from "../src/capture/serial";
 import { captureMoment, cutShowClip } from "../src/capture/pipeline";
 import { mkdir } from "node:fs/promises";
+import { existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { showNameNow, type LiveNow } from "../src/live";
 import type { ParsedShow } from "../src/log";
 import type { Players, TournamentEvent } from "../src/types";
@@ -152,16 +153,38 @@ async function runFfmpeg(argv: string[]) {
   return { ok: (await child.exited) === 0, stderr };
 }
 
+let lastRun: string | undefined;
+
+/**
+ * A folder per ffmpeg spawn, so a restart or a crash-respawn never numbers over the last one.
+ *
+ * The spawn before is dropped when it caught nothing: an input that will not open dies in under
+ * three seconds and is retried at once, which would otherwise leave an empty folder every time.
+ * Synchronous because the recorder asks for the folder in the same breath as it spawns.
+ */
+function newRun(): string {
+  if (lastRun && !readdirSync(lastRun).some((name) => name.endsWith(".mkv"))) {
+    rmSync(lastRun, { recursive: true, force: true });
+  }
+  const base = `${folders.segments}/${runFolder(Date.now())}`;
+  let dir = base;
+  for (let n = 2; existsSync(dir); n++) dir = `${base}-${n}`;
+  mkdirSync(dir, { recursive: true });
+  lastRun = dir;
+  return dir;
+}
+
 const recorder = new Recorder({
-  argvFor: (audio) =>
+  argvFor: (audio, runDir) =>
     recordArgv({
       ffmpeg: capture.ffmpeg!,
       output: capture.output,
       ...(audio && capture.audioDevice ? { audioDevice: capture.audioDevice } : {}),
-      dir: toWindows(folders.segments),
+      dir: toWindows(runDir),
       fps: 30,
       segmentSeconds: 30,
     }),
+  newRun,
   spawn: (argv) => {
     const child = Bun.spawn(argv, { stdout: "ignore", stderr: "ignore" });
     return { exited: child.exited, kill: () => child.kill() };
@@ -169,22 +192,27 @@ const recorder = new Recorder({
   now: () => Date.now(),
 });
 
-/** The muxer only lists a segment once it closes, so the one recording now is never in here. */
-async function segmentsNow() {
-  const startedAt = recorder.startedAt();
-  if (startedAt === undefined) return [];
-  const csv = await Bun.file(`${folders.segments}/segments.csv`)
-    .text()
-    .catch(() => "");
-  return parseSegments(csv, startedAt);
+/**
+ * Every run's segments, oldest first. The muxer only lists a segment once it closes, so the one
+ * recording now is never in here, and a run that died before closing one contributes nothing.
+ */
+async function segmentsNow(): Promise<Segment[]> {
+  const segments: Segment[] = [];
+  for (const run of recorder.runs()) {
+    const csv = await Bun.file(`${run.dir}/segments.csv`)
+      .text()
+      .catch(() => "");
+    segments.push(...parseSegments(csv, run.startedAt, run.dir));
+  }
+  return segments;
 }
 
-function clipName(shows: ParsedShow[], showIndex: number): string {
+function clipName(shows: ParsedShow[], showIndex: number, date: string): string {
   const slug = suggestShowName(shows, showIndex)
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
-  return `show-${String(showIndex + 1).padStart(2, "0")}-${slug}`;
+  return `${date}-show-${String(showIndex + 1).padStart(2, "0")}-${slug}`;
 }
 
 /**
@@ -203,7 +231,6 @@ async function sweepCaptures(): Promise<void> {
     captureJobs.add(async () => {
       await captureMoment(moment, segments, ledger, {
         ffmpeg: capture.ffmpeg!,
-        segmentDir: folders.segments,
         scratchDir: folders.scratch,
         captureDir: folders.captures,
         run: runFfmpeg,
@@ -215,14 +242,15 @@ async function sweepCaptures(): Promise<void> {
 
   for (const clip of showClips(shows, event.date)) {
     if (!ledger.pending(clipKey(clip))) continue;
-    const name = clipName(shows, clip.showIndex);
+    const name = clipName(shows, clip.showIndex, event.date);
     captureJobs.add(async () => {
-      await cutShowClip(clip, segments, name, ledger, {
+      const cut = await cutShowClip(clip, segments, name, ledger, {
         ffmpeg: capture.ffmpeg!,
-        segmentDir: folders.segments,
+        scratchDir: folders.scratch,
         showsDir: folders.shows,
         run: runFfmpeg,
       });
+      if (cut?.gapped) console.log(`${name}.mp4 — a recording died inside it, so the clip jumps`);
     });
   }
 }
