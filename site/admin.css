@@ -10,6 +10,8 @@
   --bad: #ff8f8f;
   --line: #2a2a3a;
   --read: #6fd08c;
+  /* Hotter than --bad, which has to stay legible as body text. */
+  --unmatched: #ff3b30;
   --field: #1b1b26;
 }
 
@@ -244,7 +246,14 @@ button.danger { color: var(--bad); }
 
 /* Filled from a capture rather than typed, so it is worth a glance before saving. */
 input.read { border-color: var(--read); background: color-mix(in srgb, var(--read) 12%, var(--field)); }
-input.unmatched { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, var(--field)); }
+
+/* Red and green are the one pair this reader cannot rely on, so unmatched is also the only field
+   with a heavy dashed edge: the shape carries it when the colour does not. */
+input.unmatched {
+  border: 2px dashed var(--unmatched);
+  background: color-mix(in srgb, var(--unmatched) 26%, var(--field));
+  color: var(--fg);
+}
 
 /* The winners are a final's only names, so the block lines up with the boards above it. */
 .show-form > .field.winners { margin-left: var(--round-indent); }
