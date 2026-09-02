@@ -139,6 +139,25 @@ function showTab(tab: string): void {
   });
   document.querySelector(".layout")!.classList.toggle("wide", tab !== "shows");
   remember(TAB_KEY, [tab]);
+  if (tab === "info") refreshRecordingFrame();
+}
+
+/**
+ * What the recorder is actually pointed at. Cache-busted because the frame is written on demand
+ * under one name, so the browser would otherwise never ask again.
+ */
+function refreshRecordingFrame(): void {
+  const image = document.querySelector<HTMLImageElement>("#capture-frame")!;
+  const note = document.querySelector<HTMLElement>("#capture-frame-status")!;
+  image.onload = () => {
+    image.hidden = false;
+    note.textContent = "";
+  };
+  image.onerror = () => {
+    image.hidden = true;
+    note.textContent = "Nothing recorded yet — a segment is only listed once it closes.";
+  };
+  image.src = `/api/recording-frame?t=${Date.now()}`;
 }
 
 function status(id: string, message: string, ok = true): void {
@@ -842,6 +861,9 @@ async function watchLog(): Promise<void> {
     state.capture,
   ]);
   setInterval(async () => {
+    if (!document.querySelector<HTMLElement>('[data-panel="info"]')!.hidden) {
+      refreshRecordingFrame();
+    }
     let next: State;
     try {
       next = (await (await fetch("/api/state")).json()) as State;

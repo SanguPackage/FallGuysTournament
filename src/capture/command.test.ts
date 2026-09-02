@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { concatList, cutArgv, extractArgv, recordArgv } from "./command";
+import { concatList, cutArgv, extractArgv, recordArgv, thumbArgv } from "./command";
 
 // The binary is launched by Bun, so it stays in WSL form. Every path handed *to* ffmpeg has been
 // through toWindows by the time it reaches here.
@@ -80,4 +80,17 @@ test("a cut copies the streams rather than re-encoding them", () => {
   expect(argv[argv.indexOf("-t") + 1]).toBe("620.5");
   expect(argv[argv.indexOf("-c") + 1]).toBe("copy");
   expect(argv.at(-1)).toBe("C:\\FallGuysCapture\\shows\\show-03-slime-climb.mp4");
+});
+
+test("a thumbnail is one scaled frame out of a segment", () => {
+  const argv = thumbArgv({
+    ffmpeg: FFMPEG,
+    segment: "C:\\caps\\segments\\21h41m03\\seg-00007.mkv",
+    width: 480,
+    out: "C:\\caps\\scratch\\recording.jpg",
+  });
+  expect(argv[argv.indexOf("-i") + 1]).toBe("C:\\caps\\segments\\21h41m03\\seg-00007.mkv");
+  expect(argv[argv.indexOf("-frames:v") + 1]).toBe("1");
+  expect(argv[argv.indexOf("-vf") + 1]).toBe("scale=480:-1");
+  expect(argv.at(-1)).toBe("C:\\caps\\scratch\\recording.jpg");
 });

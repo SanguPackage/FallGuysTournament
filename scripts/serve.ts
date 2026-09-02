@@ -15,7 +15,7 @@ import { identify } from "../src/ocr/recognizers";
 import { frameFrom } from "../src/ocr/frame";
 import { clipKey, momentKey, momentsIn, showClips } from "../src/capture/moments";
 import { parseSegments, type Segment } from "../src/capture/segments";
-import { recordArgv } from "../src/capture/command";
+import { recordArgv, thumbArgv } from "../src/capture/command";
 import { captureFolders, captureSettings, runFolder, runsIn } from "../src/capture/paths";
 import { toWindows } from "../src/capture/win-path";
 import { Recorder } from "../src/capture/recorder";
@@ -222,6 +222,34 @@ async function segmentsNow(): Promise<Segment[]> {
   return segments;
 }
 
+/**
+ * One frame of what is actually being recorded, so a monitor that is not the game shows up at a
+ * glance rather than at the end of the night. The segment being written now is not listed yet, so
+ * this lags by up to two segment lengths — enough to tell a desktop from a level.
+ */
+const THUMB_PATH = `${folders.scratch}/recording.jpg`;
+let thumbOf: string | undefined;
+
+async function recordingFrame(): Promise<string | undefined> {
+  if (!RECORD || !capture.ffmpeg) return undefined;
+  const newest = (await segmentsNow()).sort((a, b) => a.to - b.to).at(-1);
+  if (!newest) return undefined;
+
+  const segment = `${newest.dir}/${newest.file}`;
+  const out = THUMB_PATH;
+  if (thumbOf === segment && (await Bun.file(out).exists())) return out;
+
+  const argv = thumbArgv({
+    ffmpeg: capture.ffmpeg,
+    segment: toWindows(segment),
+    width: 480,
+    out: toWindows(out),
+  });
+  if (!(await runFfmpeg(argv)).ok) return undefined;
+  thumbOf = segment;
+  return out;
+}
+
 function clipName(shows: ParsedShow[], showIndex: number, date: string): string {
   const slug = suggestShowName(shows, showIndex)
     .toLowerCase()
@@ -318,6 +346,12 @@ const server = Bun.serve({
         capture: RECORD ? recorder.status() : null,
         problems: await checkData(),
       });
+    }
+
+    if (pathname === "/api/recording-frame") {
+      const frame = await recordingFrame();
+      if (!frame) return new Response("Not found", { status: 404 });
+      return new Response(Bun.file(frame), { headers: { "cache-control": "no-store" } });
     }
 
     if (pathname === "/api/shot") {

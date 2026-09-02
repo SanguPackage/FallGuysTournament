@@ -112,3 +112,16 @@ export function cutArgv(o: CutOptions): string[] {
     o.out,
   ];
 }
+
+export interface ThumbOptions {
+  ffmpeg: string;
+  segment: string;
+  /** Height follows the aspect, so a monitor of any shape stays undistorted. */
+  width: number;
+  out: string;
+}
+
+/** One frame out of a segment, small enough to sit in the admin header. */
+export function thumbArgv(o: ThumbOptions): string[] {
+  return [o.ffmpeg, ...QUIET, "-i", o.segment, "-frames:v", "1", "-vf", `scale=${o.width}:-1`, "-q:v", "4", o.out];
+}

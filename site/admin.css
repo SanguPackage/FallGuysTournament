@@ -260,3 +260,5 @@ input.unmatched { border-color: var(--bad); background: color-mix(in srgb, var(-
   cursor: pointer;
   text-decoration: underline;
 }
+
+#capture-frame { max-width: 480px; width: 100%; border-radius: 0.3rem; }
