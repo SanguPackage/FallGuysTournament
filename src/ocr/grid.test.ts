@@ -32,11 +32,23 @@ test("the board reads as many cards as the banner counts", async () => {
   expect(qualifiedCards(await frameFrom("src/ocr/samples/grid-9.jpg")).length).toBe(9);
 });
 
-test("a name band ends at its card's right edge and sits just above it", async () => {
+test("a name band sits just above its card", async () => {
   const frame = await frameFrom("src/ocr/samples/grid-5.jpg");
   const box = nameBand(frame, { row: 0, col: 4 });
   const card = cardBox(frame, { row: 0, col: 4 });
-  expect(box.x + box.w).toBeGreaterThanOrEqual(card.x + card.w);
   expect(box.y + box.h).toBeLessThanOrEqual(card.y + 4);
   expect(box.h).toBe(18);
+});
+
+test("a name band stops short of the level badge, which is no part of the name", async () => {
+  const frame = await frameFrom("src/ocr/samples/grid-5.jpg");
+  for (const card of [
+    { row: 0, col: 4 },
+    { row: 1, col: 2 },
+    { row: 2, col: 2 },
+  ]) {
+    const box = nameBand(frame, card);
+    // The badge is a gold pill hard against the card's right edge, so the band must end left of it.
+    expect(box.x + box.w).toBeLessThan(cardBox(frame, card).x + cardBox(frame, card).w);
+  }
 });

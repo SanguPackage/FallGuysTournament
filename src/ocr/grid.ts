@@ -81,9 +81,41 @@ export function cardBox(frame: Frame, card: Card): Box {
  * reaching left as far as a long name needs. A qualified card to the left has a name of its own in
  * that space, so the band stops at its badge rather than swallowing it.
  */
+/** The level badge's gold pill. Its white digits survive the same isolation the name does. */
+function isBadge(r: number, g: number, b: number): boolean {
+  return r > 175 && g > 120 && g < 215 && b < 140;
+}
+
+/** Runs of non-gold inside the pill: its own digits are white, so the run must survive them. */
+const BADGE_GAP = 8;
+
+/**
+ * The left edge of the level badge, scanning in from the right, or nothing on a card that wears
+ * none. The pill sits hard against the card's right edge, so what is left of it is the name.
+ */
+function badgeLeft(frame: Frame, box: Box, right: number): number | undefined {
+  let leftmost: number | undefined;
+  let gap = 0;
+
+  for (let x = right - 1; x >= box.x; x -= 1) {
+    let gold = false;
+    for (let y = box.y; y < box.y + box.h && !gold; y += 2) {
+      if (isBadge(...frame.at(x, y))) gold = true;
+    }
+    if (gold) {
+      leftmost = x;
+      gap = 0;
+    } else if (leftmost !== undefined && (gap += 1) > BADGE_GAP) {
+      break;
+    }
+  }
+
+  return leftmost;
+}
+
 export function nameBand(frame: Frame, card: Card, alsoQualified: Card[] = []): Box {
   const box = cardBox(frame, card);
-  const right = box.x + box.w + 4;
+  const edge = box.x + box.w + 4;
   const reach = Math.round(cellWidth(frame) * 2.2);
 
   const neighbour = alsoQualified
@@ -91,8 +123,11 @@ export function nameBand(frame: Frame, card: Card, alsoQualified: Card[] = []): 
     .sort((a, b) => b.col - a.col)[0];
   const floor = neighbour ? cardBox(frame, neighbour).x + cardBox(frame, neighbour).w + 4 : 0;
 
-  const x = Math.max(right - reach, floor);
-  return { x, y: box.y - 15, w: right - x, h: 18 };
+  const x = Math.max(edge - reach, floor);
+  const badge = badgeLeft(frame, { x, y: box.y - 15, w: edge - x, h: 18 }, edge);
+  const right = badge === undefined ? edge : badge - 2;
+
+  return { x, y: box.y - 15, w: Math.max(right - x, 1), h: 18 };
 }
 
 function greenShare(frame: Frame, card: Card): number {
