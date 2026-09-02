@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { assign, cleanToken, normalise } from "./match";
+import { assign, cleanToken, dropLevel, normalise } from "./match";
 
 const REAL = [
   "BigMooseLips",
@@ -28,8 +28,13 @@ const CARDS = [
 ];
 
 test("the crown's level number is not part of the name", () => {
-  expect(cleanToken("BigMoosellps . 2:")).toBe("BigMoosellps");
-  expect(cleanToken("Falso Brasileiro 30")).toBe("Falso Brasileiro");
+  expect(dropLevel(cleanToken("BigMoosellps . 2:"))).toBe("BigMoosellps");
+  expect(dropLevel(cleanToken("Falso Brasileiro 30"))).toBe("Falso Brasileiro");
+});
+
+test("a toast pill wears no crown, so its trailing digits are the name", () => {
+  expect(cleanToken("-Serxav 9")).toBe("Serxav 9");
+  expect(assign([cleanToken("-Serxav 9")], ["Serxav_9"])[0]!.name).toBe("Serxav_9");
 });
 
 test("separators carry no signal, because an underscore reads as a space", () => {
@@ -37,7 +42,7 @@ test("separators carry no signal, because an underscore reads as a space", () =>
 });
 
 test("every name on the board is matched, with near-misses in the roster", () => {
-  const got = assign(CARDS.map(cleanToken), [...REAL, ...NEAR]);
+  const got = assign(CARDS.map((c) => dropLevel(cleanToken(c))), [...REAL, ...NEAR]);
   expect(got.map((m) => m.name)).toEqual([
     "BigMooseLips",
     "Darkwin067",
@@ -54,7 +59,7 @@ test("a name the roster does not hold falls through to what was read", () => {
 });
 
 test("two roster names a character apart make the matcher decline, never guess", () => {
-  const [only] = assign([cleanToken("Falso Brasileiro 30")], [...REAL, "Falso_Brasileira"]);
+  const [only] = assign([dropLevel(cleanToken("Falso Brasileiro 30"))], [...REAL, "Falso_Brasileira"]);
   expect(only!.name).toBeUndefined();
 });
 

@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
 import { frameFrom } from "./frame";
-import { identify } from "./recognizers";
+import { identify, type Screen } from "./recognizers";
 
 test("each sample is recognised as the screen it is", async () => {
-  const cases: [string, string | undefined][] = [
+  const cases: [string, Screen | undefined][] = [
     ["grid-15.jpg", "grid"],
     ["grid-5.jpg", "grid"],
     ["winner.jpg", "winner"],

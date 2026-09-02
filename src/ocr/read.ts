@@ -3,6 +3,7 @@ import { frameFrom, type Frame } from "./frame";
 import { nameBand, qualifiedCards } from "./grid";
 import { identify, type Screen } from "./recognizers";
 import { maskToPng } from "./mask";
+import { cleanToken, dropLevel } from "./match";
 import { pillBox, trophyPill } from "./toast";
 import type { Box } from "./geometry";
 
@@ -53,9 +54,11 @@ export async function readShot(path: string): Promise<ShotRead> {
   if (screen === undefined) return { tokens: [] };
 
   if (screen === "grid") {
+    const cards = qualifiedCards(frame);
     const tokens: string[] = [];
-    for (const card of qualifiedCards(frame)) {
-      tokens.push(await textIn(frame, nameBand(frame, card), CUTOFF.grid, SCALE.grid));
+    for (const card of cards) {
+      const raw = await textIn(frame, nameBand(frame, card, cards), CUTOFF.grid, SCALE.grid);
+      tokens.push(dropLevel(cleanToken(raw)));
     }
     return { screen, tokens };
   }

@@ -29,14 +29,23 @@ export function normalise(text: string): string {
     .join("");
 }
 
-/** Strips the stray glyphs around a name and the crown's level number after it. */
+/**
+ * Strips the stray glyphs OCR reads around a name. Hyphens survive inside one — `Chi-_-lli` is a
+ * real name — but a leading or trailing one is the platform icon smeared into a character.
+ */
 export function cleanToken(raw: string): string {
   return raw
     .replace(/[^A-Za-z0-9_\- ]+/g, " ")
     .replace(/\s+/g, " ")
-    .trim()
-    .replace(/\s+\d{1,3}$/, "")
-    .trim();
+    .replace(/^[-\s]+|[-\s]+$/g, "");
+}
+
+/**
+ * Drops the crown's level number. Only the board wears a crown — a toast pill has none, so its
+ * trailing digits are part of the name, as in `Serxav_9`.
+ */
+export function dropLevel(token: string): string {
+  return token.replace(/\s+\d{1,3}$/, "").trim();
 }
 
 function distance(a: string, b: string): number {

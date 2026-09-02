@@ -36,12 +36,23 @@ export function cardBox(frame: Frame, card: Card): Box {
   };
 }
 
-/** The name sits in a thin band directly above its card, ending at the card's crown badge. */
-export function nameBand(frame: Frame, card: Card): Box {
+/**
+ * The name sits in a thin band directly above its card, ending at the card's crown badge and
+ * reaching left as far as a long name needs. A qualified card to the left has a name of its own in
+ * that space, so the band stops at its badge rather than swallowing it.
+ */
+export function nameBand(frame: Frame, card: Card, alsoQualified: Card[] = []): Box {
   const box = cardBox(frame, card);
   const right = box.x + box.w + 4;
-  const width = Math.round(cellWidth(frame) * 2.2);
-  return { x: right - width, y: box.y - 15, w: width, h: 18 };
+  const reach = Math.round(cellWidth(frame) * 2.2);
+
+  const neighbour = alsoQualified
+    .filter((other) => other.row === card.row && other.col < card.col)
+    .sort((a, b) => b.col - a.col)[0];
+  const floor = neighbour ? cardBox(frame, neighbour).x + cardBox(frame, neighbour).w + 4 : 0;
+
+  const x = Math.max(right - reach, floor);
+  return { x, y: box.y - 15, w: right - x, h: 18 };
 }
 
 function greenShare(frame: Frame, card: Card): number {
