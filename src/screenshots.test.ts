@@ -90,6 +90,12 @@ test("the last show stays open, so captures during it are still filed", () => {
   expect(place("21:00:00")).toMatchObject({ showIndex: 1, slot: "round", roundIndex: 0 });
 });
 
+test("a won last show closes soon after, so a later capture belongs to no show", () => {
+  const shows = [SHOWS[0]!];
+  expect(place("20:28:00", 0, shows)).toMatchObject({ showIndex: 0, slot: "winners" });
+  expect(place("21:00:00", 0, shows).showIndex).toBeUndefined();
+});
+
 test("a log running past midnight rolls the day over", () => {
   const shows: ParsedShow[] = [
     { ...SHOWS[0]!, startedAt: "23:59:00", rounds: [round("hexsnake", "23:59:30")], wonAt: "00:01:00" },
