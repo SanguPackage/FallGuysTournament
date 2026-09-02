@@ -292,3 +292,41 @@ export function applyFills(
 
   return changed;
 }
+
+/**
+ * Forgets what was read into one round, so the next poll's fills land there again.
+ *
+ * Editing `players.json` changes what the names read off a capture match to, but the round is no
+ * longer blank, and `applyFills` only writes into blanks. Without this the corrected match arrives
+ * every poll and is thrown away.
+ *
+ * A field typed by hand carries no source, and is left alone: this undoes a reading, not a
+ * correction.
+ */
+export function resyncRound(
+  draft: ShowDraft,
+  showIndex: number,
+  roundIndex: number,
+  memo: FillMemo,
+): void {
+  const round = draft.rounds[roundIndex];
+  if (!round) return;
+
+  const firstKey = `show:${showIndex}:round:${roundIndex}:first`;
+  if (memo.sources.delete(firstKey)) round.first = "";
+
+  round.qualified.forEach((_, slot) => {
+    if (memo.sources.delete(`show:${showIndex}:round:${roundIndex}:qualified:${slot}`)) {
+      round.qualified[slot] = "";
+    }
+  });
+
+  for (const spent of [...memo.applied]) {
+    if (
+      spent.startsWith(`${firstKey}=`) ||
+      spent.startsWith(`${showIndex}:${roundIndex}:qualified=`)
+    ) {
+      memo.applied.delete(spent);
+    }
+  }
+}

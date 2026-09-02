@@ -2,6 +2,7 @@ import type { ParsedShow } from "../src/log";
 import type { Players, TournamentEvent } from "../src/types";
 import {
   applyFills,
+  resyncRound,
   captureBadge,
   newFillMemo,
   defaultMessage,
@@ -500,6 +501,22 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
       ]),
     );
 
+    const roundKey = `show:${index}:round:${roundIndex}`;
+    const read =
+      fillMemo.sources.has(`${roundKey}:first`) ||
+      entry.qualified.some((_, slot) => fillMemo.sources.has(`${roundKey}:qualified:${slot}`));
+
+    if (read) {
+      const resync = el("button", { type: "button", class: "link resync" }, ["Resync"]);
+      resync.title = "Drop the names read here and read them again, after a roster change";
+      resync.addEventListener("click", () => {
+        resyncRound(draft, index, roundIndex, fillMemo);
+        // `renderShowForm` applies the fills again, now against the roster as it stands.
+        render();
+      });
+      cells.push(resync);
+    }
+
     // The final has no board of its own — the winner screen stands in — so it gets no block.
     if (entry.type !== "final") {
       const qualified = entry.qualified.map((value, slot) =>
@@ -528,6 +545,30 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
   addWinner.addEventListener("click", () => {
     draft.winners.push("");
     render();
+  });
+
+  /**
+   * Resync takes the names again from what was already read; this reads the captures themselves
+   * again, which is what a change to the reader needs. Only the server can: it holds the one
+   * Tesseract worker.
+   */
+  const reread = el("button", { type: "button" }, ["Re-read captures"]);
+  reread.addEventListener("click", async () => {
+    reread.disabled = true;
+    reread.textContent = "Re-reading…";
+    try {
+      await fetch("/api/reread", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ showIndex: index }),
+      });
+      draft.rounds.forEach((_, roundIndex) => resyncRound(draft, index, roundIndex, fillMemo));
+      status("watch-status", "Re-reading captures. Names arrive as they are read.", true);
+    } finally {
+      reread.disabled = false;
+      reread.textContent = "Re-read captures";
+      render();
+    }
   });
 
   const stopEditing = el("button", { type: "button" }, ["Close"]);
@@ -583,7 +624,7 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
       { slot: "winners" },
     ),
     problems,
-    el("div", { class: "actions" }, [saveButton, stopEditing]),
+    el("div", { class: "actions" }, [saveButton, reread, stopEditing]),
   ]);
 }
 

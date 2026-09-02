@@ -6,6 +6,7 @@ import {
   defaultMessage,
   draftFor,
   namesByPoints,
+  resyncRound,
   namesInShows,
   draftFromShow,
   suggestShowName,
@@ -681,4 +682,38 @@ test("a recording that died shouts, since it is not the same as never having ask
   const died = captureBadge({ running: false, audio: true, error: "ffmpeg exit 1" });
   expect(died).toEqual({ text: "NOT RECORDING", ok: false, title: "ffmpeg exit 1" });
   expect(died.text).not.toBe(captureBadge(null).text);
+});
+
+test("resyncing a round drops what was read and keeps what was typed", () => {
+  const draft = draftOf();
+  const memo = newFillMemo();
+  applyFills(draft, FILLS, 0, memo);
+  // Correcting a field is what `nameInput` does: the value is yours, so its source goes.
+  draft.rounds[0]!.qualified[1] = "Corrected";
+  memo.sources.delete("show:0:round:0:qualified:1");
+
+  resyncRound(draft, 0, 0, memo);
+
+  expect(draft.rounds[0]!.first).toBe("");
+  expect(draft.rounds[0]!.qualified).toEqual(["", "Corrected"]);
+  // Nothing outside the round is touched.
+  expect(draft.rounds[1]!.first).toBe("Optinux_Prime");
+  expect(draft.winners).toEqual(["Diego_9942"]);
+});
+
+test("a resynced round takes the names a changed roster now reads", () => {
+  const draft = draftOf();
+  const memo = newFillMemo();
+  applyFills(draft, FILLS, 0, memo);
+  draft.rounds[0]!.qualified[1] = "Corrected";
+  memo.sources.delete("show:0:round:0:qualified:1");
+  resyncRound(draft, 0, 0, memo);
+
+  const rematched: SlotFill[] = [
+    { showIndex: 0, slot: "first", roundIndex: 0, names: ["BigMooseLips"], from: "a.jpg" },
+    { showIndex: 0, slot: "qualified", roundIndex: 0, names: ["BigMooseLips"], from: "c.jpg" },
+  ];
+  expect(applyFills(draft, rematched, 0, memo)).toBe(true);
+  expect(draft.rounds[0]!.first).toBe("BigMooseLips");
+  expect(draft.rounds[0]!.qualified).toEqual(["BigMooseLips", "Corrected"]);
 });
