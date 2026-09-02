@@ -211,6 +211,8 @@ button.danger { color: var(--bad); }
 
 .rounds { margin: 0; padding-left: 1.2rem; }
 .rounds li { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; padding: 0.2rem 0; }
+/* A round wraps onto several lines, so the rule is what says where one ends and the next starts. */
+.rounds li + li { border-top: 1px solid var(--line); margin-top: 0.7rem; padding-top: 0.7rem; }
 .rounds .round-number { color: var(--muted); font-size: 0.85rem; }
 
 .map-input { flex: 1 1 16rem; }
