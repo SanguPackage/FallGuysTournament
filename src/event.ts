@@ -52,13 +52,19 @@ export function closeShow(
   if (isClosed(show)) {
     throw new ValidationError(`Show "${show.name}" is already closed.`);
   }
+  const semi = show.rounds.at(-1);
+  if (!semi) {
+    throw new ValidationError(
+      `Show "${show.name}" has no round before its final, so its finalists have nowhere to go.`,
+    );
+  }
   const notFinalists = final.winners.filter((w) => !final.finalists.includes(w));
   if (notFinalists.length > 0) {
     throw new ValidationError(
       `Winners must have reached the final: ${notFinalists.join(", ")} did not.`,
     );
   }
-  show.finalists = final.finalists;
+  semi.qualified = final.finalists;
   show.winners = final.winners;
   show.rounds.push({ map: final.map, type: "final" });
 }

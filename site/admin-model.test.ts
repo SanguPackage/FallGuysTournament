@@ -63,10 +63,14 @@ test("a draft becomes a show, dropping the final from the scored rounds' first p
   expect(toShow(draft)).toEqual({
     name: "Finals Marathon",
     rounds: [
-      { map: "Dizzy Heights", type: "race", first: "oopman" },
+      {
+        map: "Dizzy Heights",
+        type: "race",
+        first: "oopman",
+        qualified: ["oopman", "nicksonn", "f1xel"],
+      },
       { map: "Hex-A-Gone", type: "final" },
     ],
-    finalists: ["oopman", "nicksonn", "f1xel"],
     winners: ["oopman"],
   });
 });
@@ -101,10 +105,9 @@ test("a saved show reopens with everything that was entered", () => {
     {
       name: "Solos",
       rounds: [
-        { map: "one", type: "race", first: "oopman" },
+        { map: "one", type: "race", first: "oopman", qualified: ["oopman", "f1xel"] },
         { map: "two", type: "final" },
       ],
-      finalists: ["oopman", "f1xel"],
       winners: ["oopman"],
     },
     parsedShow,
@@ -118,7 +121,7 @@ test("a saved show reopens with everything that was entered", () => {
 
 test("reopening keeps a round type the log would have guessed differently", () => {
   const draft = draftFromShow(
-    { name: "Solos", rounds: [{ map: "one", type: "survival" }], finalists: [], winners: [] },
+    { name: "Solos", rounds: [{ map: "one", type: "survival" }], winners: [] },
     {
       showId: "s",
       rounds: [
@@ -134,7 +137,7 @@ test("reopening keeps a round type the log would have guessed differently", () =
 test("blanks are dropped from the saved show", () => {
   const draft = complete();
   draft.finalists = ["oopman", "", "f1xel"];
-  expect(toShow(draft).finalists).toEqual(["oopman", "f1xel"]);
+  expect(toShow(draft).rounds[0]!.qualified).toEqual(["oopman", "f1xel"]);
 });
 
 test("with no shows recorded the commit message is about the players", () => {
@@ -260,10 +263,9 @@ test("names already entered in a show are offered again", () => {
       {
         name: "Solos",
         rounds: [
-          { map: "m", type: "race", first: "Bravo" },
+          { map: "m", type: "race", first: "Bravo", qualified: ["Bravo", "Alpha"] },
           { map: "n", type: "final" },
         ],
-        finalists: ["Bravo", "Alpha"],
         winners: ["Alpha"],
       },
     ],
@@ -283,10 +285,9 @@ const scored: TournamentEvent = {
     {
       name: "Solos",
       rounds: [
-        { map: "m", type: "race", first: "Bravo" },
+        { map: "m", type: "race", first: "Bravo", qualified: ["Bravo", "Alpha", "Delta"] },
         { map: "n", type: "final" },
       ],
-      finalists: ["Bravo", "Alpha", "Delta"],
       winners: ["Alpha"],
     },
   ],
@@ -385,7 +386,6 @@ test("the gaps in a half-filled show are named one by one", () => {
       { map: "one", type: "race" as const },
       { map: "two", type: "final" as const },
     ],
-    finalists: [],
     winners: [],
   };
   expect(missingFrom(show, played)).toEqual([
@@ -399,21 +399,20 @@ test("the gaps in a half-filled show are named one by one", () => {
 test("rounds played since the show was saved count as missing", () => {
   const show = {
     name: "Solos",
-    rounds: [{ map: "one", type: "race" as const, first: "oopman" }],
-    finalists: ["oopman"],
+    rounds: [{ map: "one", type: "race" as const, first: "oopman", qualified: ["oopman"] }],
     winners: ["oopman"],
   };
-  expect(missingFrom(show, played)).toEqual(["1 round not entered"]);
+  // The final has not been entered, so nothing yet says who reached it.
+  expect(missingFrom(show, played)).toEqual(["1 round not entered", "finalists"]);
 });
 
 test("a show with nothing left to fill in reports no gaps", () => {
   const show = {
     name: "Solos",
     rounds: [
-      { map: "one", type: "race" as const, first: "oopman" },
+      { map: "one", type: "race" as const, first: "oopman", qualified: ["oopman", "f1xel"] },
       { map: "two", type: "final" as const },
     ],
-    finalists: ["oopman", "f1xel"],
     winners: ["oopman"],
   };
   expect(missingFrom(show, played)).toEqual([]);

@@ -32,10 +32,8 @@ export function checkEvent(value: unknown): string[] {
       if (!isObject(show)) return void problems.push(`${at} is not an object`);
       if (typeof show.name !== "string") problems.push(`${at}.name is not a string`);
 
-      for (const key of ["finalists", "winners"] as const) {
-        if (show[key] !== undefined && !names(show[key])) {
-          problems.push(`${at}.${key} is not an array of names`);
-        }
+      if (show.winners !== undefined && !names(show.winners)) {
+        problems.push(`${at}.winners is not an array of names`);
       }
 
       if (!Array.isArray(show.rounds)) return void problems.push(`${at}.rounds is not an array`);
@@ -48,6 +46,9 @@ export function checkEvent(value: unknown): string[] {
         }
         if (round.first !== undefined && typeof round.first !== "string") {
           problems.push(`${on}.first is not a string`);
+        }
+        if (round.qualified !== undefined && !names(round.qualified)) {
+          problems.push(`${on}.qualified is not an array of names`);
         }
       });
     });

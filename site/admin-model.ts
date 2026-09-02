@@ -1,6 +1,6 @@
 import type { ParsedShow } from "../src/log";
 import { score } from "../src/scoring";
-import { SCORES_FIRST } from "../src/rounds";
+import { finalistsOf, SCORES_FIRST } from "../src/rounds";
 
 export { ROUND_TYPES, SCORES_FIRST } from "../src/rounds";
 import type { Players, Round, RoundType, Show, TournamentEvent } from "../src/types";
@@ -66,7 +66,7 @@ export function draftFromShow(show: Show, parsed: ParsedShow): ShowDraft {
       first: round.first ?? "",
       typeEdited: true,
     })),
-    finalists: [...(show.finalists ?? [])],
+    finalists: [...finalistsOf(show)],
     winners: [...(show.winners ?? [])],
   };
   syncDraft(draft, parsed);
@@ -99,10 +99,13 @@ export function toShow(draft: ShowDraft): Show {
       : { map: round.map, type: round.type };
   });
 
+  const finalists = filled(draft.finalists);
+  const semi = rounds.at(-1)?.type === "final" ? rounds.at(-2) : undefined;
+  if (semi && finalists.length > 0) semi.qualified = finalists;
+
   return {
     name: draft.name.trim(),
     rounds,
-    finalists: filled(draft.finalists),
     winners: filled(draft.winners),
   };
 }
@@ -110,7 +113,7 @@ export function toShow(draft: ShowDraft): Show {
 /** What still has to be typed into a show, for the collapsed rows that have no fields on show. */
 export function missingFrom(show: Show | undefined, parsed: ParsedShow): string[] {
   // An unrecorded show is every gap at once, so it reads the same as one saved empty.
-  const entered = show ?? { name: "", rounds: [], finalists: [], winners: [] };
+  const entered: Show = show ?? { name: "", rounds: [], winners: [] };
 
   const gaps: string[] = [];
   if (!entered.name.trim()) gaps.push("name");
@@ -123,7 +126,7 @@ export function missingFrom(show: Show | undefined, parsed: ParsedShow): string[
   const behind = parsed.rounds.length - entered.rounds.length;
   if (behind > 0) gaps.push(`${behind} round${behind === 1 ? "" : "s"} not entered`);
 
-  if ((entered.finalists ?? []).length === 0) gaps.push("finalists");
+  if (finalistsOf(entered).length === 0) gaps.push("finalists");
   if ((entered.winners ?? []).length === 0) gaps.push("winners");
 
   return gaps;
@@ -151,7 +154,7 @@ export function defaultMessage(event: TournamentEvent): string {
 export function namesInShows(event: TournamentEvent): string[] {
   const names = event.shows.flatMap((show) => [
     ...show.rounds.map((round) => round.first),
-    ...(show.finalists ?? []),
+    ...show.rounds.flatMap((round) => round.qualified ?? []),
     ...(show.winners ?? []),
   ]);
   return [...new Set(names.filter((name): name is string => !!name))].sort();

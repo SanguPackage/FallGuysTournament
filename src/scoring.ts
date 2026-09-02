@@ -1,4 +1,4 @@
-import { SCORES_FIRST } from "./rounds";
+import { finalistsOf, SCORES_FIRST } from "./rounds";
 import type { LeaderboardRow, Players, TournamentEvent } from "./types";
 
 export const RACE_WIN = 3;
@@ -33,7 +33,7 @@ export function score(event: TournamentEvent, players: Players): LeaderboardRow[
       row.points += RACE_WIN;
     }
 
-    for (const ingame of show.finalists ?? []) {
+    for (const ingame of finalistsOf(show)) {
       const row = byIngame.get(ingame);
       if (!row) continue;
       row.finalsReached += 1;

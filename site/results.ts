@@ -1,4 +1,5 @@
 import type { LiveNow } from "../src/live";
+import { finalistsOf } from "../src/rounds";
 import type { Round, Show } from "../src/types";
 import { escapeHtml } from "./render";
 
@@ -33,8 +34,9 @@ function renderShow(show: Show, number: number, live: boolean): string {
       ? `<span class="champ playing">● Playing now</span>`
       : "";
 
-  const finalists = show.finalists?.length
-    ? `<p class="finalists">Finalists: <b>${show.finalists.map(escapeHtml).join(", ")}</b></p>`
+  const names = finalistsOf(show);
+  const finalists = names.length
+    ? `<p class="finalists">Finalists: <b>${names.map(escapeHtml).join(", ")}</b></p>`
     : "";
 
   return `

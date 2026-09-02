@@ -69,9 +69,11 @@ test("qualifying for the final awards 1 point", () => {
   const event = emptyEvent();
   event.shows.push({
     name: "Solos",
-    finalists: ["Alpha", "Bravo"],
     winners: [],
-    rounds: [{ map: "Fall Mountain", type: "final" }],
+    rounds: [
+      { map: "Roll Out", type: "survival", qualified: ["Alpha", "Bravo"] },
+      { map: "Fall Mountain", type: "final" },
+    ],
   });
   const rows = score(event, players);
   expect(pointsFor(rows, "Alpha")).toBe(1);
@@ -83,9 +85,11 @@ test("winning the final is worth 6 in total, reaching it included", () => {
   const event = emptyEvent();
   event.shows.push({
     name: "Solos",
-    finalists: ["Alpha", "Bravo"],
     winners: ["Alpha"],
-    rounds: [{ map: "Fall Mountain", type: "final" }],
+    rounds: [
+      { map: "Roll Out", type: "survival", qualified: ["Alpha", "Bravo"] },
+      { map: "Fall Mountain", type: "final" },
+    ],
   });
   const rows = score(event, players);
   expect(pointsFor(rows, "Alpha")).toBe(6);
@@ -96,9 +100,11 @@ test("two simultaneous winners split the 5 into 2 each", () => {
   const event = emptyEvent();
   event.shows.push({
     name: "Solos",
-    finalists: ["Alpha", "Bravo"],
     winners: ["Alpha", "Bravo"],
-    rounds: [{ map: "Fall Mountain", type: "final" }],
+    rounds: [
+      { map: "Roll Out", type: "survival", qualified: ["Alpha", "Bravo"] },
+      { map: "Fall Mountain", type: "final" },
+    ],
   });
   const rows = score(event, players);
   expect(pointsFor(rows, "Alpha")).toBe(3);
@@ -109,9 +115,11 @@ test("three simultaneous winners split the 5 into 1 each, rounded down", () => {
   const event = emptyEvent();
   event.shows.push({
     name: "Solos",
-    finalists: ["Alpha", "Bravo", "Charlie"],
     winners: ["Alpha", "Bravo", "Charlie"],
-    rounds: [{ map: "Fall Mountain", type: "final" }],
+    rounds: [
+      { map: "Roll Out", type: "survival", qualified: ["Alpha", "Bravo", "Charlie"] },
+      { map: "Fall Mountain", type: "final" },
+    ],
   });
   const rows = score(event, players);
   expect(pointsFor(rows, "Alpha")).toBe(2);
@@ -123,9 +131,11 @@ test("a race that is the final scores as a final only", () => {
   const event = emptyEvent();
   event.shows.push({
     name: "Solos",
-    finalists: ["Alpha"],
     winners: ["Alpha"],
-    rounds: [{ map: "Lily Leapers", type: "final", first: "Alpha" }],
+    rounds: [
+      { map: "Roll Out", type: "survival", qualified: ["Alpha"] },
+      { map: "Lily Leapers", type: "final", first: "Alpha" },
+    ],
   });
   const rows = score(event, players);
   expect(pointsFor(rows, "Alpha")).toBe(6);
@@ -165,9 +175,11 @@ test("results for unregistered in-game names are ignored", () => {
   const event = emptyEvent();
   event.shows.push({
     name: "Solos",
-    finalists: ["Ghost", "Alpha"],
     winners: ["Ghost"],
-    rounds: [{ map: "Dizzy Heights", type: "race", first: "Ghost" }],
+    rounds: [
+      { map: "Dizzy Heights", type: "race", first: "Ghost", qualified: ["Ghost", "Alpha"] },
+      { map: "Fall Mountain", type: "final" },
+    ],
   });
   event.penalties.push({ ingame: "Ghost", points: -2, reason: "collaboration" });
   const rows = score(event, players);
@@ -195,29 +207,26 @@ test("equal points are broken by finals won, then finals reached, then race wins
   const event = emptyEvent();
   event.shows.push({
     name: "One",
-    finalists: ["Bravo"],
     winners: ["Bravo"],
     rounds: [
       { map: "Dizzy Heights", type: "race", first: "Alpha" },
-      { map: "Slime Climb", type: "race", first: "Alpha" },
+      { map: "Slime Climb", type: "race", first: "Alpha", qualified: ["Bravo"] },
       { map: "Fall Mountain", type: "final" },
     ],
   });
   event.shows.push({
     name: "Two",
-    finalists: ["Charlie"],
     winners: [],
     rounds: [
-      { map: "Tip Toe", type: "race", first: "Charlie" },
+      { map: "Tip Toe", type: "race", first: "Charlie", qualified: ["Charlie"] },
       { map: "Hex-A-Gone", type: "final" },
     ],
   });
   event.shows.push({
     name: "Three",
-    finalists: ["Charlie"],
     winners: [],
     rounds: [
-      { map: "Whirlygig", type: "race", first: "Charlie" },
+      { map: "Whirlygig", type: "race", first: "Charlie", qualified: ["Charlie"] },
       { map: "Hex-A-Gone", type: "final" },
     ],
   });
@@ -276,9 +285,11 @@ test("results recorded against the admin score nothing", () => {
   const event = emptyEvent();
   event.shows.push({
     name: "Solos",
-    finalists: ["Ref", "Alpha"],
     winners: ["Ref"],
-    rounds: [{ map: "Dizzy Heights", type: "race", first: "Ref" }],
+    rounds: [
+      { map: "Dizzy Heights", type: "race", first: "Ref", qualified: ["Ref", "Alpha"] },
+      { map: "Fall Mountain", type: "final" },
+    ],
   });
   const rows = score(event, withAdmin);
   expect(rows).toHaveLength(1);

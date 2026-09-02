@@ -19,8 +19,6 @@ export interface Round {
 
 export interface Show {
   name: string;
-  /** In-game names of everyone who qualified for the final round. */
-  finalists?: string[];
   /** In-game names of the final's winners. More than one means a simultaneous win. */
   winners?: string[];
   rounds: Round[];

@@ -8,8 +8,10 @@ const event = {
   shows: [
     {
       name: "Solos",
-      rounds: [{ map: "Wall Guys", type: "race", first: "Alpha" }],
-      finalists: ["Alpha"],
+      rounds: [
+        { map: "Wall Guys", type: "race", first: "Alpha", qualified: ["Alpha"] },
+        { map: "Fall Mountain", type: "final" },
+      ],
       winners: ["Alpha"],
     },
   ],
@@ -45,11 +47,13 @@ test("a first that is not a name is caught, since scoring looks it up", () => {
   expect(checkEvent({ ...event, shows })).toEqual(["shows[0].rounds[0].first is not a string"]);
 });
 
-test("finalists and winners have to be lists of names", () => {
-  const shows = [{ name: "Solos", rounds: [], finalists: "Alpha", winners: [1] }];
+test("survivors and winners have to be lists of names", () => {
+  const shows = [
+    { name: "Solos", rounds: [{ map: "Wall Guys", type: "race", qualified: "Alpha" }], winners: [1] },
+  ];
   expect(checkEvent({ ...event, shows })).toEqual([
-    "shows[0].finalists is not an array of names",
     "shows[0].winners is not an array of names",
+    "shows[0].rounds[0].qualified is not an array of names",
   ]);
 });
 

@@ -7,10 +7,9 @@ const SOLOS: Show = {
   name: "Solos",
   rounds: [
     { map: "Dizzy Heights", type: "race", first: "Alpha" },
-    { map: "Roll Out", type: "survival" },
+    { map: "Roll Out", type: "survival", qualified: ["Alpha", "Bravo"] },
     { map: "Fall Mountain", type: "final" },
   ],
-  finalists: ["Alpha", "Bravo"],
   winners: ["Alpha"],
 };
 
