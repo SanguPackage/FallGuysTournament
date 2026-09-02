@@ -4,6 +4,7 @@ import { SCORES_FIRST } from "../src/rounds";
 
 export { ROUND_TYPES, SCORES_FIRST } from "../src/rounds";
 import type { Players, Round, RoundType, Show, TournamentEvent } from "../src/types";
+import type { SlotFill } from "../src/ocr/autofill";
 
 export interface RoundDraft {
   map: string;
@@ -178,4 +179,67 @@ export function namesByPoints(event: TournamentEvent, players: Players): string[
   return [...new Set([...competing, ...namesInShows(event)])]
     .filter((name) => !admins.has(name))
     .sort((a, b) => (points.get(b) ?? 0) - (points.get(a) ?? 0) || a.localeCompare(b));
+}
+
+/** The same keys `nameInput` files its fields under, so a source can be looked up per field. */
+function fieldKey(showIndex: number, fill: SlotFill, slot: number): string {
+  if (fill.slot === "first") return `show:${showIndex}:round:${fill.roundIndex}:first`;
+  return `show:${showIndex}:${fill.slot === "finalists" ? "finalist" : "winner"}:${slot}`;
+}
+
+/** What the page remembers between polls: where each name came from, and what has been used. */
+export interface FillMemo {
+  /** Field key to the capture its name was read off. */
+  sources: Map<string, string>;
+  /** Fills already spent, so clearing a field does not summon the same name back. */
+  applied: Set<string>;
+}
+
+export function newFillMemo(): FillMemo {
+  return { sources: new Map(), applied: new Set() };
+}
+
+/**
+ * Drops read names into blank fields only. A field already holding something was either typed or
+ * corrected, and a later capture disagreeing with it must not undo that. A fill is spent once
+ * used, so a field emptied on purpose stays empty.
+ */
+export function applyFills(
+  draft: ShowDraft,
+  fills: SlotFill[],
+  showIndex: number,
+  memo: FillMemo,
+): boolean {
+  let changed = false;
+
+  for (const fill of fills) {
+    if (fill.showIndex !== showIndex) continue;
+
+    if (fill.slot === "first") {
+      const round = fill.roundIndex === undefined ? undefined : draft.rounds[fill.roundIndex];
+      const name = fill.names[0];
+      const key = fieldKey(showIndex, fill, 0);
+      if (round && !round.first && name && !memo.applied.has(`${key}=${name}`)) {
+        round.first = name;
+        memo.sources.set(key, fill.from);
+        memo.applied.add(`${key}=${name}`);
+        changed = true;
+      }
+      continue;
+    }
+
+    const slot = fill.slot === "finalists" ? draft.finalists : draft.winners;
+    for (const name of fill.names) {
+      if (slot.includes(name)) continue;
+      if (memo.applied.has(`${showIndex}:${fill.slot}=${name}`)) continue;
+      const blank = slot.indexOf("");
+      if (blank === -1) break;
+      slot[blank] = name;
+      memo.sources.set(fieldKey(showIndex, fill, blank), fill.from);
+      memo.applied.add(`${showIndex}:${fill.slot}=${name}`);
+      changed = true;
+    }
+  }
+
+  return changed;
 }

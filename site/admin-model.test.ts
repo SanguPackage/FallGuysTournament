@@ -1,5 +1,7 @@
 import { expect, test } from "bun:test";
 import {
+  applyFills,
+  newFillMemo,
   defaultMessage,
   draftFor,
   namesByPoints,
@@ -11,6 +13,8 @@ import {
   missingFrom,
   validate,
 } from "./admin-model";
+import type { ShowDraft } from "./admin-model";
+import type { SlotFill } from "../src/ocr/autofill";
 import type { Players, RoundType, TournamentEvent } from "../src/types";
 import type { ParsedShow } from "../src/log";
 import { identify } from "../src/rounds";
@@ -527,4 +531,68 @@ test("slots that shrink give back only the ones nobody typed into", () => {
 
   syncDraft(draft, midShow([playing("hex", "final", [1, 2])]));
   expect(draft.finalists).toEqual(["oopman", ""]);
+});
+
+function draftOf(): ShowDraft {
+  return {
+    name: "Solos",
+    rounds: [
+      { map: "Wall Guys", type: "race", first: "" },
+      { map: "Airtime", type: "hunt", first: "Optinux_Prime" },
+    ],
+    finalists: ["", ""],
+    winners: [""],
+  };
+}
+
+const FILLS: SlotFill[] = [
+  { showIndex: 0, slot: "first", roundIndex: 0, names: ["Serxav_9"], from: "a.jpg" },
+  { showIndex: 0, slot: "first", roundIndex: 1, names: ["Diego_9942"], from: "b.jpg" },
+  { showIndex: 0, slot: "finalists", names: ["Diego_9942", "Serxav_9"], from: "c.jpg" },
+  { showIndex: 0, slot: "winners", names: ["Diego_9942"], from: "d.jpg" },
+];
+
+test("a fill lands only where nothing has been typed", () => {
+  const draft = draftOf();
+  expect(applyFills(draft, FILLS, 0, newFillMemo())).toBe(true);
+  expect(draft.rounds[0]!.first).toBe("Serxav_9");
+  expect(draft.rounds[1]!.first).toBe("Optinux_Prime");
+  expect(draft.finalists).toEqual(["Diego_9942", "Serxav_9"]);
+  expect(draft.winners).toEqual(["Diego_9942"]);
+});
+
+test("every filled field records the capture it was read off", () => {
+  const memo = newFillMemo();
+  applyFills(draftOf(), FILLS, 0, memo);
+  expect(memo.sources.get("show:0:round:0:first")).toBe("a.jpg");
+  expect(memo.sources.get("show:0:finalist:0")).toBe("c.jpg");
+  expect(memo.sources.get("show:0:winner:0")).toBe("d.jpg");
+  expect(memo.sources.has("show:0:round:1:first")).toBe(false);
+});
+
+test("applying the same fills twice changes nothing the second time", () => {
+  const draft = draftOf();
+  const memo = newFillMemo();
+  expect(applyFills(draft, FILLS, 0, memo)).toBe(true);
+  expect(applyFills(draft, FILLS, 0, memo)).toBe(false);
+});
+
+test("a field emptied on purpose is not filled again", () => {
+  const draft = draftOf();
+  const memo = newFillMemo();
+  applyFills(draft, FILLS, 0, memo);
+  draft.rounds[0]!.first = "";
+  draft.finalists = ["", ""];
+  expect(applyFills(draft, FILLS, 0, memo)).toBe(false);
+  expect(draft.rounds[0]!.first).toBe("");
+  expect(draft.finalists).toEqual(["", ""]);
+});
+
+test("a fill for another show is ignored", () => {
+  const draft = draftOf();
+  const other: SlotFill[] = [
+    { showIndex: 1, slot: "finalists", names: ["Diego_9942"], from: "c.jpg" },
+  ];
+  expect(applyFills(draft, other, 0, newFillMemo())).toBe(false);
+  expect(draft.finalists).toEqual(["", ""]);
 });
