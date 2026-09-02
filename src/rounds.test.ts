@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
-import { identify } from "./rounds";
+import { finalistsOf, identify } from "./rounds";
+import type { Show } from "./types";
 
 test("a round played straight from the base id is named and typed", () => {
   expect(identify("round_wall_guys")).toEqual({ name: "Wall Guys", type: "race" });
@@ -28,4 +29,43 @@ test("an id in no table keeps its raw name, so the admin sees what to type inste
     name: "cloudyteacupsgoldrush_only_finals_v3_normal",
     type: "unknown",
   });
+});
+
+test("finalistsOf reads the board after the round before the final", () => {
+  const show: Show = {
+    name: "Solos",
+    rounds: [
+      { map: "Dizzy Heights", type: "race", qualified: ["Alpha", "Bravo", "Charlie"] },
+      { map: "Roll Out", type: "survival", qualified: ["Alpha", "Bravo"] },
+      { map: "Fall Mountain", type: "final" },
+    ],
+  };
+  expect(finalistsOf(show)).toEqual(["Alpha", "Bravo"]);
+});
+
+test("a show whose final has not been played yet has no finalists", () => {
+  const show: Show = {
+    name: "Solos",
+    rounds: [
+      { map: "Dizzy Heights", type: "race", qualified: ["Alpha", "Bravo", "Charlie"] },
+      { map: "Roll Out", type: "survival", qualified: ["Alpha", "Bravo"] },
+    ],
+  };
+  expect(finalistsOf(show)).toEqual([]);
+});
+
+test("finalistsOf gives nothing when the semi's board was never read", () => {
+  const show: Show = {
+    name: "Solos",
+    rounds: [
+      { map: "Roll Out", type: "survival" },
+      { map: "Fall Mountain", type: "final" },
+    ],
+  };
+  expect(finalistsOf(show)).toEqual([]);
+});
+
+test("a show that is only a final has no round to hang finalists off", () => {
+  const show: Show = { name: "Solos", rounds: [{ map: "Fall Mountain", type: "final" }] };
+  expect(finalistsOf(show)).toEqual([]);
 });

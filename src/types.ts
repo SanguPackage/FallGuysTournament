@@ -13,6 +13,8 @@ export interface Round {
   type: RoundType;
   /** In-game name of the player who crossed first. Race rounds only. */
   first?: string;
+  /** In-game names off the qualification board that came up after this round. */
+  qualified?: string[];
 }
 
 export interface Show {
