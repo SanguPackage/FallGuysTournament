@@ -25,7 +25,6 @@ export interface RunResult {
 
 export interface CaptureDeps {
   ffmpeg: string;
-  segmentDir: string;
   scratchDir: string;
   captureDir: string;
   run: (argv: string[]) => Promise<RunResult>;
@@ -80,7 +79,7 @@ export async function captureMoment(
       const result = await deps.run(
         extractArgv({
           ffmpeg: deps.ffmpeg,
-          segment: toWindows(`${deps.segmentDir}/${part.file}`),
+          segment: toWindows(`${part.dir}/${part.file}`),
           offset: offsetIn(part, from),
           duration: (to - from) / 1000,
           fps: moment.fps,
@@ -120,14 +119,23 @@ export async function captureMoment(
 
 export interface ClipDeps {
   ffmpeg: string;
-  segmentDir: string;
+  scratchDir: string;
   showsDir: string;
   run: (argv: string[]) => Promise<RunResult>;
+}
+
+export interface ClipResult {
+  out: string;
+  /** The clip jumps here: a recording died inside the window and the parts do not meet. */
+  gapped: boolean;
 }
 
 /**
  * Cuts one show's mp4 out of the segments it spans. `-c copy`, so this is a file operation rather
  * than an encode; `-g` on the recording is what keeps the cut within about a second of `from`.
+ *
+ * A window with a hole in it is still cut. Refusing would spend the ledger's attempts and abandon
+ * a show whose footage is on disk, and a clip that jumps is worth more than no clip.
  */
 export async function cutShowClip(
   clip: ShowClip,
@@ -135,16 +143,17 @@ export async function cutShowClip(
   name: string,
   ledger: Ledger,
   deps: ClipDeps,
-): Promise<string | undefined> {
+): Promise<ClipResult | undefined> {
   const key = clipKey(clip);
-  const { parts, complete } = coverage(segments, clip.from, clip.to);
+  const { parts, complete, gapped } = coverage(segments, clip.from, clip.to);
   if (!complete) {
     ledger.failed(key);
     return undefined;
   }
 
-  const list = `${deps.segmentDir}/clip-${clip.showIndex}.txt`;
-  await Bun.write(list, concatList(parts.map((part) => part.file)));
+  const list = `${deps.scratchDir}/clip-${clip.showIndex}.txt`;
+  await mkdir(deps.scratchDir, { recursive: true });
+  await Bun.write(list, concatList(parts.map((part) => toWindows(`${part.dir}/${part.file}`))));
   await mkdir(deps.showsDir, { recursive: true });
 
   const out = `${deps.showsDir}/${name}.mp4`;
@@ -163,5 +172,5 @@ export async function cutShowClip(
     return undefined;
   }
   ledger.done(key);
-  return out;
+  return { out, gapped };
 }

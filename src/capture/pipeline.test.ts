@@ -16,7 +16,8 @@ const MOMENT: Moment = {
   fps: 30,
 };
 
-const SEGMENTS = [{ file: "seg-00003.mkv", from: AT - 20_000, to: AT + 10_000 }];
+const RUN = "/mnt/c/temp/FallGuysCapture/segments/2026-09-05T20h00m00";
+const SEGMENTS = [{ file: "seg-00003.mkv", dir: RUN, from: AT - 20_000, to: AT + 10_000 }];
 
 async function harness() {
   const dir = await mkdtemp(`${tmpdir()}/capture-`);
@@ -27,7 +28,6 @@ async function harness() {
     ran,
     deps: {
       ffmpeg: "ff",
-      segmentDir: `${dir}/segments`,
       scratchDir,
       captureDir: `${dir}/captures`,
       // Stands in for ffmpeg. The argv carries Windows paths, which this process cannot write to,
@@ -103,21 +103,56 @@ test("the scratch folder is not left behind", async () => {
   }
 });
 
+test("a frame is pulled from the run folder its segment came from", async () => {
+  const { dir, deps, ran } = await harness();
+  try {
+    await captureMoment(MOMENT, SEGMENTS, new Ledger(), deps);
+    expect(ran[0]![ran[0]!.indexOf("-i") + 1]).toBe(
+      "C:\\temp\\FallGuysCapture\\segments\\2026-09-05T20h00m00\\seg-00003.mkv",
+    );
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test("a clip is cut with the streams copied, and named after the show", async () => {
   const { dir, deps, ran } = await harness();
   const clip = { showIndex: 2, from: AT - 10_000, to: AT + 5_000 };
   const ledger = new Ledger();
   try {
-    const out = await cutShowClip(clip, SEGMENTS, "show-03-slime-climb", ledger, {
+    const cut = await cutShowClip(clip, SEGMENTS, "show-03-slime-climb", ledger, {
       ffmpeg: deps.ffmpeg,
-      segmentDir: deps.segmentDir,
+      scratchDir: deps.scratchDir,
       showsDir: `${dir}/shows`,
       run: deps.run,
     });
-    expect(out).toBe(`${dir}/shows/show-03-slime-climb.mp4`);
+    expect(cut).toEqual({ out: `${dir}/shows/show-03-slime-climb.mp4`, gapped: false });
     expect(ran[0]).toContain("copy");
-    expect(await Bun.file(`${dir}/segments/clip-2.txt`).text()).toBe("file 'seg-00003.mkv'\n");
+    expect(await Bun.file(`${dir}/scratch/clip-2.txt`).text()).toBe(
+      "file 'C:\\temp\\FallGuysCapture\\segments\\2026-09-05T20h00m00\\seg-00003.mkv'\n",
+    );
     expect(ledger.pending("2:clip")).toBe(false);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("a clip whose recording died inside it is cut anyway, and says so", async () => {
+  const { dir, deps } = await harness();
+  const later = "/mnt/c/temp/FallGuysCapture/segments/2026-09-05T20h01m00";
+  const split = [
+    { file: "seg-00003.mkv", dir: RUN, from: AT - 20_000, to: AT - 5_000 },
+    { file: "seg-00000.mkv", dir: later, from: AT + 5_000, to: AT + 20_000 },
+  ];
+  try {
+    const cut = await cutShowClip(
+      { showIndex: 1, from: AT - 15_000, to: AT + 15_000 },
+      split,
+      "show-02-x",
+      new Ledger(),
+      { ffmpeg: deps.ffmpeg, scratchDir: deps.scratchDir, showsDir: `${dir}/shows`, run: deps.run },
+    );
+    expect(cut?.gapped).toBe(true);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -127,19 +162,19 @@ test("a clip the segments do not cover yet is left pending", async () => {
   const { dir, deps } = await harness();
   const ledger = new Ledger();
   try {
-    const out = await cutShowClip(
+    const cut = await cutShowClip(
       { showIndex: 0, from: AT - 60_000, to: AT },
       SEGMENTS,
       "show-01-x",
       ledger,
       {
         ffmpeg: deps.ffmpeg,
-        segmentDir: deps.segmentDir,
+        scratchDir: deps.scratchDir,
         showsDir: `${dir}/shows`,
         run: deps.run,
       },
     );
-    expect(out).toBeUndefined();
+    expect(cut).toBeUndefined();
     expect(ledger.pending("0:clip")).toBe(true);
   } finally {
     await rm(dir, { recursive: true, force: true });

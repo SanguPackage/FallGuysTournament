@@ -80,7 +80,7 @@ export function extractArgv(o: ExtractOptions): string[] {
   ];
 }
 
-/** The concat demuxer's list format. Paths are relative to the list file's own folder. */
+/** The concat demuxer's list format. Paths are absolute, because parts can span run folders. */
 export function concatList(files: string[]): string {
   return files.map((file) => `file '${file}'\n`).join("");
 }

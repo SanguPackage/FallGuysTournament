@@ -55,9 +55,14 @@ test("extraction seeks the segment, takes a duration, and numbers the frames", (
   expect(argv.indexOf("-ss")).toBeLessThan(argv.indexOf("-i"));
 });
 
-test("a concat list quotes one file per line, as the demuxer wants", () => {
-  expect(concatList(["seg-00000.mkv", "seg-00001.mkv"])).toBe(
-    "file 'seg-00000.mkv'\nfile 'seg-00001.mkv'\n",
+test("a concat list quotes one absolute path per line, as the demuxer wants", () => {
+  expect(
+    concatList([
+      "C:\\caps\\segments\\21h41m03\\seg-00002.mkv",
+      "C:\\caps\\segments\\21h43m00\\seg-00000.mkv",
+    ]),
+  ).toBe(
+    "file 'C:\\caps\\segments\\21h41m03\\seg-00002.mkv'\nfile 'C:\\caps\\segments\\21h43m00\\seg-00000.mkv'\n",
   );
 });
 
