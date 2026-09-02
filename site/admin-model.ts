@@ -405,3 +405,12 @@ export function resyncWinners(draft: ShowDraft, showIndex: number, memo: FillMem
     if (spent.startsWith(`${showIndex}:winners=`)) memo.applied.delete(spent);
   }
 }
+
+/**
+ * Forgets everything read into a show, which is what re-reading the captures needs: a name still
+ * held as spent never lands again, however the reader now reads it.
+ */
+export function resyncShow(draft: ShowDraft, showIndex: number, memo: FillMemo): void {
+  draft.rounds.forEach((_, roundIndex) => resyncRound(draft, showIndex, roundIndex, memo));
+  resyncWinners(draft, showIndex, memo);
+}

@@ -7,6 +7,7 @@ import {
   draftFor,
   namesByPoints,
   resyncRound,
+  resyncShow,
   resyncWinners,
   namesInShows,
   draftFromShow,
@@ -838,4 +839,18 @@ test("a winner is offered only whoever reached the final", () => {
   const draft = typing();
   draft.rounds[1]!.qualified = ["Alpha", "Bravo"];
   expect(candidatesFor(draft, FIELD, { slot: "winners", at: 0 })).toEqual(["Alpha", "Bravo"]);
+});
+
+test("re-reading a show forgets the winners along with the rounds", () => {
+  const draft = draftOf();
+  const memo = newFillMemo();
+  applyFills(draft, FILLS, 0, memo);
+
+  resyncShow(draft, 0, memo);
+  expect(draft.rounds[0]!.first).toBe("");
+  expect(draft.rounds[0]!.qualified).toEqual(["", ""]);
+  expect(draft.winners).toEqual([""]);
+
+  expect(applyFills(draft, FILLS, 0, memo)).toBe(true);
+  expect(draft.winners).toEqual(["Diego_9942"]);
 });

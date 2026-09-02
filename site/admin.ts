@@ -4,6 +4,7 @@ import {
   applyFills,
   candidatesFor,
   resyncRound,
+  resyncShow,
   resyncWinners,
   captureBadge,
   newFillMemo,
@@ -636,7 +637,7 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ showIndex: index }),
       });
-      draft.rounds.forEach((_, roundIndex) => resyncRound(draft, index, roundIndex, fillMemo));
+      resyncShow(draft, index, fillMemo);
       status("watch-status", "Re-reading captures. Names arrive as they are read.", true);
     } finally {
       reread.disabled = false;
