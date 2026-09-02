@@ -7,11 +7,17 @@ import { publish } from "../src/publish";
 import { EVENT_PATH, PLAYERS_PATH } from "../src/storage";
 import { parseShowOrder } from "../site/rules";
 import { defaultMessage, suggestShowName } from "../site/admin-model";
+import { ReadQueue } from "../src/ocr/queue";
+import { readShot } from "../src/ocr/read";
+import { cacheKey, loadCache, saveCache } from "../src/ocr/cache";
+import { fillsFor } from "../src/ocr/autofill";
 import type { LiveNow } from "../src/live";
 import type { ParsedShow } from "../src/log";
-import type { TournamentEvent } from "../src/types";
+import type { Players, TournamentEvent } from "../src/types";
+import type { Shot } from "../src/screenshots";
 
 const SHOWS_PATH = "data/shows.json";
+const CACHE_PATH = ".ocr-cache/reads.json";
 
 /**
  * Off by default: development saves the same files the event does, and every save would otherwise
@@ -61,6 +67,32 @@ async function writeJson(
   return json({ saved: path, published });
 }
 
+const reader = new ReadQueue(readShot);
+Object.assign(reader.cache(), await loadCache(CACHE_PATH));
+setInterval(() => void saveCache(CACHE_PATH, reader.cache()), 10_000);
+
+/** Reading is a convenience: a capture that cannot be read must not stop the admin loading. */
+function queueReads(dir: string | undefined, shots: Shot[]): void {
+  if (!dir) return;
+  reader.offer(
+    shots.flatMap((shot) => {
+      const path = resolveShot(dir, shot.file);
+      return path ? [{ key: cacheKey(shot.file, shot.takenAt), path }] : [];
+    }),
+  );
+}
+
+/** Only what has already been read. A capture still in the queue turns up on a later poll. */
+function readsFor(shots: Shot[]) {
+  const cache = reader.cache();
+  return Object.fromEntries(
+    shots.flatMap((shot) => {
+      const read = cache[cacheKey(shot.file, shot.takenAt)];
+      return read ? [[shot.file, read] as const] : [];
+    }),
+  );
+}
+
 const server = Bun.serve({
   port: Number(process.env.PORT ?? 3000),
   async fetch(request) {
@@ -71,8 +103,13 @@ const server = Bun.serve({
       const shotDir = await findScreenshotDir();
       const shows = await parsedShows(logPath);
       const event = (await Bun.file(EVENT_PATH).json()) as TournamentEvent;
+      const shots = await placed(shotDir, shows, event.date);
+      queueReads(shotDir, shots);
+      const players = (await Bun.file(PLAYERS_PATH).json()) as Players;
+      const roster = players.players.flatMap((player) => (player.ingame ? [player.ingame] : []));
+
       return json({
-        players: await Bun.file(PLAYERS_PATH).json(),
+        players,
         event,
         showNames: Object.keys(
           ((await Bun.file(SHOWS_PATH).json()) as { shows: Record<string, unknown> }).shows,
@@ -82,7 +119,8 @@ const server = Bun.serve({
         shows,
         times: absoluteTimes(shows, event.date),
         shotDir: shotDir ?? null,
-        shots: await placed(shotDir, shows, event.date),
+        shots,
+        fills: fillsFor(shots, readsFor(shots), roster),
         autoPublish: AUTO_PUBLISH,
         problems: await checkData(),
       });
