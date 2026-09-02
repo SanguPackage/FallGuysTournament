@@ -20,7 +20,8 @@ const ORDER: Record<FieldState, number> = { won: 0, through: 1, playing: 1, out:
  */
 export function fieldOf(show: Show, players: Player[]): FieldPlayer[] {
   const roster = players.filter(
-    (player): player is Player & { ingame: string } => !player.admin && !!player.ingame,
+    (player): player is Player & { ingame: string } =>
+      !player.admin && player.joined !== false && !!player.ingame,
   );
 
   const outAt = new Map<string, number>();

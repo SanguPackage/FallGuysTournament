@@ -3,7 +3,7 @@ process.env.TZ = "Europe/Brussels";
 
 import { expect, test } from "bun:test";
 import { absoluteTimes, placeShots, shotsForSlot, type Shot } from "./screenshots";
-import type { ParsedShow } from "./log";
+import { parseLog, type ParsedShow } from "./log";
 import type { RoundType } from "./types";
 
 const DATE = "2026-09-01";
@@ -51,9 +51,12 @@ const SHOWS: ParsedShow[] = [
   },
 ];
 
+function shot(file: string, takenAt: number): Shot {
+  return { file, takenAt, source: "sharex" };
+}
+
 function place(clock: string, dayOffset = 0, shows = SHOWS) {
-  const shot: Shot = { file: "a.png", takenAt: at(clock, dayOffset) };
-  return placeShots([shot], shows, DATE)[0]!;
+  return placeShots([shot("a.png", at(clock, dayOffset))], shows, DATE)[0]!;
 }
 
 test("a capture during a race round is filed under that round", () => {
@@ -104,8 +107,8 @@ test("a round the log left unstamped falls through to the show rather than guess
 
 test("captures come back in the order they were taken", () => {
   const shots: Shot[] = [
-    { file: "late.png", takenAt: at("20:26:00") },
-    { file: "early.png", takenAt: at("20:25:20") },
+    shot("late.png", at("20:26:00")),
+    shot("early.png", at("20:25:20")),
   ];
   expect(placeShots(shots, SHOWS, DATE).map((shot) => shot.file)).toEqual([
     "early.png",
@@ -115,11 +118,11 @@ test("captures come back in the order they were taken", () => {
 
 const PLACED = placeShots(
   [
-    { file: "race.png", takenAt: at("20:25:20") },
-    { file: "final.png", takenAt: at("20:26:00") },
-    { file: "win.png", takenAt: at("20:27:30") },
-    { file: "idle.png", takenAt: at("20:25:03") },
-    { file: "desktop.png", takenAt: at("19:00:00") },
+    shot("race.png", at("20:25:20")),
+    shot("final.png", at("20:26:00")),
+    shot("win.png", at("20:27:30")),
+    shot("idle.png", at("20:25:03")),
+    shot("desktop.png", at("19:00:00")),
   ],
   SHOWS,
   DATE,
@@ -170,8 +173,8 @@ test("log stamps are read as UTC, not as the clock on the wall", () => {
 
 test("the screen after the round before the final names the finalists", () => {
   const shots: Shot[] = [
-    { file: "playing.png", takenAt: at("20:25:20") },
-    { file: "qualified.png", takenAt: at("20:25:35") },
+    shot("playing.png", at("20:25:20")),
+    shot("qualified.png", at("20:25:35")),
   ];
   const placed = placeShots(shots, SHOWS, DATE);
 
@@ -186,4 +189,16 @@ test("the screen after the round before the final names the finalists", () => {
     "playing.png",
     "qualified.png",
   ]);
+});
+
+test("absolute times carry each round's first qualifier", () => {
+  const shows = parseLog(`
+20:00:00.000: [HandleSuccessfulLogin] Selected show is s IsUltimatePartyEpisode: False
+20:00:01.000: [StateGameLoading] Finished loading game level, assumed to be r. Duration: 1s
+20:00:20.000: ClientGameManager::HandleServerPlayerProgress PlayerId=1 is succeeded=True
+20:00:25.000: ClientGameManager::HandleServerPlayerProgress PlayerId=2 is succeeded=True
+`);
+  const [times] = absoluteTimes(shows, DATE);
+  expect(times!.firsts).toEqual([at("20:00:20")]);
+  expect(times!.ends).toEqual([at("20:00:25")]);
 });

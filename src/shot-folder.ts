@@ -1,11 +1,15 @@
 import { readdir, stat } from "node:fs/promises";
 import { isAbsolute, relative, resolve, sep } from "node:path";
-import type { Shot } from "./screenshots";
+import type { Shot, ShotSource } from "./screenshots";
 
 const IMAGES = /\.(png|jpe?g)$/i;
 
 /** ShareX files captures by month, so `month` is the `YYYY-MM` folder the event falls in. */
-export async function listShots(root: string, month: string): Promise<Shot[]> {
+export async function listShots(
+  root: string,
+  month: string,
+  source: ShotSource = "sharex",
+): Promise<Shot[]> {
   const dir = `${root}/${month}`;
   let names: string[];
   try {
@@ -18,7 +22,7 @@ export async function listShots(root: string, month: string): Promise<Shot[]> {
   for (const name of names) {
     if (!IMAGES.test(name)) continue;
     const info = await stat(`${dir}/${name}`);
-    if (info.isFile()) shots.push({ file: `${month}/${name}`, takenAt: info.mtimeMs });
+    if (info.isFile()) shots.push({ file: `${month}/${name}`, takenAt: info.mtimeMs, source });
   }
 
   return shots;

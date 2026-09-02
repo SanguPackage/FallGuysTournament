@@ -22,6 +22,8 @@ export interface Show {
   /** In-game names of the final's winners. More than one means a simultaneous win. */
   winners?: string[];
   rounds: Round[];
+  /** Ticked off by the admin as read back against the captures and correct. */
+  checked?: boolean;
 }
 
 export interface Penalty {
@@ -44,6 +46,8 @@ export interface Player {
   discord?: string;
   /** Admins run the event rather than competing, so they are left off the leaderboard. */
   admin?: boolean;
+  /** Absent or true for everyone playing. False keeps a registered no-show out of the tournament. */
+  joined?: boolean;
 }
 
 export interface Players {

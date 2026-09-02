@@ -8,6 +8,7 @@ const ROSTER: Player[] = [
   { fom: "Charlie_FOM", ingame: "Charlie" },
   { fom: "Delta_FOM", ingame: "Delta" },
   { fom: "Ref_FOM", ingame: "Ref", admin: true },
+  { fom: "NoShow_FOM", ingame: "NoShow", joined: false },
   { fom: "Unreported_FOM" },
 ];
 
@@ -34,7 +35,7 @@ test("a show that has not loaded a round yet leaves everyone in play", () => {
   });
 });
 
-test("admins and players with no in-game name are not in the field", () => {
+test("admins, no-shows and players with no in-game name are not in the field", () => {
   const field = fieldOf({ name: "Solos", rounds: [] }, ROSTER);
   expect(field.map((p) => p.ingame)).toEqual(["Alpha", "Bravo", "Charlie", "Delta"]);
 });

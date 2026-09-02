@@ -19,8 +19,9 @@ Simultaneous winners split the 5, rounded down.
 ## Running the admin
 
 ```bash
-bun run live   # every save is committed and pushed
-bun run dev    # saves stay on this machine
+bun run live            # every save is committed and pushed
+bun run dev             # saves stay on this machine
+bun run live --record    # and record the screen — see below
 ```
 
 Both serve the admin on <http://localhost:3000/admin> and the board beside it.
@@ -148,6 +149,10 @@ Pushing to `main` publishes `dist/` to GitHub Pages via
 
 ## Screenshots
 
+Shooting by hand is the backup now — see [Capturing the screens
+automatically](#capturing-the-screens-automatically). It still works exactly as described here, and
+a hand-shot capture and a frame cut from the recording are treated identically.
+
 ShareX captures the active window with `Alt + Print Screen`. Rebind under Hotkey
 settings → `...` → Task = Capture → Active window.
 
@@ -211,6 +216,54 @@ overlap into pileups in a full lobby, and any name not written in the Latin alph
 The first run downloads Tesseract's English model, about 5MB, into `.ocr-cache/`. **Do that once
 before the event** — nothing afterwards needs the network. Read names are cached in the same
 folder against each file's modified time, so restarting the server does not re-read everything.
+
+## Capturing the screens automatically
+
+Asked for with `--record`, the server records the screen for the whole event and cuts the frames the
+reader needs out of the recording afterwards, so nothing has to be shot by hand. The screen naming
+who finished first can be gone in a fraction of a second when a dozen beans qualify together, and no
+capture that reacts to an event can catch it.
+
+Frames are found by the clock stamp **inside** the log line, never by when the line arrived, so a
+log that flushed late still names the right frame. The same recording is cut into one mp4 per show.
+
+**Nothing is recorded without `--record`.** It grabs a whole monitor and writes gigabytes an hour,
+so neither `bun run dev` nor `bun run live` starts it on its own.
+
+```bash
+CAPTURE_OUTPUT=1 bun run live --record
+```
+
+The console says `Recording  on` with the folder, or `off`, on every start.
+
+| Setting          | Default                                  | What it is                                          |
+|------------------|------------------------------------------|-----------------------------------------------------|
+| `CAPTURE_OUTPUT` | `0`                                      | Which monitor to record, numbered from 0            |
+| `CAPTURE_DIR`    | `/mnt/c/FallGuysCapture`                 | Where segments, clips and frames go                 |
+| `CAPTURE_AUDIO`  | `virtual-audio-capturer`                 | dshow device to record sound from; `off` for silent |
+| `FFMPEG_PATH`    | `/mnt/c/Program Files/ShareX/ffmpeg.exe` | ShareX ships the one this uses                      |
+
+The header carries a **recording** badge. If it reads `NOT RECORDING`, nothing is being captured
+and `Alt + Print Screen` is the only thing still working.
+
+One mp4 per show lands in `CAPTURE_DIR/shows`, cut from the first round to just past the victory
+screen without re-encoding. Nothing here is committed or copied into the repo, and nothing is
+cleaned up: `CAPTURE_DIR` is yours to empty. A static desktop runs about 1.7 Mbps, so budget a few
+gigabytes an hour and leave 30GB free.
+
+### Before the event
+
+1. Install `virtual-audio-capturer` (from the screen-capture-recorder installer) and confirm ffmpeg
+   lists it:
+   ```bash
+   "/mnt/c/Program Files/ShareX/ffmpeg.exe" -list_devices true -f dshow -i dummy
+   ```
+   Without it the recording still happens, silently, and the badge says `recording — no sound`.
+2. Find the monitor Fall Guys is on, set `CAPTURE_OUTPUT`, record ten seconds and watch it back.
+   Getting this wrong records the admin screen instead of the game.
+3. Play one round and confirm a frame with a trophy pill turns up in the capture panel.
+
+This machine has no NVENC or AMF encoder, so the recording uses Quick Sync (`h264_qsv`).
 
 ## Tests
 

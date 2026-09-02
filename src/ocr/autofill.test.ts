@@ -6,7 +6,7 @@ import type { ShotRead } from "./read";
 const ROSTER = ["Diego_9942", "Serxav_9", "BigMooseLips"];
 
 function shot(file: string, extra: Partial<PlacedShot> = {}): PlacedShot {
-  return { file, takenAt: 0, showIndex: 0, ...extra };
+  return { file, takenAt: 0, source: "sharex", showIndex: 0, ...extra };
 }
 
 test("a board read after the round before the final names the finalists", () => {
@@ -61,5 +61,5 @@ test("a capture placed in no show fills nothing", () => {
   const reads: Record<string, ShotRead> = {
     "x.jpg": { screen: "winner", tokens: ["Diego_9942"] },
   };
-  expect(fillsFor([{ file: "x.jpg", takenAt: 0 }], reads, ROSTER)).toEqual([]);
+  expect(fillsFor([{ file: "x.jpg", takenAt: 0, source: "sharex" }], reads, ROSTER)).toEqual([]);
 });

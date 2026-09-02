@@ -19,41 +19,65 @@
         <a href="/results.html">Results</a>
         <span aria-current="page">Admin</span>
       </nav>
-      <h1>Admin <span id="publish-badge" class="badge"></span></h1>
-      <p id="log-path" class="subtitle"></p>
+      <h1>
+        Admin <span id="publish-badge" class="badge"></span>
+        <span id="capture-badge" class="badge" hidden></span>
+      </h1>
       <div id="data-problems" class="banner" hidden></div>
 
-      <section>
-        <h2>Shows</h2>
-        <p id="watch-status" class="status"></p>
-        <div id="shows"></div>
-      </section>
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" data-tab="shows">Shows</button>
+        <button type="button" role="tab" data-tab="players">Players</button>
+        <button type="button" role="tab" data-tab="info">Info</button>
+      </div>
 
-      <section>
-        <h2>Publish</h2>
-        <div class="publish">
-          <div class="field">
-            <label for="publish-message">Commit message</label>
-            <input id="publish-message" type="text" />
+      <div data-panel="shows" role="tabpanel">
+        <section>
+          <h2>Shows</h2>
+          <p id="watch-status" class="status"></p>
+          <div id="shows"></div>
+        </section>
+
+        <section>
+          <h2>Publish</h2>
+          <div class="publish">
+            <div class="field">
+              <label for="publish-message">Commit message</label>
+              <input id="publish-message" type="text" />
+            </div>
+            <div class="actions">
+              <button id="publish" type="button" class="primary">Commit &amp; push</button>
+              <span id="publish-status" class="status"></span>
+            </div>
+            <p id="publish-mode" class="hint"></p>
           </div>
+        </section>
+      </div>
+
+      <div data-panel="players" role="tabpanel" hidden>
+        <section>
+          <h2>Players</h2>
+          <div id="players"></div>
           <div class="actions">
-            <button id="publish" type="button" class="primary">Commit &amp; push</button>
-            <span id="publish-status" class="status"></span>
+            <button id="add-player" type="button">Add player</button>
+            <button id="toggle-linked" type="button"></button>
+            <button id="save-players" type="button" class="primary">Save players</button>
+            <span id="players-status" class="status"></span>
           </div>
-          <p id="publish-mode" class="hint"></p>
-        </div>
-      </section>
+        </section>
+      </div>
 
-      <section>
-        <h2>Players</h2>
-        <div id="players"></div>
-        <div class="actions">
-          <button id="add-player" type="button">Add player</button>
-          <button id="toggle-linked" type="button"></button>
-          <button id="save-players" type="button" class="primary">Save players</button>
-          <span id="players-status" class="status"></span>
-        </div>
-      </section>
+      <div data-panel="info" role="tabpanel" hidden>
+        <section>
+          <h2>Info</h2>
+          <dl class="paths">
+            <dt>Fall Guys log</dt>
+            <dd id="log-path"></dd>
+            <dt>Screenshots</dt>
+            <dd id="shot-dir"></dd>
+          </dl>
+        </section>
+      </div>
 
       <datalist id="registered"></datalist>
       <datalist id="show-names"></datalist>

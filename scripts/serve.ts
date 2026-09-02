@@ -11,19 +11,38 @@ import { ReadQueue } from "../src/ocr/queue";
 import { readShot } from "../src/ocr/read";
 import { cacheKey, loadCache, saveCache } from "../src/ocr/cache";
 import { fillsFor } from "../src/ocr/autofill";
-import type { LiveNow } from "../src/live";
+import { identify } from "../src/ocr/recognizers";
+import { frameFrom } from "../src/ocr/frame";
+import { clipKey, momentKey, momentsIn, showClips } from "../src/capture/moments";
+import { parseSegments } from "../src/capture/segments";
+import { recordArgv } from "../src/capture/command";
+import { captureFolders, captureSettings } from "../src/capture/paths";
+import { toWindows } from "../src/capture/win-path";
+import { Recorder } from "../src/capture/recorder";
+import { Ledger, type LedgerState } from "../src/capture/ledger";
+import { Serial } from "../src/capture/serial";
+import { captureMoment, cutShowClip } from "../src/capture/pipeline";
+import { mkdir } from "node:fs/promises";
+import { showNameNow, type LiveNow } from "../src/live";
 import type { ParsedShow } from "../src/log";
 import type { Players, TournamentEvent } from "../src/types";
-import type { Shot } from "../src/screenshots";
+import type { Shot, ShotSource } from "../src/screenshots";
 
 const SHOWS_PATH = "data/shows.json";
 const CACHE_PATH = ".ocr-cache/reads.json";
+const LEDGER_PATH = ".ocr-cache/captured.json";
 
 /**
  * Off by default: development saves the same files the event does, and every save would otherwise
  * land on the public board. `bun run live` turns it on for the night itself.
  */
 const AUTO_PUBLISH = Bun.argv.includes("--publish");
+
+/**
+ * Off unless asked for by name: recording eats gigabytes an hour and grabs a monitor, so it is
+ * never something a plain `bun run live` should start doing.
+ */
+const RECORD = Bun.argv.includes("--record");
 
 /** The log is a convenience: it prefills rounds. Losing it must not stop the admin loading. */
 async function parsedShows(logPath: string | undefined) {
@@ -35,11 +54,32 @@ async function parsedShows(logPath: string | undefined) {
   }
 }
 
+const capture = await captureSettings(process.env);
+const folders = captureFolders(capture.dir);
+
+/** Which folder a capture lives in. ShareX's is only ever read; the frames are ours to write. */
+async function rootFor(source: ShotSource): Promise<string | undefined> {
+  if (source === "auto") return RECORD ? folders.captures : undefined;
+  return findScreenshotDir();
+}
+
 /** Screenshots are a reading aid: a missing or unreadable folder must not stop the admin loading. */
 async function placed(dir: string | undefined, shows: ParsedShow[], date: string) {
-  if (!dir) return [];
+  const month = date.slice(0, 7);
+  const shots: Shot[] = [];
+  for (const [root, source] of [
+    [dir, "sharex"],
+    [RECORD ? folders.captures : undefined, "auto"],
+  ] as const) {
+    if (!root) continue;
+    try {
+      shots.push(...(await listShots(root, month, source)));
+    } catch {
+      // One unreadable root must not cost the other.
+    }
+  }
   try {
-    return placeShots(await listShots(dir, date.slice(0, 7)), shows, date);
+    return placeShots(shots, shows, date);
   } catch {
     return [];
   }
@@ -73,10 +113,14 @@ setInterval(() => void saveCache(CACHE_PATH, reader.cache()), 10_000);
 
 /** Reading is a convenience: a capture that cannot be read must not stop the admin loading. */
 function queueReads(dir: string | undefined, shots: Shot[]): void {
-  if (!dir) return;
+  const roots: Record<ShotSource, string | undefined> = {
+    sharex: dir,
+    auto: RECORD ? folders.captures : undefined,
+  };
   reader.offer(
     shots.flatMap((shot) => {
-      const path = resolveShot(dir, shot.file);
+      const root = roots[shot.source];
+      const path = root ? resolveShot(root, shot.file) : undefined;
       return path ? [{ key: cacheKey(shot.file, shot.takenAt), path }] : [];
     }),
   );
@@ -93,6 +137,105 @@ function readsFor(shots: Shot[]) {
   );
 }
 
+const ledger = new Ledger(
+  await Bun.file(LEDGER_PATH)
+    .json()
+    .then((state) => state as LedgerState)
+    .catch(() => undefined),
+);
+const captureJobs = new Serial();
+
+async function runFfmpeg(argv: string[]) {
+  const child = Bun.spawn(argv, { stdout: "ignore", stderr: "pipe" });
+  const stderr = await new Response(child.stderr).text();
+  return { ok: (await child.exited) === 0, stderr };
+}
+
+const recorder = new Recorder({
+  argvFor: (audio) =>
+    recordArgv({
+      ffmpeg: capture.ffmpeg!,
+      output: capture.output,
+      ...(audio && capture.audioDevice ? { audioDevice: capture.audioDevice } : {}),
+      dir: toWindows(folders.segments),
+      fps: 30,
+      segmentSeconds: 30,
+    }),
+  spawn: (argv) => {
+    const child = Bun.spawn(argv, { stdout: "ignore", stderr: "ignore" });
+    return { exited: child.exited, kill: () => child.kill() };
+  },
+  now: () => Date.now(),
+});
+
+/** The muxer only lists a segment once it closes, so the one recording now is never in here. */
+async function segmentsNow() {
+  const startedAt = recorder.startedAt();
+  if (startedAt === undefined) return [];
+  const csv = await Bun.file(`${folders.segments}/segments.csv`)
+    .text()
+    .catch(() => "");
+  return parseSegments(csv, startedAt);
+}
+
+function clipName(shows: ParsedShow[], showIndex: number): string {
+  const slug = suggestShowName(shows, showIndex)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  return `show-${String(showIndex + 1).padStart(2, "0")}-${slug}`;
+}
+
+/**
+ * Frames are found by the clock stamp inside a log line, never by when the line was noticed, so a
+ * log that flushed late still names the right frame.
+ */
+async function sweepCaptures(): Promise<void> {
+  const shows = await parsedShows(await findLog());
+  if (shows.length === 0) return;
+  const event = (await Bun.file(EVENT_PATH).json()) as TournamentEvent;
+  const segments = await segmentsNow();
+  if (segments.length === 0) return;
+
+  for (const moment of momentsIn(shows, event.date)) {
+    if (!ledger.pending(momentKey(moment))) continue;
+    captureJobs.add(async () => {
+      await captureMoment(moment, segments, ledger, {
+        ffmpeg: capture.ffmpeg!,
+        segmentDir: folders.segments,
+        scratchDir: folders.scratch,
+        captureDir: folders.captures,
+        run: runFfmpeg,
+        frameOf: frameFrom,
+        screenOf: identify,
+      });
+    });
+  }
+
+  for (const clip of showClips(shows, event.date)) {
+    if (!ledger.pending(clipKey(clip))) continue;
+    const name = clipName(shows, clip.showIndex);
+    captureJobs.add(async () => {
+      await cutShowClip(clip, segments, name, ledger, {
+        ffmpeg: capture.ffmpeg!,
+        segmentDir: folders.segments,
+        showsDir: folders.shows,
+        run: runFfmpeg,
+      });
+    });
+  }
+}
+
+if (RECORD && capture.ffmpeg) {
+  for (const dir of Object.values(folders)) await mkdir(dir, { recursive: true });
+  recorder.start();
+  setInterval(() => void sweepCaptures().catch(() => {}), 5_000);
+  setInterval(
+    () => void Bun.write(LEDGER_PATH, `${JSON.stringify(ledger.state(), null, 2)}\n`),
+    10_000,
+  );
+}
+
 const server = Bun.serve({
   port: Number(process.env.PORT ?? 3000),
   async fetch(request) {
@@ -106,7 +249,9 @@ const server = Bun.serve({
       const shots = await placed(shotDir, shows, event.date);
       queueReads(shotDir, shots);
       const players = (await Bun.file(PLAYERS_PATH).json()) as Players;
-      const roster = players.players.flatMap((player) => (player.ingame ? [player.ingame] : []));
+      const roster = players.players.flatMap((player) =>
+        player.ingame && player.joined !== false ? [player.ingame] : [],
+      );
 
       return json({
         players,
@@ -122,13 +267,15 @@ const server = Bun.serve({
         shots,
         fills: fillsFor(shots, readsFor(shots), roster),
         autoPublish: AUTO_PUBLISH,
+        capture: RECORD ? recorder.status() : null,
         problems: await checkData(),
       });
     }
 
     if (pathname === "/api/shot") {
-      const dir = await findScreenshotDir();
-      const file = new URL(request.url).searchParams.get("f");
+      const params = new URL(request.url).searchParams;
+      const file = params.get("f");
+      const dir = await rootFor(params.get("s") === "auto" ? "auto" : "sharex");
       if (!dir || !file) return new Response("Not found", { status: 404 });
       const path = resolveShot(dir, file);
       if (!path) return new Response("Forbidden", { status: 403 });
@@ -157,13 +304,14 @@ const server = Bun.serve({
       const round = playing.rounds.at(-1);
 
       // A recorded show without winners is the one still being typed in; anything else means the
-      // lobby has moved on to the next show in the plan.
+      // lobby has moved on to a show nobody has written down yet.
       const last = event.shows.at(-1);
       const typing = last !== undefined && !last.winners?.length;
+      const index = typing ? event.shows.length - 1 : event.shows.length;
 
       const live: LiveNow = {
-        show: typing ? last.name : suggestShowName(played, played.length - 1),
-        showNumber: typing ? event.shows.length : event.shows.length + 1,
+        show: showNameNow(event, index, suggestShowName(played, played.length - 1)),
+        showNumber: index + 1,
         round: playing.rounds.length,
         map: round?.name ?? null,
         type: round ? (round.isFinal ? "final" : round.type) : null,
@@ -216,3 +364,12 @@ const server = Bun.serve({
 console.log(`Public site   ${server.url}`);
 console.log(`Admin         ${server.url}admin`);
 console.log(`Publishing    ${AUTO_PUBLISH ? "on — every save is committed and pushed" : "off"}`);
+console.log(
+  `Recording     ${
+    RECORD
+      ? capture.ffmpeg
+        ? `on — ${folders.segments}`
+        : "off — no ffmpeg found, set FFMPEG_PATH"
+      : "off"
+  }`,
+);

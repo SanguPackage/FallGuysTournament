@@ -10,7 +10,7 @@ export function score(event: TournamentEvent, players: Players): LeaderboardRow[
   const rows = new Map<string, LeaderboardRow>();
   const byIngame = new Map<string, LeaderboardRow>();
   for (const player of players.players) {
-    if (player.admin) continue;
+    if (player.admin || player.joined === false) continue;
     const row: LeaderboardRow = {
       ingame: player.ingame,
       fom: player.fom,
