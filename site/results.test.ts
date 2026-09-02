@@ -1,7 +1,13 @@
 import { expect, test } from "bun:test";
 import type { LiveNow } from "../src/live";
-import type { Show } from "../src/types";
+import type { Player, Show } from "../src/types";
 import { renderResults } from "./results";
+
+const ROSTER: Player[] = [
+  { fom: "Alpha_FOM", ingame: "Alpha" },
+  { fom: "Bravo_FOM", ingame: "Bravo" },
+  { fom: "Charlie_FOM", ingame: "Charlie" },
+];
 
 const SOLOS: Show = {
   name: "Solos",
@@ -14,57 +20,60 @@ const SOLOS: Show = {
 };
 
 test("nothing played yet renders a message", () => {
-  expect(renderResults([])).toContain("No shows played yet");
+  expect(renderResults([], ROSTER)).toContain("No shows played yet");
 });
 
 test("shows are listed newest first", () => {
-  const html = renderResults([SOLOS, { name: "Roll Call", rounds: [] }]);
+  const html = renderResults([SOLOS, { name: "Roll Call", rounds: [] }], ROSTER);
   expect(html.indexOf("Roll Call")).toBeLessThan(html.indexOf("Solos"));
 });
 
 test("a show numbers its rounds and names each map", () => {
-  const html = renderResults([SOLOS]);
+  const html = renderResults([SOLOS], ROSTER);
   expect(html).toContain("Dizzy Heights");
   expect(html).toContain("Roll Out");
   expect(html).toContain("Fall Mountain");
 });
 
 test("a race names who crossed first", () => {
-  expect(renderResults([SOLOS])).toMatch(/Dizzy Heights[\s\S]*?Alpha/);
+  expect(renderResults([SOLOS], ROSTER)).toMatch(/Dizzy Heights[\s\S]*?Alpha/);
 });
 
 test("a round that scores nothing says so", () => {
-  expect(renderResults([SOLOS])).toMatch(/Roll Out[\s\S]*?no points/);
+  expect(renderResults([SOLOS], ROSTER)).toMatch(/Roll Out[\s\S]*?no points/);
 });
 
 test("a race still waiting for its winner is not mistaken for a round that scores nothing", () => {
-  const html = renderResults([{ name: "S", rounds: [{ map: "Whirlygig", type: "race" }] }]);
+  const html = renderResults([{ name: "S", rounds: [{ map: "Whirlygig", type: "race" }] }], ROSTER);
   expect(html).toContain("not recorded");
   expect(html).not.toContain("no points");
 });
 
-test("the finalists are listed", () => {
-  expect(renderResults([SOLOS])).toContain("Alpha, Bravo");
+test("a show panel colours the field", () => {
+  const html = renderResults([SOLOS], ROSTER);
+  expect(html).toContain(`class="bn won"`);
+  expect(html).toContain(`class="bn through"`);
+  expect(html).toContain(`class="bn out"`);
 });
 
 test("a finished show is crowned with its winners", () => {
-  expect(renderResults([{ ...SOLOS, winners: ["Alpha", "Bravo"] }])).toContain("Alpha &amp; Bravo");
+  expect(renderResults([{ ...SOLOS, winners: ["Alpha", "Bravo"] }], ROSTER)).toContain("Alpha &amp; Bravo");
 });
 
 test("the show still being played is marked as live rather than crowned", () => {
-  const html = renderResults([{ name: "Roll Call", rounds: [{ map: "See Saw", type: "race", first: "Alpha" }] }]);
+  const html = renderResults([{ name: "Roll Call", rounds: [{ map: "See Saw", type: "race", first: "Alpha" }] }], ROSTER);
   expect(html).toContain("Playing now");
   expect(html).toContain(`class="show live"`);
 });
 
 test("only the newest show can be live", () => {
-  const html = renderResults([SOLOS, { name: "Roll Call", rounds: [] }]);
+  const html = renderResults([SOLOS, { name: "Roll Call", rounds: [] }], ROSTER);
   expect([...html.matchAll(/class="show live"/g)]).toHaveLength(1);
 });
 
 test("map names are escaped", () => {
-  const html = renderResults([{ name: "<b>", rounds: [{ map: "A&B", type: "race" }] }]);
-  expect(html).not.toContain("<b>");
+  const html = renderResults([{ name: "<b>", rounds: [{ map: "A&B", type: "race" }] }], ROSTER);
+  expect(html).toContain("<h3>&lt;b&gt;</h3>");
   expect(html).toContain("A&amp;B");
 });
 
@@ -78,23 +87,23 @@ const NOW: LiveNow = {
 };
 
 test("the round on screen is listed before anything recorded", () => {
-  const html = renderResults([SOLOS], NOW);
+  const html = renderResults([SOLOS], ROSTER, NOW);
   expect(html).toContain("Playing now");
   expect(html).toContain("Roll Out");
   expect(html.indexOf("Solos 2")).toBeLessThan(html.indexOf("Solos<"));
 });
 
 test("a show already typed in is not shown twice", () => {
-  const html = renderResults([SOLOS], { ...NOW, showNumber: 1 });
+  const html = renderResults([SOLOS], ROSTER, { ...NOW, showNumber: 1 });
   expect(html).not.toContain("Playing now");
 });
 
 test("the log alone is enough to list the show being played", () => {
-  expect(renderResults([], NOW)).toContain("Roll Out");
+  expect(renderResults([], ROSTER, NOW)).toContain("Roll Out");
 });
 
 test("between rounds the show is still listed", () => {
-  const html = renderResults([SOLOS], { ...NOW, map: null, type: null });
+  const html = renderResults([SOLOS], ROSTER, { ...NOW, map: null, type: null });
   expect(html).toContain("Playing now");
   expect(html).toContain("Loading the next round");
 });

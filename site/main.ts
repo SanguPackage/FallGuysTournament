@@ -53,7 +53,7 @@ function render(page: string, data: Data, rows: LeaderboardRow[], movers: Set<st
     case "standings":
       return renderStandings(rows, movers);
     case "results":
-      return renderResults(data.event.shows, data.now);
+      return renderResults(data.event.shows, data.players.players, data.now);
     case "shows":
       return renderShowOrder(data.order, status.orderIndex);
     default:

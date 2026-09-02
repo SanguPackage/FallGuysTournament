@@ -66,7 +66,7 @@ const PAGES: { file: string; heading: string; title: string; live?: LivePage; bo
     heading: "Results",
     title: `Results — ${TITLE}`,
     live: "results",
-    body: data(renderResults(event.shows)),
+    body: data(renderResults(event.shows, players.players)),
   },
   {
     file: "rules.html",
