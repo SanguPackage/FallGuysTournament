@@ -45,20 +45,15 @@ mergeLive(show: Show | undefined, now: LiveNow): Show
 The `on screen` marker becomes a property of the last round of the live show when
 `now.map !== null`, rather than a whole separate column of placeholder text.
 
-Between rounds (`now.map === null`) with nothing recorded, the merged show has no rounds and the
-panel keeps today's `Loading the next round…` message.
+`Loading the next round…` narrows to a live show with no rounds at all. Between rounds with
+rounds already loaded, the list stays up — it is strictly more than the placeholder was.
 
 ## Badges per round
 
 New in `src/field.ts`, walking the same alive-set as `fieldOf`:
 
 ```ts
-export interface RoundField {
-  /** Badges to draw under this round, already ordered. */
-  beans: FieldPlayer[];
-}
-
-export function roundFieldsOf(show: Show, players: Player[]): RoundField[]
+export function roundFieldsOf(show: Show, players: Player[]): FieldPlayer[][]
 ```
 
 For each round, with `alive` = the set entering it:
