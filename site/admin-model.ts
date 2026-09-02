@@ -330,3 +330,17 @@ export function resyncRound(
     }
   }
 }
+
+/**
+ * The same for the winners, which is where a final's names live: it scores no first place and has
+ * no board of its own, so the show's winners are the only thing read for it.
+ */
+export function resyncWinners(draft: ShowDraft, showIndex: number, memo: FillMemo): void {
+  draft.winners.forEach((_, slot) => {
+    if (memo.sources.delete(`show:${showIndex}:winner:${slot}`)) draft.winners[slot] = "";
+  });
+
+  for (const spent of [...memo.applied]) {
+    if (spent.startsWith(`${showIndex}:winners=`)) memo.applied.delete(spent);
+  }
+}

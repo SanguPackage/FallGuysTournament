@@ -209,7 +209,8 @@ button.danger { color: var(--bad); }
 .show-name { flex: 1 1 14rem; }
 .show-number { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
 
-.rounds { margin: 0; padding-left: 1.2rem; }
+.show-form { --round-indent: 1.2rem; }
+.rounds { margin: 0; padding-left: var(--round-indent); }
 .rounds li { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; padding: 0.2rem 0; }
 /* A round wraps onto several lines, so the rule is what says where one ends and the next starts. */
 .rounds li + li { border-top: 1px solid var(--line); margin-top: 0.7rem; padding-top: 0.7rem; }
@@ -218,7 +219,7 @@ button.danger { color: var(--bad); }
 .map-input { flex: 1 1 16rem; }
 
 .field { margin-top: 0.9rem; }
-.field label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.35rem; }
+.field label { display: flex; align-items: baseline; gap: 0.5rem; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.35rem; }
 
 .names { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .names input { width: 10rem; }
@@ -233,14 +234,17 @@ button.danger { color: var(--bad); }
 /* Filled from a capture rather than typed, so it is worth a glance before saving. */
 input.read { border-color: var(--read); background: color-mix(in srgb, var(--read) 12%, var(--field)); }
 
-/* Sits in the round row beside the hint, so it reads as a note rather than an action. */
-.rounds .resync {
+/* The winners are a final's only names, so the block lines up with the boards above it. */
+.show-form > .field.winners { margin-left: var(--round-indent); }
+
+/* Sits beside what it controls, so it reads as a note rather than an action. */
+.resync {
   border: 0;
   background: none;
   padding: 0;
   font: inherit;
   font-size: 0.85em;
-  color: #6aa9ff;
+  color: var(--muted);
   cursor: pointer;
   text-decoration: underline;
 }

@@ -7,6 +7,7 @@ import {
   draftFor,
   namesByPoints,
   resyncRound,
+  resyncWinners,
   namesInShows,
   draftFromShow,
   suggestShowName,
@@ -716,4 +717,32 @@ test("a resynced round takes the names a changed roster now reads", () => {
   expect(applyFills(draft, rematched, 0, memo)).toBe(true);
   expect(draft.rounds[0]!.first).toBe("BigMooseLips");
   expect(draft.rounds[0]!.qualified).toEqual(["BigMooseLips", "Corrected"]);
+});
+
+test("resyncing the winners drops what was read and keeps what was typed", () => {
+  const draft = draftOf();
+  draft.winners = ["", ""];
+  const memo = newFillMemo();
+  applyFills(draft, FILLS, 0, memo);
+  expect(draft.winners[0]).toBe("Diego_9942");
+  draft.winners[1] = "Corrected";
+
+  resyncWinners(draft, 0, memo);
+  expect(draft.winners).toEqual(["", "Corrected"]);
+
+  // The final's name is the only one it has, so it must come back on the next fill.
+  const rematched: SlotFill[] = [
+    { showIndex: 0, slot: "winners", names: ["BigMooseLips"], from: "d.jpg" },
+  ];
+  expect(applyFills(draft, rematched, 0, memo)).toBe(true);
+  expect(draft.winners).toEqual(["BigMooseLips", "Corrected"]);
+});
+
+test("resyncing the winners leaves the rounds alone", () => {
+  const draft = draftOf();
+  const memo = newFillMemo();
+  applyFills(draft, FILLS, 0, memo);
+  resyncWinners(draft, 0, memo);
+  expect(draft.rounds[0]!.first).toBe("Serxav_9");
+  expect(draft.rounds[0]!.qualified).toEqual(["Diego_9942", "Serxav_9"]);
 });

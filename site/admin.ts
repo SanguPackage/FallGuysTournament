@@ -3,6 +3,7 @@ import type { Players, TournamentEvent } from "../src/types";
 import {
   applyFills,
   resyncRound,
+  resyncWinners,
   captureBadge,
   newFillMemo,
   defaultMessage,
@@ -394,6 +395,17 @@ function renderShots(): void {
   applyScroll();
 }
 
+/** Forgets what was read here, so the next render fills it again from the roster as it stands. */
+function resyncButton(forget: () => void): HTMLButtonElement {
+  const button = el("button", { type: "button", class: "resync" }, ["Resync"]);
+  button.title = "Drop the names read here and match them again, after a roster change";
+  button.addEventListener("click", () => {
+    forget();
+    render();
+  });
+  return button;
+}
+
 function nameInput(key: string, value: string, onChange: (value: string) => void): HTMLInputElement {
   const input = el("input", { type: "text", list: "registered", value, placeholder: "name" });
   input.dataset.focusKey = key;
@@ -506,16 +518,8 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
       fillMemo.sources.has(`${roundKey}:first`) ||
       entry.qualified.some((_, slot) => fillMemo.sources.has(`${roundKey}:qualified:${slot}`));
 
-    if (read) {
-      const resync = el("button", { type: "button", class: "link resync" }, ["Resync"]);
-      resync.title = "Drop the names read here and read them again, after a roster change";
-      resync.addEventListener("click", () => {
-        resyncRound(draft, index, roundIndex, fillMemo);
-        // `renderShowForm` applies the fills again, now against the roster as it stands.
-        render();
-      });
-      cells.push(resync);
-    }
+    // `renderShowForm` applies the fills again, now against the roster as it stands.
+    if (read) cells.push(resyncButton(() => resyncRound(draft, index, roundIndex, fillMemo)));
 
     // The final has no board of its own — the winner screen stands in — so it gets no block.
     if (entry.type !== "final") {
@@ -616,8 +620,13 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
     ]),
     el("ol", { class: "rounds" }, rounds),
     selectable(
-      el("div", { class: "field" }, [
-        el("label", {}, [`Winners (${winners.length})`]),
+      el("div", { class: "field winners" }, [
+        el("label", {}, [
+          `Winners (${winners.length})`,
+          ...(draft.winners.some((_, slot) => fillMemo.sources.has(`show:${index}:winner:${slot}`))
+            ? [resyncButton(() => resyncWinners(draft, index, fillMemo))]
+            : []),
+        ]),
         el("div", { class: "names" }, [...winners, addWinner]),
       ]),
       index,
