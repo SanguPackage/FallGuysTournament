@@ -38,6 +38,10 @@ export function checkEvent(value: unknown): string[] {
         }
       }
 
+      if (show.checked !== undefined && typeof show.checked !== "boolean") {
+        problems.push(`${at}.checked is not true or false`);
+      }
+
       if (!Array.isArray(show.rounds)) return void problems.push(`${at}.rounds is not an array`);
       show.rounds.forEach((round, roundIndex) => {
         const on = `${at}.rounds[${roundIndex}]`;

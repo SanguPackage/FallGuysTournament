@@ -596,3 +596,16 @@ test("a fill for another show is ignored", () => {
   expect(applyFills(draft, other, 0, newFillMemo())).toBe(false);
   expect(draft.finalists).toEqual(["", ""]);
 });
+
+test("a show ticked off carries that through a reopen and a save", () => {
+  const draft = draftFromShow(
+    { name: "Solos", rounds: [], finalists: [], winners: [], checked: true },
+    { showId: "s", rounds: [], winnerId: undefined },
+  );
+  expect(draft.checked).toBe(true);
+  expect(toShow(draft).checked).toBe(true);
+});
+
+test("a show nobody has ticked off saves without the flag", () => {
+  expect(toShow(complete())).not.toHaveProperty("checked");
+});

@@ -19,6 +19,7 @@ export interface ShowDraft {
   rounds: RoundDraft[];
   finalists: string[];
   winners: string[];
+  checked?: boolean;
 }
 
 export function draftFor(parsed: ParsedShow, name = ""): ShowDraft {
@@ -68,6 +69,7 @@ export function draftFromShow(show: Show, parsed: ParsedShow): ShowDraft {
     })),
     finalists: [...(show.finalists ?? [])],
     winners: [...(show.winners ?? [])],
+    ...(show.checked ? { checked: true } : {}),
   };
   syncDraft(draft, parsed);
   return draft;
@@ -104,6 +106,7 @@ export function toShow(draft: ShowDraft): Show {
     rounds,
     finalists: filled(draft.finalists),
     winners: filled(draft.winners),
+    ...(draft.checked ? { checked: true } : {}),
   };
 }
 

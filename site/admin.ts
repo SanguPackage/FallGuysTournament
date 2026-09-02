@@ -590,18 +590,43 @@ function renderShows(): void {
     const gaps = missingFrom(show, parsed);
     if (gaps.length > 0) cells.push(el("span", { class: "gaps" }, [`needs ${gaps.join(", ")}`]));
 
-    const edit = el("button", { type: "button", class: "push" }, ["Edit"]);
+    const buttons: HTMLButtonElement[] = [];
+
+    if (show) {
+      const tick = el("button", { type: "button", class: show.checked ? "tick on" : "tick" }, ["\u2713"]);
+      tick.title = show.checked ? "Checked — click to undo" : "Mark this show as checked";
+      tick.addEventListener("click", async (event) => {
+        event.stopPropagation();
+        const before = show.checked;
+        if (before) delete show.checked;
+        else show.checked = true;
+        render();
+        try {
+          const published = await save("/api/event", state.event);
+          if (published) status("publish-status", published.message, published.pushed);
+        } catch (error) {
+          show.checked = before;
+          render();
+          status("publish-status", `Could not save: ${error}`, false);
+        }
+      });
+      buttons.push(tick);
+    }
+
+    const edit = el("button", { type: "button" }, ["Edit"]);
     edit.addEventListener("click", (event) => {
       event.stopPropagation();
       editing = index;
       render();
     });
-    cells.push(edit);
+    buttons.push(edit);
 
+    buttons[0]!.classList.add("push");
+    cells.push(...buttons);
+
+    const classes = ["show-done", ...(show ? [] : ["waiting"]), ...(show?.checked ? ["ok"] : [])];
     return selectable(
-      el("div", { class: show ? "show-done" : "show-done waiting" }, [
-        el("div", { class: "show-head" }, cells),
-      ]),
+      el("div", { class: classes.join(" ") }, [el("div", { class: "show-head" }, cells)]),
       index,
       { slot: "all" },
     );
@@ -659,7 +684,6 @@ async function watchLog(): Promise<void> {
       status("watch-status", "Lost the server. Retrying…", false);
       return;
     }
-    status("watch-status", `Watching the log · ${next.shows.length} shows`);
     const signature = JSON.stringify([next.shows, next.shots, next.times, next.problems, next.fills]);
     if (signature === seen) return;
     seen = signature;
@@ -748,7 +772,6 @@ async function main(): Promise<void> {
   });
 
   render();
-  status("watch-status", `Watching the log · ${state.shows.length} shows`);
   void watchLog();
 }
 

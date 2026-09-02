@@ -180,6 +180,10 @@ button.danger { color: var(--bad); }
 
 .show-done { cursor: pointer; color: var(--muted); }
 .show-done.waiting { opacity: 0.6; }
+.show-done.ok { border-color: var(--read); }
+
+.tick { font-weight: 700; padding: 0.25rem 0.6rem; }
+.tick.on { color: var(--read); border-color: var(--read); }
 
 .show-head { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
 .show-form .show-head { border-bottom: 1px solid var(--line); padding-bottom: 0.75rem; margin-bottom: 0.9rem; }

@@ -106,3 +106,8 @@ test("problems are named by the file they came from", async () => {
     { file: "players.json", problem: "players[0].fom is not a string" },
   ]);
 });
+
+test("a checked flag that is not true or false is caught", () => {
+  const shows = [{ name: "Solos", rounds: [], checked: "yes" }];
+  expect(checkEvent({ ...event, shows })).toEqual(["shows[0].checked is not true or false"]);
+});

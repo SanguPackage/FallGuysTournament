@@ -22,6 +22,8 @@ export interface Show {
   /** In-game names of the final's winners. More than one means a simultaneous win. */
   winners?: string[];
   rounds: Round[];
+  /** Ticked off by the admin as read back against the captures and correct. */
+  checked?: boolean;
 }
 
 export interface Penalty {
