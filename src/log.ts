@@ -119,9 +119,13 @@ export function parseLog(text: string): ParsedShow[] {
     }
   }
 
-  for (const show of shows) {
+  shows.forEach((show, index) => {
     const last = show.rounds.at(-1);
-    if (last) {
+    // Rounds arrive as they load, so the last one on the list is the one being played. It is only
+    // the show's final once the show has stopped: a victory scene named a winner, or the lobby
+    // moved on to another show. Until then it keeps its own type, and a race keeps its first place.
+    const over = show.wonAt !== undefined || index < shows.length - 1;
+    if (last && (over || last.type === "final")) {
       last.isFinal = true;
       last.type = "final";
     }
@@ -129,7 +133,7 @@ export function parseLog(text: string): ParsedShow[] {
       round.present.sort((a, b) => a - b);
       round.timedOut = round.qualified.length === 0 && round.eliminated.length > 0;
     }
-  }
+  });
 
   return shows;
 }

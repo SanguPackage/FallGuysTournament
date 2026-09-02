@@ -130,11 +130,42 @@ test("a round carries the name and type its level id resolves to", () => {
   ]);
 });
 
-test("the show's last round is a final whatever the level id is normally played as", () => {
+/**
+ * Rounds arrive one at a time, so the round on screen is always the last one on the list. Calling
+ * it the final while the show is still being played turns the opener into a final, which takes the
+ * first-place field away from a round that scores one.
+ */
+test("the round being played now is not the final just for being last", () => {
   const show = parseLog(`20:00:00.000: [HandleSuccessfulLogin] Selected show is show_solos
-20:00:01.000: [StateGameLoading] Finished loading game level, assumed to be round_wall_guys_solos. Duration: 1s
+20:00:01.000: [StateGameLoading] Finished loading game level, assumed to be knockout_mindthegap_opener. Duration: 1s
 `)[0]!;
+  expect(show.rounds[0]!.isFinal).toBe(false);
+  expect(show.rounds[0]!.type).toBe("unknown");
+});
+
+test("the last round is the final once the victory scene has named a winner", () => {
+  const show = parseLog(`20:00:00.000: [HandleSuccessfulLogin] Selected show is show_solos
+20:00:01.000: [StateGameLoading] Finished loading game level, assumed to be knockout_mindthegap_opener. Duration: 1s
+20:00:40.000: VictoryScene::winnerPlayerId:3 squadId:0 teamId:-1
+`)[0]!;
+  expect(show.rounds[0]!.isFinal).toBe(true);
   expect(show.rounds[0]!.type).toBe("final");
+});
+
+test("the last round is the final once the lobby has moved on to another show", () => {
+  const [first] = parseLog(`20:00:00.000: [HandleSuccessfulLogin] Selected show is show_a
+20:00:01.000: [StateGameLoading] Finished loading game level, assumed to be knockout_mindthegap_opener. Duration: 1s
+20:10:00.000: [HandleSuccessfulLogin] Selected show is show_b
+20:10:01.000: [StateGameLoading] Finished loading game level, assumed to be knockout_mindthegap_opener. Duration: 1s
+`);
+  expect(first!.rounds[0]!.isFinal).toBe(true);
+});
+
+test("a round the table calls a final is one from the moment it loads", () => {
+  const show = parseLog(`20:00:00.000: [HandleSuccessfulLogin] Selected show is show_solos
+20:00:01.000: [StateGameLoading] Finished loading game level, assumed to be round_fall_mountain_hub_complete. Duration: 1s
+`)[0]!;
+  expect(show.rounds[0]!.isFinal).toBe(true);
 });
 
 test("a round is stamped with the last result the server reported", () => {

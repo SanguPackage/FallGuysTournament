@@ -40,6 +40,20 @@ test("a draft asks for one name per player the log counted through the round", (
   expect(draftFor(parsed).rounds[0]!.qualified).toHaveLength(3);
 });
 
+test("the log's own count rides along, so a round says how many got through untyped", () => {
+  expect(draftFor(parsed).rounds[0]!.survivors).toBe(3);
+  expect(toShow(draftFor(parsed)).rounds[0]!.survivors).toBe(3);
+});
+
+test("the final is crowned by its winner, so it carries no count of its own", () => {
+  expect(toShow(draftFor(parsed)).rounds[1]).not.toHaveProperty("survivors");
+});
+
+test("a round the log has not counted yet carries no count", () => {
+  const draft = draftFor(midShow([playing("wall_guys", "race", [1, 2, 3, 4, 5])]), "Solos 1");
+  expect(toShow(draft).rounds[0]).not.toHaveProperty("survivors");
+});
+
 test("a draft asks for one winner, since the log reports one", () => {
   expect(draftFor(parsed).winners).toHaveLength(1);
 });
@@ -68,6 +82,7 @@ test("a draft becomes a show, dropping the final from the scored rounds' first p
         type: "race",
         first: "oopman",
         qualified: ["oopman", "nicksonn", "f1xel"],
+        survivors: 3,
       },
       { map: "Hex-A-Gone", type: "final" },
     ],
@@ -79,7 +94,7 @@ test("a survival round carries no first place", () => {
   const draft = draftFor(parsed);
   draft.rounds[0]!.type = "survival";
   draft.rounds[0]!.first = "oopman";
-  expect(toShow(draft).rounds[0]).toEqual({ map: "Dizzy Heights", type: "survival" });
+  expect(toShow(draft).rounds[0]).toEqual({ map: "Dizzy Heights", type: "survival", survivors: 3 });
 });
 
 

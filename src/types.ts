@@ -15,6 +15,11 @@ export interface Round {
   first?: string;
   /** In-game names off the qualification board that came up after this round. */
   qualified?: string[];
+  /**
+   * How many the log counted through this round. It knows the number without ever knowing a name,
+   * so this fills the board for a round nobody has read the survivors off yet.
+   */
+  survivors?: number;
 }
 
 export interface Show {

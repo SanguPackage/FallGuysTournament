@@ -24,6 +24,7 @@ function renderShow(show: Show, number: number, live: boolean, players: Player[]
         <span class="map">${escapeHtml(round.map)}</span>
         <span class="type"><span class="tag ${round.type}">${round.type}</span></span>
         ${winnerCell(round, show)}
+        ${round.survivors === undefined ? "" : `<span class="through">${round.survivors} through</span>`}
       </div>`,
     )
     .join("");
@@ -59,16 +60,18 @@ function renderPlaying(now: LiveNow, players: Player[]): string {
   const rounds = now.rounds
     .map((entry, index) => {
       // Only the log speaks for this show, and it counts survivors without ever naming them.
+      const state = index === last ? "on screen" : "—";
       const through =
         entry.qualified === undefined
-          ? `<span class="winner none">${index === last ? "on screen" : "—"}</span>`
-          : `<span class="winner none">${entry.qualified} through</span>`;
+          ? ""
+          : `<span class="through">${entry.qualified} through</span>`;
 
       return `
       <div class="rnd ${entry.type === "final" ? "final" : ""}">
         <span class="i">${index + 1}</span>
         <span class="map">${escapeHtml(entry.map)}</span>
         <span class="type"><span class="tag ${entry.type}">${entry.type}</span></span>
+        <span class="winner none">${state}</span>
         ${through}
       </div>`;
     })

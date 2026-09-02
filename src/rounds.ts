@@ -32,9 +32,21 @@ const rounds = book.rounds as Record<string, RoundInfo>;
  */
 const ids = Object.keys(rounds).sort((a, b) => b.length - a.length);
 
+/**
+ * A level id ending in `_final` is that level played as the show's final — Hex-A-Gone is a survival
+ * round as `round_floor_fall`, and the final as `round_floor_fall_only_finals_v2_final`. The table
+ * still names it; only its type changes.
+ *
+ * An id the table lists in full is the exception: `round_tunnel_final` is a survival round and the
+ * table saying so outranks its own name. So the suffix only speaks where the match was a prefix.
+ */
 export function identify(id: string): RoundInfo {
   const match = ids.find((known) => id.startsWith(known));
-  return match ? rounds[match]! : { name: id, type: "unknown" };
+  if (!match) return { name: id, type: id.endsWith("_final") ? "final" : "unknown" };
+
+  const known = rounds[match]!;
+  const playedAsFinal = match !== id && id.endsWith("_final");
+  return playedAsFinal ? { name: known.name, type: "final" } : known;
 }
 
 /**

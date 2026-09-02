@@ -12,6 +12,8 @@ export interface RoundDraft {
   first: string;
   /** One slot per name the log counted through this round. */
   qualified: string[];
+  /** The log's own count, which needs no typing and stands in until the names are read. */
+  survivors?: number;
   /** Set once the admin picks a type, so the log never overrides their judgement. */
   typeEdited?: boolean;
 }
@@ -43,6 +45,7 @@ export function syncDraft(draft: ShowDraft, parsed: ParsedShow): void {
     if (!entry) return;
     if (!entry.typeEdited) entry.type = round.type;
     fit(entry.qualified, round.qualified.length);
+    if (round.qualified.length > 0) entry.survivors = round.qualified.length;
   });
 
   // parseLog calls the last round a final, but mid-show that is only the round being played.
@@ -68,6 +71,7 @@ export function draftFromShow(show: Show, parsed: ParsedShow): ShowDraft {
       type: round.type,
       first: round.first ?? "",
       qualified: [...(round.qualified ?? [])],
+      ...(round.survivors === undefined ? {} : { survivors: round.survivors }),
       typeEdited: true,
     })),
     winners: [...(show.winners ?? [])],
@@ -104,6 +108,10 @@ export function toShow(draft: ShowDraft): Show {
       type: round.type,
       ...(SCORES_FIRST.has(round.type) && first ? { first } : {}),
       ...(qualified.length > 0 ? { qualified } : {}),
+      // The final is crowned by its winner, so its count would only repeat that.
+      ...(round.type !== "final" && round.survivors !== undefined
+        ? { survivors: round.survivors }
+        : {}),
     };
   });
 

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { finalistsOf, identify } from "./rounds";
+import { finalistsOf, identify, SCORES_FIRST } from "./rounds";
 import type { Show } from "./types";
 
 test("a round played straight from the base id is named and typed", () => {
@@ -68,4 +68,21 @@ test("finalistsOf gives nothing when the semi's board was never read", () => {
 test("a show that is only a final has no round to hang finalists off", () => {
   const show: Show = { name: "Solos", rounds: [{ map: "Fall Mountain", type: "final" }] };
   expect(finalistsOf(show)).toEqual([]);
+});
+
+/**
+ * The table is the authority for a level it names — `round_tunnel_final` is a survival round
+ * despite its id. The suffix only speaks for an id the table has never seen.
+ */
+test("an unknown id ending in _final is taken for a final", () => {
+  expect(identify("some_new_level_final")).toEqual({ name: "some_new_level_final", type: "final" });
+});
+
+test("an unknown id that is not a final stays unknown, so a first can still be scored", () => {
+  expect(identify("knockout_mindthegap_opener").type).toBe("unknown");
+  expect(SCORES_FIRST.has(identify("knockout_mindthegap_opener").type)).toBe(true);
+});
+
+test("the table outranks the suffix", () => {
+  expect(identify("round_tunnel_final").type).toBe("survival");
 });

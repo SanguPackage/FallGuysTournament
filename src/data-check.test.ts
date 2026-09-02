@@ -116,6 +116,13 @@ test("a checked flag that is not true or false is caught", () => {
   expect(checkEvent({ ...event, shows })).toEqual(["shows[0].checked is not true or false"]);
 });
 
+test("a survivor count that is not a number is caught", () => {
+  const shows = [{ name: "Solos", rounds: [{ map: "Wall Guys", type: "race", survivors: "21" }] }];
+  expect(checkEvent({ ...event, shows })).toEqual([
+    "shows[0].rounds[0].survivors is not a number",
+  ]);
+});
+
 test("a joined flag that is not true or false is caught", () => {
   const broken = { players: [{ fom: "Ann", joined: "yes" }] };
   expect(checkPlayers(broken)).toEqual(["players[0].joined is not true or false"]);

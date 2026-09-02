@@ -12,8 +12,8 @@ const ROSTER: Player[] = [
 const SOLOS: Show = {
   name: "Solos",
   rounds: [
-    { map: "Dizzy Heights", type: "race", first: "Alpha" },
-    { map: "Roll Out", type: "survival", qualified: ["Alpha", "Bravo"] },
+    { map: "Dizzy Heights", type: "race", first: "Alpha", survivors: 14 },
+    { map: "Roll Out", type: "survival", qualified: ["Alpha", "Bravo"], survivors: 2 },
     { map: "Fall Mountain", type: "final" },
   ],
   winners: ["Alpha"],
@@ -134,4 +134,15 @@ test("a round the log has already counted through says how many got out of it", 
 test("the round on screen is marked rather than counted", () => {
   const html = renderResults([], ROSTER, NOW);
   expect(html).toMatch(/Roll Out[\s\S]*?on screen/);
+});
+
+test("a recorded round says how many the log counted through it", () => {
+  const html = renderResults([SOLOS], ROSTER);
+  expect(html).toMatch(/Dizzy Heights[\s\S]*?14 through/);
+  expect(html).toMatch(/Roll Out[\s\S]*?2 through/);
+});
+
+test("a round nobody counted says nothing rather than zero", () => {
+  const bare: Show = { name: "S", rounds: [{ map: "Whirlygig", type: "race" }] };
+  expect(renderResults([bare], ROSTER)).not.toContain("through");
 });

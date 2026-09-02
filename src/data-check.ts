@@ -54,6 +54,9 @@ export function checkEvent(value: unknown): string[] {
         if (round.qualified !== undefined && !names(round.qualified)) {
           problems.push(`${on}.qualified is not an array of names`);
         }
+        if (round.survivors !== undefined && typeof round.survivors !== "number") {
+          problems.push(`${on}.survivors is not a number`);
+        }
       });
     });
   }
