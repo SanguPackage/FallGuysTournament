@@ -3,7 +3,7 @@ process.env.TZ = "Europe/Brussels";
 
 import { expect, test } from "bun:test";
 import { absoluteTimes, placeShots, shotsForSlot, type Shot } from "./screenshots";
-import type { ParsedShow } from "./log";
+import { parseLog, type ParsedShow } from "./log";
 import type { RoundType } from "./types";
 
 const DATE = "2026-09-01";
@@ -186,4 +186,16 @@ test("the screen after the round before the final names the finalists", () => {
     "playing.png",
     "qualified.png",
   ]);
+});
+
+test("absolute times carry each round's first qualifier", () => {
+  const shows = parseLog(`
+20:00:00.000: [HandleSuccessfulLogin] Selected show is s IsUltimatePartyEpisode: False
+20:00:01.000: [StateGameLoading] Finished loading game level, assumed to be r. Duration: 1s
+20:00:20.000: ClientGameManager::HandleServerPlayerProgress PlayerId=1 is succeeded=True
+20:00:25.000: ClientGameManager::HandleServerPlayerProgress PlayerId=2 is succeeded=True
+`);
+  const [times] = absoluteTimes(shows, DATE);
+  expect(times!.firsts).toEqual([at("20:00:20")]);
+  expect(times!.ends).toEqual([at("20:00:25")]);
 });

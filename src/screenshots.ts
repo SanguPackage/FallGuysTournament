@@ -38,6 +38,8 @@ export interface ShowTimes {
   startedAt?: number;
   wonAt?: number;
   rounds: (number | undefined)[];
+  /** When each round's first qualifier came in, which is when the trophy pill appeared. */
+  firsts: (number | undefined)[];
   /** When each round's last result came in, so the screen that follows it can be told apart. */
   ends: (number | undefined)[];
 }
@@ -68,12 +70,14 @@ export function absoluteTimes(shows: ParsedShow[], date: string): ShowTimes[] {
   return shows.map((show) => {
     const startedAt = read(show.startedAt);
     const rounds: (number | undefined)[] = [];
+    const firsts: (number | undefined)[] = [];
     const ends: (number | undefined)[] = [];
     for (const round of show.rounds) {
       rounds.push(read(round.startedAt));
+      firsts.push(read(round.firstQualifiedAt));
       ends.push(read(round.endedAt));
     }
-    return { startedAt, rounds, ends, wonAt: read(show.wonAt) };
+    return { startedAt, rounds, firsts, ends, wonAt: read(show.wonAt) };
   });
 }
 
