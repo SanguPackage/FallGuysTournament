@@ -24,7 +24,8 @@
         }
       ],
       "finalists": [],
-      "winners": []
+      "winners": [],
+      "checked": true
     },
     {
       "name": "Day at the Races Solo",
@@ -32,7 +33,7 @@
         {
           "map": "Airtime",
           "type": "hunt",
-          "first": "Optinux_Prime"
+          "first": "Serxav_9"
         },
         {
           "map": "Pegwin Pool Party",
@@ -48,7 +49,106 @@
         }
       ],
       "finalists": [],
-      "winners": []
+      "winners": [
+        "Diego_9942"
+      ],
+      "checked": true
+    },
+    {
+      "name": "Solos 3",
+      "rounds": [
+        {
+          "map": "Hoverboard Heroes",
+          "type": "survival"
+        },
+        {
+          "map": "Snowball Survival",
+          "type": "survival"
+        },
+        {
+          "map": "Roll Out",
+          "type": "survival"
+        },
+        {
+          "map": "Kraken Slam",
+          "type": "final"
+        }
+      ],
+      "finalists": [],
+      "winners": [],
+      "checked": true
+    },
+    {
+      "name": "knockout_mode 1",
+      "rounds": [
+        {
+          "map": "knockout_door_dash",
+          "type": "unknown"
+        },
+        {
+          "map": "knockout_stompinground",
+          "type": "unknown"
+        },
+        {
+          "map": "knockout_chickengulch_filler",
+          "type": "unknown"
+        },
+        {
+          "map": "knockout_jump_showdown",
+          "type": "final"
+        }
+      ],
+      "finalists": [],
+      "winners": [],
+      "checked": true
+    },
+    {
+      "name": "knockout_mode 2",
+      "rounds": [
+        {
+          "map": "knockout_spacerace",
+          "type": "unknown"
+        },
+        {
+          "map": "knockout_skifall_filler",
+          "type": "unknown"
+        },
+        {
+          "map": "knockout_starchart",
+          "type": "unknown"
+        },
+        {
+          "map": "knockout_blunderblocks",
+          "type": "final"
+        }
+      ],
+      "finalists": [],
+      "winners": [],
+      "checked": true
+    },
+    {
+      "name": "knockout_mode 3",
+      "rounds": [
+        {
+          "map": "knockout_trackattack",
+          "type": "unknown"
+        },
+        {
+          "map": "knockout_tail_tag",
+          "type": "unknown"
+        },
+        {
+          "map": "knockout_slimescraper",
+          "type": "unknown"
+        },
+        {
+          "map": "knockout_rollerderby_final",
+          "type": "final"
+        }
+      ],
+      "finalists": [],
+      "winners": [],
+      "checked": true
     }
   ],
   "penalties": []
