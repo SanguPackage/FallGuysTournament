@@ -10,6 +10,7 @@ import {
   resyncWinners,
   namesInShows,
   draftFromShow,
+  everyPlayerNamed,
   suggestShowName,
   syncDraft,
   toShow,
@@ -774,4 +775,10 @@ test("a name the roster did not claim is marked, so it is not read as confirmed"
   // Resync forgets the marks along with the names.
   resyncRound(draft, 0, 0, memo);
   expect(memo.unmatched.size).toBe(0);
+});
+
+test("a roster with a blank FOM name is a row still being typed, not one to save", () => {
+  expect(everyPlayerNamed({ players: [{ fom: "A" }, { fom: "  " }] })).toBe(false);
+  expect(everyPlayerNamed({ players: [{ fom: "A" }, { fom: "B" }] })).toBe(true);
+  expect(everyPlayerNamed({ players: [] })).toBe(true);
 });

@@ -190,6 +190,11 @@ export function defaultMessage(event: TournamentEvent): string {
   return last ? `data: record show ${event.shows.length} — ${last.name}` : "data: update players";
 }
 
+/** A row with no FOM name is one still being typed, and saving it would publish a blank player. */
+export function everyPlayerNamed(players: Players): boolean {
+  return players.players.every((player) => player.fom.trim().length > 0);
+}
+
 /** Every name the admin has already typed into a show, so it can be picked rather than retyped. */
 export function namesInShows(event: TournamentEvent): string[] {
   const names = event.shows.flatMap((show) => [

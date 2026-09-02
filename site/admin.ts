@@ -9,6 +9,7 @@ import {
   defaultMessage,
   draftFor,
   draftFromShow,
+  everyPlayerNamed,
   missingFrom,
   namesByPoints,
   ROUND_TYPES,
@@ -689,6 +690,10 @@ function renderShows(): void {
         : "Record this show as the log has it, checked";
     tick.addEventListener("click", async (event) => {
       event.stopPropagation();
+      if (!everyPlayerNamed(state.players)) {
+        status("players-status", "Every player needs a FOM name.", false);
+        return;
+      }
       const before = structuredClone(state.event.shows);
       if (show?.checked) {
         delete state.event.shows[index]!.checked;
@@ -701,6 +706,9 @@ function renderShows(): void {
       }
       render();
       try {
+        // The roster is committed alongside the shows: a name typed here and never saved would be
+        // missing from the board the tick just published.
+        await save("/api/players?publish=0", state.players);
         const published = await save("/api/event", state.event);
         if (published) status("publish-status", published.message, published.pushed);
       } catch (error) {
@@ -857,8 +865,7 @@ async function main(): Promise<void> {
   });
 
   document.querySelector("#save-players")!.addEventListener("click", async () => {
-    const missing = state.players.players.filter((player) => !player.fom.trim());
-    if (missing.length > 0) {
+    if (!everyPlayerNamed(state.players)) {
       status("players-status", "Every player needs a FOM name.", false);
       return;
     }
