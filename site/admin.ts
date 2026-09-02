@@ -382,7 +382,10 @@ function renderShots(): void {
   }
 
   target.replaceChildren(
-    el("h2", {}, [`Show ${selectedShow + 1} · ${SLOT_LABELS[selection.slot]}`]),
+    el("h2", {}, [
+      el("span", { class: "badge show-number" }, [`Show ${selectedShow + 1}`]),
+      ` ${SLOT_LABELS[selection.slot]}`,
+    ]),
     ...shotImages(shotsForSlot(state.shots, selectedShow, selection)),
     ...(selection.slot === "all"
       ? []
@@ -619,7 +622,7 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
 
   return el("div", { class: "show-form" }, [
     el("div", { class: "show-head" }, [
-      el("span", { class: "show-number" }, [`Show ${index + 1}`]),
+      el("span", { class: "badge show-number" }, [`Show ${index + 1}`]),
       name,
       el("span", { class: "hint" }, [
         [clock(state.times[index]?.startedAt), parsed.showId, `${parsed.players ?? "?"} players`]
@@ -668,7 +671,7 @@ function renderShows(): void {
 
     const show = state.event.shows[index];
     const cells: (Node | string)[] = [
-      el("span", { class: "show-number" }, [`Show ${index + 1}`]),
+      el("span", { class: "badge show-number" }, [`Show ${index + 1}`]),
       el("span", { class: "map" }, [show?.name || parsed.showId]),
       el("span", { class: "hint" }, [
         [

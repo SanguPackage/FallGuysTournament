@@ -207,7 +207,7 @@ button.danger { color: var(--bad); }
 .show-form .show-head { border-bottom: 1px solid var(--line); padding-bottom: 0.75rem; margin-bottom: 0.9rem; }
 .show-head .push { margin-left: auto; }
 .show-name { flex: 1 1 14rem; }
-.show-number { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
+.show-number { background: var(--line); color: var(--fg); white-space: nowrap; }
 
 .show-form { --round-indent: 1.2rem; }
 .rounds { margin: 0; padding-left: var(--round-indent); }
