@@ -143,3 +143,25 @@ test("a round is stamped with the last result the server reported", () => {
     "20:27:12",
   ]);
 });
+
+test("a round records when its first qualifier came in, not its first result", () => {
+  // The elimination lands a second before the first qualifier, so a stamp taken off any progress
+  // line rather than a qualifying one reads 20:00:09.
+  const show = parseLog(`
+20:00:00.000: [HandleSuccessfulLogin] Selected show is s IsUltimatePartyEpisode: False
+20:00:01.000: [StateGameLoading] Finished loading game level, assumed to be r. Duration: 1s
+20:00:09.000: ClientGameManager::HandleServerPlayerProgress PlayerId=4 is succeeded=False
+20:00:10.000: ClientGameManager::HandleServerPlayerProgress PlayerId=1 is succeeded=True
+20:00:11.000: ClientGameManager::HandleServerPlayerProgress PlayerId=2 is succeeded=True
+`)[0]!;
+  expect(show.rounds[0]!.firstQualifiedAt).toBe("20:00:10");
+});
+
+test("a round nobody qualified from records no first", () => {
+  const show = parseLog(`
+20:00:00.000: [HandleSuccessfulLogin] Selected show is s IsUltimatePartyEpisode: False
+20:00:01.000: [StateGameLoading] Finished loading game level, assumed to be r. Duration: 1s
+20:00:09.000: ClientGameManager::HandleServerPlayerProgress PlayerId=2 is succeeded=False
+`)[0]!;
+  expect(show.rounds[0]!.firstQualifiedAt).toBeUndefined();
+});
