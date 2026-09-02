@@ -1,6 +1,7 @@
 import type { LiveNow } from "../src/live";
-import type { Round, Show } from "../src/types";
+import type { Player, Round, Show } from "../src/types";
 import { escapeHtml } from "./render";
+import { renderShowField } from "./show-field";
 
 function winnerCell(round: Round, show: Show): string {
   if (round.type === "final") {
@@ -14,7 +15,7 @@ function winnerCell(round: Round, show: Show): string {
     : `<span class="winner none">no points</span>`;
 }
 
-function renderShow(show: Show, number: number, live: boolean): string {
+function renderShow(show: Show, number: number, live: boolean, players: Player[]): string {
   const rounds = show.rounds
     .map(
       (round, index) => `
@@ -33,9 +34,7 @@ function renderShow(show: Show, number: number, live: boolean): string {
       ? `<span class="champ playing">● Playing now</span>`
       : "";
 
-  const finalists = show.finalists?.length
-    ? `<p class="finalists">Finalists: <b>${show.finalists.map(escapeHtml).join(", ")}</b></p>`
-    : "";
+  const field = renderShowField(show, players);
 
   return `
     <div class="${live ? "show live" : "show"}">
@@ -46,7 +45,7 @@ function renderShow(show: Show, number: number, live: boolean): string {
           ${badge}
         </header>
         <div class="rounds">${rounds}</div>
-        ${finalists}
+        ${field}
       </div>
     </div>`;
 }
@@ -80,7 +79,11 @@ function renderPlaying(now: LiveNow): string {
     </div>`;
 }
 
-export function renderResults(shows: Show[], now: LiveNow | null = null): string {
+export function renderResults(
+  shows: Show[],
+  players: Player[],
+  now: LiveNow | null = null,
+): string {
   const unrecorded = now !== null && now.showNumber > shows.length;
   const playing = unrecorded ? renderPlaying(now) : "";
 
@@ -91,7 +94,7 @@ export function renderResults(shows: Show[], now: LiveNow | null = null): string
   const last = shows.length - 1;
   const recorded = shows
     .map((show, index) =>
-      renderShow(show, index + 1, !unrecorded && index === last && !show.winners?.length),
+      renderShow(show, index + 1, !unrecorded && index === last && !show.winners?.length, players),
     )
     .reverse()
     .join("");

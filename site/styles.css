@@ -387,8 +387,44 @@ h2 {
 .rnd .winner.missing { color: #ffb4b4; font-weight: 600; }
 .rnd.final { background: #ffd23f1f; border: 2px solid #ffd23f5c; }
 
-.finalists { margin: 0.7rem 0 0; font-size: 14px; color: #ffffffb8; }
-.finalists b { color: #fff; }
+.beans { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.8rem; }
+
+.bn {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.28rem 0.7rem;
+  font-size: 14px;
+  border: 2px solid transparent;
+  background: #ffffff14;
+  color: #ffffffb8;
+}
+
+.bn b { font-weight: 800; }
+.bn small { font-size: 11px; font-weight: 800; opacity: 0.8; }
+
+.bn.won { background: linear-gradient(#ffe27a, var(--yellow)); color: var(--ink); }
+.bn.through { background: #6ee78730; border-color: var(--lime); color: #fff; }
+.bn.playing { border-color: #ffffff2e; }
+.bn.out { background: #ff6b6b1c; border-color: #ff6b6b4d; color: #ffffff70; }
+.bn.out b { text-decoration: line-through; }
+
+.shownow { margin-bottom: 1.6rem; }
+.shownow > header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
+.shownow h3 { margin: 0; font: 400 26px/1 "Bebas Neue", sans-serif; letter-spacing: 0.06em; }
+
+.shownow .num {
+  font-family: "Titan One", cursive;
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--cyan);
+  border-radius: 8px;
+  padding: 0.15rem 0.5rem;
+}
+
+.shownow .count { margin-left: auto; font-weight: 800; color: var(--lime); }
+.shownow .champ { margin-left: auto; font-weight: 800; }
 
 /* show order */
 

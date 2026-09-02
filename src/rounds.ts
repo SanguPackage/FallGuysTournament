@@ -1,5 +1,5 @@
 import book from "../data/rounds.json";
-import type { RoundType } from "./types";
+import type { RoundType, Show } from "./types";
 
 /** Offered in the admin's type dropdown, in the order a round is most likely to need correcting. */
 export const ROUND_TYPES: readonly RoundType[] = [
@@ -35,4 +35,13 @@ const ids = Object.keys(rounds).sort((a, b) => b.length - a.length);
 export function identify(id: string): RoundInfo {
   const match = ids.find((known) => id.startsWith(known));
   return match ? rounds[match]! : { name: id, type: "unknown" };
+}
+
+/**
+ * Rounds arrive one at a time as they are played, so a show three rounds in has a second-to-last
+ * round that is nobody's semi-final. Until the final itself is on the list there are no finalists.
+ */
+export function finalistsOf(show: Show): string[] {
+  if (show.rounds.at(-1)?.type !== "final") return [];
+  return show.rounds.at(-2)?.qualified ?? [];
 }

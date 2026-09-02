@@ -117,13 +117,18 @@ bun run dev     # serve dist/ on http://localhost:3000, admin on /admin
 
 Five pages, all built from `data/` and `docs/rules.md`:
 
-| Page       | What it shows                                                        |
-|------------|----------------------------------------------------------------------|
-| Dashboard  | Which show and round is on, the podium, and the rest of the field     |
-| Standings  | Every player with their races, finals, wins and penalties             |
-| Results    | Every show round by round, newest first                               |
-| Rules      | `docs/rules.md`                                                       |
-| Show order | The ten shows, marked played / playing now / upcoming                 |
+| Page       | What it shows                                                                        |
+|------------|--------------------------------------------------------------------------------------|
+| Dashboard  | Which show and round is on, who is left in it, the podium, and the rest of the field |
+| Standings  | Every player with their races, finals, wins and penalties                            |
+| Results    | Every show round by round, newest first, with the field coloured                     |
+| Rules      | `docs/rules.md`                                                                      |
+| Show order | The ten shows, marked played / playing now / upcoming                                |
+
+Every show carries its field: gold won it, green got through the last board read, grey is still in
+the round on screen, red is out with the round number that did it. The field is the roster —
+everyone in `players.json` who is not an admin and has an `ingame` name — because a player knocked
+out in round 1 is named on no screen at all.
 
 Every page but the rules refreshes itself every 15 seconds, so nobody has to reload during
 the event. Players who gained points since the last refresh are ringed in green for a few
@@ -178,17 +183,18 @@ the day before the event would shift every window.
 The admin reads the captures and fills the names it finds into fields that are still blank. Three
 screens are read:
 
-| Screen                 | Fills               | Read from                                     |
-|------------------------|---------------------|-----------------------------------------------|
-| Qualification board    | `finalists`         | the name over every green card                 |
-| Winner screen          | `winners`           | the nameplate under the bean                   |
-| Qualified toast        | `rounds[n].first`   | the pill wearing the gold trophy               |
+| Screen              | Fills                 | Read from                        |
+|---------------------|-----------------------|----------------------------------|
+| Qualification board | `rounds[n].qualified` | the name over every green card   |
+| Winner screen       | `winners`             | the nameplate under the bean     |
+| Qualified toast     | `rounds[n].first`     | the pill wearing the gold trophy |
 
 The trophy is what marks first place, not the pill's position — the column does not run in finish
 order.
 
-The board comes up after **every** round, so it only means finalists when it is the one following
-the round before the final. That is the same placement the capture panel uses.
+The board comes up after **every** round, and every one of them is read: the survivors go onto the
+round they were read after. The finalists are the survivors of the round before the final, so they
+are not stored separately.
 
 Names are matched against the `ingame` names in `data/players.json`. Everyone playing the
 tournament is registered, so the roster is the answer key rather than a spelling aid: each name

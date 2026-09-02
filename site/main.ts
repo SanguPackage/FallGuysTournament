@@ -3,6 +3,7 @@ import { score } from "../src/scoring";
 import type { LeaderboardRow, Players, TournamentEvent } from "../src/types";
 import { renderField, renderPodium, renderStandings, renderStatus } from "./render";
 import { renderResults } from "./results";
+import { renderShowNow } from "./show-field";
 import type { ShowInOrder } from "./rules";
 import { renderShowOrder } from "./rules";
 
@@ -49,11 +50,16 @@ function render(page: string, data: Data, rows: LeaderboardRow[], movers: Set<st
   const status = withLiveLog(liveStatus(data.event, data.order), data.now, data.order);
   switch (page) {
     case "dashboard":
-      return renderStatus(status, data.order) + renderPodium(rows) + renderField(rows, movers);
+      return (
+        renderStatus(status, data.order) +
+        renderShowNow(data.event, data.players.players, status) +
+        renderPodium(rows) +
+        renderField(rows, movers)
+      );
     case "standings":
       return renderStandings(rows, movers);
     case "results":
-      return renderResults(data.event.shows, data.now);
+      return renderResults(data.event.shows, data.players.players, data.now);
     case "shows":
       return renderShowOrder(data.order, status.orderIndex);
     default:

@@ -4,7 +4,7 @@ import type { ShotRead } from "./read";
 
 export interface SlotFill {
   showIndex: number;
-  slot: "first" | "finalists" | "winners";
+  slot: "first" | "qualified" | "winners";
   roundIndex?: number;
   names: string[];
   /** The capture the names were read off, so a wrong one can be traced back. */
@@ -27,10 +27,16 @@ export function fillsFor(
       .filter(Boolean);
     if (names.length === 0) continue;
 
+    // A board turns up after every round, and lands in the window of the round it followed.
     if (read.screen === "grid") {
-      // A board turns up after every round. Only the one naming the finalists is worth anything.
-      if (shot.namesFinalists === true) {
-        fills.push({ showIndex: shot.showIndex, slot: "finalists", names, from: shot.file });
+      if (shot.roundIndex !== undefined) {
+        fills.push({
+          showIndex: shot.showIndex,
+          slot: "qualified",
+          roundIndex: shot.roundIndex,
+          names,
+          from: shot.file,
+        });
       }
       continue;
     }

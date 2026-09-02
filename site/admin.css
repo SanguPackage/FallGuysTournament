@@ -221,6 +221,8 @@ button.danger { color: var(--bad); }
 .names { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .names input { width: 10rem; }
 
+.rounds .field.qualified { flex-basis: 100%; margin-top: 0.5rem; }
+
 .problems { margin: 0.75rem 0 0; padding-left: 1.2rem; color: var(--bad); font-size: 0.9rem; }
 
 .publish { margin-top: 0; }

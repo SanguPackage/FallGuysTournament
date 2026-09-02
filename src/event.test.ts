@@ -54,20 +54,24 @@ test("addRound appends to the current show", () => {
 test("closeShow records the final round, its finalists and its winners", () => {
   const event = emptyEvent();
   addShow(event, "Solos");
+  addRound(event, { map: "Roll Out", type: "survival" });
   closeShow(event, {
     map: "Fall Mountain",
     finalists: ["Alpha", "Bravo"],
     winners: ["Alpha"],
   });
   const show = currentShow(event);
-  expect(show.rounds).toEqual([{ map: "Fall Mountain", type: "final" }]);
-  expect(show.finalists).toEqual(["Alpha", "Bravo"]);
+  expect(show.rounds).toEqual([
+    { map: "Roll Out", type: "survival", qualified: ["Alpha", "Bravo"] },
+    { map: "Fall Mountain", type: "final" },
+  ]);
   expect(show.winners).toEqual(["Alpha"]);
 });
 
 test("closeShow accepts an empty winners list for a timed-out final", () => {
   const event = emptyEvent();
   addShow(event, "Solos");
+  addRound(event, { map: "Roll Out", type: "survival" });
   closeShow(event, { map: "Hex-A-Gone", finalists: ["Alpha"], winners: [] });
   expect(currentShow(event).winners).toEqual([]);
 });
@@ -75,14 +79,24 @@ test("closeShow accepts an empty winners list for a timed-out final", () => {
 test("closeShow rejects a winner who did not reach the final", () => {
   const event = emptyEvent();
   addShow(event, "Solos");
+  addRound(event, { map: "Roll Out", type: "survival" });
   expect(() =>
     closeShow(event, { map: "Fall Mountain", finalists: ["Alpha"], winners: ["Bravo"] }),
+  ).toThrow(ValidationError);
+});
+
+test("closeShow rejects a show with no round before its final", () => {
+  const event = emptyEvent();
+  addShow(event, "Solos");
+  expect(() =>
+    closeShow(event, { map: "Fall Mountain", finalists: ["Alpha"], winners: ["Alpha"] }),
   ).toThrow(ValidationError);
 });
 
 test("closeShow rejects a show that is already closed", () => {
   const event = emptyEvent();
   addShow(event, "Solos");
+  addRound(event, { map: "Roll Out", type: "survival" });
   closeShow(event, { map: "Fall Mountain", finalists: ["Alpha"], winners: ["Alpha"] });
   expect(() =>
     closeShow(event, { map: "Hex-A-Gone", finalists: ["Bravo"], winners: ["Bravo"] }),
@@ -92,6 +106,7 @@ test("closeShow rejects a show that is already closed", () => {
 test("addRound rejects a show that is already closed", () => {
   const event = emptyEvent();
   addShow(event, "Solos");
+  addRound(event, { map: "Roll Out", type: "survival" });
   closeShow(event, { map: "Fall Mountain", finalists: ["Alpha"], winners: ["Alpha"] });
   expect(() => addRound(event, { map: "Tip Toe", type: "race", first: "Alpha" })).toThrow(
     ValidationError,

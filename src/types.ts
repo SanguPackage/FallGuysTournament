@@ -13,12 +13,12 @@ export interface Round {
   type: RoundType;
   /** In-game name of the player who crossed first. Race rounds only. */
   first?: string;
+  /** In-game names off the qualification board that came up after this round. */
+  qualified?: string[];
 }
 
 export interface Show {
   name: string;
-  /** In-game names of everyone who qualified for the final round. */
-  finalists?: string[];
   /** In-game names of the final's winners. More than one means a simultaneous win. */
   winners?: string[];
   rounds: Round[];
