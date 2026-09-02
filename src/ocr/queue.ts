@@ -22,6 +22,17 @@ export class ReadQueue {
     return this.done;
   }
 
+  /**
+   * Drops what was read for these captures, so the next offer reads them again. The cache is keyed
+   * by name and mtime, which a change to the reader itself does not move.
+   */
+  forget(keys: string[]): void {
+    for (const key of keys) {
+      delete this.done[key];
+      this.queued.delete(key);
+    }
+  }
+
   offer(jobs: Job[]): void {
     for (const job of jobs) {
       if (this.queued.has(job.key) || this.done[job.key]) continue;

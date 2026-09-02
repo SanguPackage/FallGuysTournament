@@ -36,3 +36,24 @@ test("one capture failing does not stop the next", async () => {
   expect(queue.cache()["good@1"]).toEqual({ tokens: ["ok"] });
   expect(queue.cache()["bad@1"]).toEqual({ tokens: [] });
 });
+
+test("a forgotten capture is read again when it is next offered", async () => {
+  let reads = 0;
+  const queue = new ReadQueue(async () => {
+    reads += 1;
+    return { tokens: [`read ${reads}`] };
+  });
+
+  queue.offer([{ key: "a", path: "a.jpg" }]);
+  await queue.drained();
+  // Offering it again is normally free: the admin polls every few seconds.
+  queue.offer([{ key: "a", path: "a.jpg" }]);
+  await queue.drained();
+  expect(reads).toBe(1);
+
+  queue.forget(["a"]);
+  queue.offer([{ key: "a", path: "a.jpg" }]);
+  await queue.drained();
+  expect(reads).toBe(2);
+  expect(queue.cache()["a"]).toEqual({ tokens: ["read 2"] });
+});

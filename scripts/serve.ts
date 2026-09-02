@@ -314,6 +314,23 @@ const server = Bun.serve({
       return new Response(image);
     }
 
+    /**
+     * Reads one show's captures again. The cache is keyed by name and mtime, so a change to the
+     * reader leaves every capture answering with what the old one made of it.
+     */
+    if (request.method === "POST" && pathname === "/api/reread") {
+      const { showIndex } = (await request.json()) as { showIndex: number };
+      const shows = await parsedShows(await findLog());
+      const event = (await Bun.file(EVENT_PATH).json()) as TournamentEvent;
+      const shotDir = await findScreenshotDir();
+      const shots = (await placed(shotDir, shows, event.date)).filter(
+        (shot) => shot.showIndex === showIndex,
+      );
+      reader.forget(shots.map((shot) => cacheKey(shot.file, shot.takenAt)));
+      queueReads(shotDir, shots);
+      return json({ rereading: shots.length });
+    }
+
     if (request.method === "PUT" && pathname === "/api/players") {
       return writeJson(PLAYERS_PATH, request, () => "data: update players");
     }
