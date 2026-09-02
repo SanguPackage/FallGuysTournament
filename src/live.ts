@@ -6,7 +6,7 @@ export interface LiveStatus {
   /** How many shows have been started, which is what the site calls "Show N". */
   showNumber?: number;
   showName?: string;
-  /** Zero-based position of the current show in the planned order, or -1 if the order does not list it. */
+  /** Zero-based position of the current show in the planned order, or -1 once past its end. */
   orderIndex: number;
   /** The round being played now: one past the last one recorded. */
   round?: number;
@@ -16,13 +16,20 @@ export interface LiveStatus {
   nextShow?: string;
 }
 
+/** Zero-based slot the nth show occupies in the plan, or -1 once the plan has run out. */
+function positionIn(order: ShowInOrder[], played: number): number {
+  return played >= 1 && played <= order.length ? played - 1 : -1;
+}
+
 export function liveStatus(event: TournamentEvent, order: ShowInOrder[]): LiveStatus {
   const current = event.shows.at(-1);
   if (!current) {
     return { state: "not-started", orderIndex: -1, nextShow: order[0]?.show };
   }
 
-  const orderIndex = order.findIndex((show) => show.show === current.name);
+  // Shows are named after the playlist the log reports, not after the plan, so how many have been
+  // played is the only thing that lines them up with the order.
+  const orderIndex = positionIn(order, event.shows.length);
   const finished = (current.winners?.length ?? 0) > 0;
 
   return {
@@ -36,9 +43,18 @@ export function liveStatus(event: TournamentEvent, order: ShowInOrder[]): LiveSt
   };
 }
 
+/**
+ * What the show being played is called. The name always comes from what has been recorded, so a
+ * rename sticks and keeps sticking; the log's own playlist only stands in until someone writes the
+ * show down. Shows are recorded in the order they were played, so the log's position finds it.
+ */
+export function showNameNow(event: TournamentEvent, index: number, fromLog: string): string {
+  return event.shows[index]?.name.trim() || fromLog;
+}
+
 /** What the Fall Guys log says is on screen right now. Only the machine running the game knows this. */
 export interface LiveNow {
-  /** The show being played, named from the plan rather than the log's internal show id. */
+  /** The show being played, named from what has been recorded for it where that exists. */
   show: string;
   showNumber: number;
   /** Rounds loaded so far, so the one on screen is this many in. */
@@ -59,7 +75,7 @@ export function withLiveLog(
 ): LiveStatus {
   if (!now) return status;
 
-  const orderIndex = order.findIndex((show) => show.show === now.show);
+  const orderIndex = positionIn(order, now.showNumber);
   const onScreen = now.map !== null && now.type !== null;
 
   return {

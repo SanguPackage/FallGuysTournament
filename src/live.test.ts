@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import type { ShowInOrder } from "../site/rules";
-import { liveStatus, withLiveLog } from "./live";
+import { liveStatus, showNameNow, withLiveLog } from "./live";
 import type { Round, Show, TournamentEvent } from "./types";
 
 const ORDER: ShowInOrder[] = [
@@ -50,28 +50,35 @@ test("a show with winners is over, so the next show is up", () => {
   expect(status.nextShow).toBe("Fan Favourites");
 });
 
-test("the show number counts shows played, not the position in the order", () => {
+test("the plan is followed by how many shows have been played, whatever they are called", () => {
   const status = liveStatus(
     event([
-      { name: "Solos", rounds: [], winners: ["Alpha"] },
-      { name: "Roll Call", rounds: [] },
+      { name: "Solos 1", rounds: [], winners: ["Alpha"] },
+      { name: "Solos 2", rounds: [] },
     ]),
     ORDER,
   );
   expect(status.showNumber).toBe(2);
-  expect(status.orderIndex).toBe(2);
+  expect(status.orderIndex).toBe(1);
+  expect(status.nextShow).toBe("Roll Call");
 });
 
 test("after the last show in the order there is nothing up next", () => {
   const status = liveStatus(
-    event([{ name: "Roll Call", rounds: [], winners: ["Alpha"] }]),
+    event([
+      { name: "Solos 1", rounds: [], winners: ["Alpha"] },
+      { name: "Solos 2", rounds: [], winners: ["Alpha"] },
+      { name: "Solos 3", rounds: [], winners: ["Alpha"] },
+    ]),
     ORDER,
   );
+  expect(status.orderIndex).toBe(2);
   expect(status.nextShow).toBeUndefined();
 });
 
-test("a replayed show the order does not list leaves the pips unanchored", () => {
-  const status = liveStatus(event([{ name: "Some Replay", rounds: [] }]), ORDER);
+test("playing past the end of the plan leaves the pips unanchored", () => {
+  const played = [1, 2, 3, 4].map((n) => ({ name: `Solos ${n}`, rounds: [] }));
+  const status = liveStatus(event(played), ORDER);
   expect(status.orderIndex).toBe(-1);
   expect(status.nextShow).toBeUndefined();
 });
@@ -118,8 +125,28 @@ test("a show still loading its first round keeps the last recorded round on scre
   expect(live.roundLive).toBe(false);
 });
 
-test("a show the order does not list leaves the pips unanchored", () => {
-  const live = withLiveLog(liveStatus(event([]), ORDER), { ...NOW, show: "Some Replay" }, ORDER);
+test("a show past the end of the plan leaves the pips unanchored", () => {
+  const live = withLiveLog(liveStatus(event([]), ORDER), { ...NOW, showNumber: 4 }, ORDER);
   expect(live.orderIndex).toBe(-1);
   expect(live.nextShow).toBeUndefined();
+});
+
+test("a show that has been recorded is called whatever it was recorded as", () => {
+  const recorded = event([{ name: "Solos 1", rounds: [] }, { name: "Solos 2", rounds: [] }]);
+  expect(showNameNow(recorded, 1, "Day at the Races Solo 1")).toBe("Solos 2");
+});
+
+test("a rename keeps, because the name is read back every time", () => {
+  const renamed = event([{ name: "The Rematch", rounds: [] }]);
+  expect(showNameNow(renamed, 0, "Solos 1")).toBe("The Rematch");
+});
+
+test("finishing a show does not hand its name back to the log", () => {
+  const won = event([{ name: "Solos 1", rounds: [], winners: ["Alpha"] }]);
+  expect(showNameNow(won, 0, "Solos 2")).toBe("Solos 1");
+});
+
+test("a show nobody has written down yet goes by what the log calls it", () => {
+  expect(showNameNow(event([]), 0, "Solos 1")).toBe("Solos 1");
+  expect(showNameNow(event([{ name: "  ", rounds: [] }]), 0, "Solos 1")).toBe("Solos 1");
 });
