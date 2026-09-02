@@ -20,6 +20,7 @@ test("a board read after the round before the final names the finalists", () => 
       slot: "qualified",
       roundIndex: 2,
       names: ["Diego_9942", "Serxav_9"],
+      matched: [true, true],
       from: "g.jpg",
     },
   ]);
@@ -29,7 +30,7 @@ test("a board read after any other round names that round's survivors", () => {
   const shots = [shot("g.jpg", { slot: "round", roundIndex: 0 })];
   const reads: Record<string, ShotRead> = { "g.jpg": { screen: "grid", tokens: ["Diego_9942"] } };
   expect(fillsFor(shots, reads, ROSTER)).toEqual([
-    { showIndex: 0, slot: "qualified", roundIndex: 0, names: ["Diego_9942"], from: "g.jpg" },
+    { showIndex: 0, slot: "qualified", roundIndex: 0, names: ["Diego_9942"], matched: [true], from: "g.jpg" },
   ]);
 });
 
@@ -45,7 +46,7 @@ test("the winner screen fills the winners", () => {
     "w.jpg": { screen: "winner", tokens: ["R- Diego_9942"] },
   };
   expect(fillsFor(shots, reads, ROSTER)).toEqual([
-    { showIndex: 0, slot: "winners", names: ["Diego_9942"], from: "w.jpg" },
+    { showIndex: 0, slot: "winners", names: ["Diego_9942"], matched: [true], from: "w.jpg" },
   ]);
 });
 
@@ -53,7 +54,7 @@ test("the toast fills the round it was taken in", () => {
   const shots = [shot("t.jpg", { slot: "round", roundIndex: 1 })];
   const reads: Record<string, ShotRead> = { "t.jpg": { screen: "toast", tokens: ["-Serxav 9"] } };
   expect(fillsFor(shots, reads, ROSTER)).toEqual([
-    { showIndex: 0, slot: "first", roundIndex: 1, names: ["Serxav_9"], from: "t.jpg" },
+    { showIndex: 0, slot: "first", roundIndex: 1, names: ["Serxav_9"], matched: [true], from: "t.jpg" },
   ]);
 });
 
@@ -87,4 +88,26 @@ test("a capture from before the first qualifier names nobody first", () => {
   // The same capture ten seconds later is the real thing.
   expect(fillsFor([{ ...shot, takenAt: Date.parse("2026-09-02T01:47:44Z") }], reads, ["shalaby_nino"], times))
     .toHaveLength(1);
+});
+
+/**
+ * Every player in the tournament is registered, so a name no roster entry claimed is one to look
+ * at: either the reading is wrong or the roster is missing somebody.
+ */
+test("a fill says which of its names the roster claimed", () => {
+  const shot: PlacedShot = {
+    file: "board.jpg",
+    takenAt: 1,
+    source: "sharex",
+    showIndex: 0,
+    slot: "round",
+    roundIndex: 0,
+  };
+  const reads = {
+    "board.jpg": { screen: "grid" as const, tokens: ["Diego_9942", "RanidHives05"] },
+  };
+
+  const [fill] = fillsFor([shot], reads, ["Diego_9942", "Serxav_9"]);
+  expect(fill!.names).toEqual(["Diego_9942", "RanidHives05"]);
+  expect(fill!.matched).toEqual([true, false]);
 });

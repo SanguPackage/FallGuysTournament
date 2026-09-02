@@ -411,12 +411,18 @@ function nameInput(key: string, value: string, onChange: (value: string) => void
   input.dataset.focusKey = key;
   const source = fillMemo.sources.get(key);
   if (source && value) {
-    input.classList.add("read");
-    input.title = `Read from ${source}`;
+    // Everyone playing is registered, so text no roster entry claimed is a reading to check, not a
+    // result. It is still filled in: the name may be right and the roster short of somebody.
+    const claimed = !fillMemo.unmatched.has(key);
+    input.classList.add(claimed ? "read" : "unmatched");
+    input.title = claimed
+      ? `Read from ${source}`
+      : `Read from ${source}, but no player in players.json goes by this`;
   }
   input.addEventListener("input", () => {
     fillMemo.sources.delete(key);
-    input.classList.remove("read");
+    fillMemo.unmatched.delete(key);
+    input.classList.remove("read", "unmatched");
     input.removeAttribute("title");
     onChange(input.value);
   });

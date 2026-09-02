@@ -7,6 +7,11 @@ export interface SlotFill {
   slot: "first" | "qualified" | "winners";
   roundIndex?: number;
   names: string[];
+  /**
+   * Whether each name is a roster entry or the text as it was read. Everyone in the tournament is
+   * registered, so one the roster did not claim is worth a look rather than a green tick.
+   */
+  matched: boolean[];
   /** The capture the names were read off, so a wrong one can be traced back. */
   from: string;
 }
@@ -29,10 +34,10 @@ export function fillsFor(
     const read = reads[shot.file];
     if (!read?.screen || shot.showIndex === undefined || read.tokens.length === 0) continue;
 
-    const names = assign(read.tokens.map(cleanToken), roster)
-      .map((match) => match.value)
-      .filter(Boolean);
-    if (names.length === 0) continue;
+    const assigned = assign(read.tokens.map(cleanToken), roster).filter((match) => match.value);
+    if (assigned.length === 0) continue;
+    const names = assigned.map((match) => match.value);
+    const matched = assigned.map((match) => match.name !== undefined);
 
     // A board turns up after every round, and lands in the window of the round it followed.
     if (read.screen === "grid") {
@@ -42,6 +47,7 @@ export function fillsFor(
           slot: "qualified",
           roundIndex: shot.roundIndex,
           names,
+          matched,
           from: shot.file,
         });
       }
@@ -49,7 +55,7 @@ export function fillsFor(
     }
 
     if (read.screen === "winner") {
-      fills.push({ showIndex: shot.showIndex, slot: "winners", names, from: shot.file });
+      fills.push({ showIndex: shot.showIndex, slot: "winners", names, matched, from: shot.file });
       continue;
     }
 
@@ -64,6 +70,7 @@ export function fillsFor(
         slot: "first",
         roundIndex: shot.roundIndex,
         names: [names[0]!],
+        matched: [matched[0]!],
         from: shot.file,
       });
     }

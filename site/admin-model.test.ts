@@ -585,16 +585,17 @@ function draftOf(): ShowDraft {
 }
 
 const FILLS: SlotFill[] = [
-  { showIndex: 0, slot: "first", roundIndex: 0, names: ["Serxav_9"], from: "a.jpg" },
-  { showIndex: 0, slot: "first", roundIndex: 1, names: ["Diego_9942"], from: "b.jpg" },
+  { showIndex: 0, slot: "first", roundIndex: 0, names: ["Serxav_9"], matched: [true], from: "a.jpg" },
+  { showIndex: 0, slot: "first", roundIndex: 1, names: ["Diego_9942"], matched: [true], from: "b.jpg" },
   {
     showIndex: 0,
     slot: "qualified",
     roundIndex: 0,
     names: ["Diego_9942", "Serxav_9"],
+    matched: [true, true],
     from: "c.jpg",
   },
-  { showIndex: 0, slot: "winners", names: ["Diego_9942"], from: "d.jpg" },
+  { showIndex: 0, slot: "winners", names: ["Diego_9942"], matched: [true], from: "d.jpg" },
 ];
 
 test("a fill lands only where nothing has been typed", () => {
@@ -636,7 +637,7 @@ test("a field emptied on purpose is not filled again", () => {
 test("a fill for another show is ignored", () => {
   const draft = draftOf();
   const other: SlotFill[] = [
-    { showIndex: 1, slot: "qualified", roundIndex: 0, names: ["Diego_9942"], from: "c.jpg" },
+    { showIndex: 1, slot: "qualified", roundIndex: 0, names: ["Diego_9942"], matched: [true], from: "c.jpg" },
   ];
   expect(applyFills(draft, other, 0, newFillMemo())).toBe(false);
   expect(draft.rounds[0]!.qualified).toEqual(["", ""]);
@@ -711,8 +712,8 @@ test("a resynced round takes the names a changed roster now reads", () => {
   resyncRound(draft, 0, 0, memo);
 
   const rematched: SlotFill[] = [
-    { showIndex: 0, slot: "first", roundIndex: 0, names: ["BigMooseLips"], from: "a.jpg" },
-    { showIndex: 0, slot: "qualified", roundIndex: 0, names: ["BigMooseLips"], from: "c.jpg" },
+    { showIndex: 0, slot: "first", roundIndex: 0, names: ["BigMooseLips"], matched: [true], from: "a.jpg" },
+    { showIndex: 0, slot: "qualified", roundIndex: 0, names: ["BigMooseLips"], matched: [true], from: "c.jpg" },
   ];
   expect(applyFills(draft, rematched, 0, memo)).toBe(true);
   expect(draft.rounds[0]!.first).toBe("BigMooseLips");
@@ -732,7 +733,7 @@ test("resyncing the winners drops what was read and keeps what was typed", () =>
 
   // The final's name is the only one it has, so it must come back on the next fill.
   const rematched: SlotFill[] = [
-    { showIndex: 0, slot: "winners", names: ["BigMooseLips"], from: "d.jpg" },
+    { showIndex: 0, slot: "winners", names: ["BigMooseLips"], matched: [true], from: "d.jpg" },
   ];
   expect(applyFills(draft, rematched, 0, memo)).toBe(true);
   expect(draft.winners).toEqual(["BigMooseLips", "Corrected"]);
@@ -745,4 +746,32 @@ test("resyncing the winners leaves the rounds alone", () => {
   resyncWinners(draft, 0, memo);
   expect(draft.rounds[0]!.first).toBe("Serxav_9");
   expect(draft.rounds[0]!.qualified).toEqual(["Diego_9942", "Serxav_9"]);
+});
+
+test("a name the roster did not claim is marked, so it is not read as confirmed", () => {
+  const draft = draftOf();
+  const memo = newFillMemo();
+  applyFills(
+    draft,
+    [
+      {
+        showIndex: 0,
+        slot: "qualified",
+        roundIndex: 0,
+        names: ["Diego_9942", "RanidHives05"],
+        matched: [true, false],
+        from: "c.jpg",
+      },
+    ],
+    0,
+    memo,
+  );
+
+  expect(draft.rounds[0]!.qualified).toEqual(["Diego_9942", "RanidHives05"]);
+  expect(memo.unmatched.has("show:0:round:0:qualified:0")).toBe(false);
+  expect(memo.unmatched.has("show:0:round:0:qualified:1")).toBe(true);
+
+  // Resync forgets the marks along with the names.
+  resyncRound(draft, 0, 0, memo);
+  expect(memo.unmatched.size).toBe(0);
 });

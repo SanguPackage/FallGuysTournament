@@ -239,10 +239,12 @@ export interface FillMemo {
   sources: Map<string, string>;
   /** Fills already spent, so clearing a field does not summon the same name back. */
   applied: Set<string>;
+  /** Fields holding text no roster entry claimed, which is a reading nobody has confirmed. */
+  unmatched: Set<string>;
 }
 
 export function newFillMemo(): FillMemo {
-  return { sources: new Map(), applied: new Set() };
+  return { sources: new Map(), applied: new Set(), unmatched: new Set() };
 }
 
 /**
@@ -268,6 +270,7 @@ export function applyFills(
       if (round && !round.first && name && !memo.applied.has(`${key}=${name}`)) {
         round.first = name;
         memo.sources.set(key, fill.from);
+        if (fill.matched[0] === false) memo.unmatched.add(key);
         memo.applied.add(`${key}=${name}`);
         changed = true;
       }
@@ -278,13 +281,15 @@ export function applyFills(
     const slot = fill.slot === "qualified" ? round?.qualified : draft.winners;
     if (!slot) continue;
     const spent = fill.slot === "qualified" ? `${fill.roundIndex}:qualified` : "winners";
-    for (const name of fill.names) {
+    for (const [at, name] of fill.names.entries()) {
       if (slot.includes(name)) continue;
       if (memo.applied.has(`${showIndex}:${spent}=${name}`)) continue;
       const blank = slot.indexOf("");
       if (blank === -1) break;
       slot[blank] = name;
-      memo.sources.set(fieldKey(showIndex, fill, blank), fill.from);
+      const key = fieldKey(showIndex, fill, blank);
+      memo.sources.set(key, fill.from);
+      if (fill.matched[at] === false) memo.unmatched.add(key);
       memo.applied.add(`${showIndex}:${spent}=${name}`);
       changed = true;
     }
@@ -314,11 +319,12 @@ export function resyncRound(
 
   const firstKey = `show:${showIndex}:round:${roundIndex}:first`;
   if (memo.sources.delete(firstKey)) round.first = "";
+  memo.unmatched.delete(firstKey);
 
   round.qualified.forEach((_, slot) => {
-    if (memo.sources.delete(`show:${showIndex}:round:${roundIndex}:qualified:${slot}`)) {
-      round.qualified[slot] = "";
-    }
+    const key = `show:${showIndex}:round:${roundIndex}:qualified:${slot}`;
+    if (memo.sources.delete(key)) round.qualified[slot] = "";
+    memo.unmatched.delete(key);
   });
 
   for (const spent of [...memo.applied]) {
@@ -337,7 +343,9 @@ export function resyncRound(
  */
 export function resyncWinners(draft: ShowDraft, showIndex: number, memo: FillMemo): void {
   draft.winners.forEach((_, slot) => {
-    if (memo.sources.delete(`show:${showIndex}:winner:${slot}`)) draft.winners[slot] = "";
+    const key = `show:${showIndex}:winner:${slot}`;
+    if (memo.sources.delete(key)) draft.winners[slot] = "";
+    memo.unmatched.delete(key);
   });
 
   for (const spent of [...memo.applied]) {

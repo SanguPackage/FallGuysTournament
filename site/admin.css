@@ -233,6 +233,7 @@ button.danger { color: var(--bad); }
 
 /* Filled from a capture rather than typed, so it is worth a glance before saving. */
 input.read { border-color: var(--read); background: color-mix(in srgb, var(--read) 12%, var(--field)); }
+input.unmatched { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, var(--field)); }
 
 /* The winners are a final's only names, so the block lines up with the boards above it. */
 .show-form > .field.winners { margin-left: var(--round-indent); }
