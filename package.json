@@ -9,7 +9,7 @@
     "build": "bun run scripts/build.ts",
     "rounds": "bun run scripts/fetch-rounds.ts",
     "dev": "bun run scripts/serve.ts",
-    "live": "bun run scripts/serve.ts --publish"
+    "live": "bun run scripts/serve.ts --publish --record"
   },
   "devDependencies": {
     "@types/bun": "^1.4.0"
