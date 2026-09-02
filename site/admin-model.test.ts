@@ -12,6 +12,7 @@ import {
   namesInShows,
   draftFromShow,
   candidatesFor,
+  canResyncWinners,
   everyPlayerNamed,
   suggestShowName,
   syncDraft,
@@ -853,4 +854,14 @@ test("re-reading a show forgets the winners along with the rounds", () => {
 
   expect(applyFills(draft, FILLS, 0, memo)).toBe(true);
   expect(draft.winners).toEqual(["Diego_9942"]);
+});
+
+test("the winners offer a resync once a capture names them, read or not", () => {
+  const draft = draftOf();
+  const memo = newFillMemo();
+  expect(canResyncWinners(draft, 0, memo, 0)).toBe(false);
+  expect(canResyncWinners(draft, 0, memo, 1)).toBe(true);
+
+  applyFills(draft, FILLS, 0, memo);
+  expect(canResyncWinners(draft, 0, memo, 0)).toBe(true);
 });

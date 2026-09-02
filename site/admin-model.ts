@@ -414,3 +414,17 @@ export function resyncShow(draft: ShowDraft, showIndex: number, memo: FillMemo):
   draft.rounds.forEach((_, roundIndex) => resyncRound(draft, showIndex, roundIndex, memo));
   resyncWinners(draft, showIndex, memo);
 }
+
+/**
+ * A capture is enough on its own: the winner screen may have been read into nothing — the names
+ * spent on an earlier pass, or claimed by no roster entry — and resync is what puts it back in play.
+ */
+export function canResyncWinners(
+  draft: ShowDraft,
+  showIndex: number,
+  memo: FillMemo,
+  captures: number,
+): boolean {
+  if (captures > 0) return true;
+  return draft.winners.some((_, slot) => memo.sources.has(`show:${showIndex}:winner:${slot}`));
+}

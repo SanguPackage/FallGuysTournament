@@ -3,6 +3,7 @@ import type { Players, TournamentEvent } from "../src/types";
 import {
   applyFills,
   candidatesFor,
+  canResyncWinners,
   resyncRound,
   resyncShow,
   resyncWinners,
@@ -616,6 +617,8 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
     ),
   );
 
+  const winnerShots = shotsForSlot(state.shots, index, { slot: "winners" }).length;
+
   const addWinner = el("button", { type: "button" }, ["+ winner"]);
   addWinner.addEventListener("click", () => {
     draft.winners.push("");
@@ -694,7 +697,7 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
       el("div", { class: "field winners" }, [
         el("label", {}, [
           `Winners (${winners.length})`,
-          ...(draft.winners.some((_, slot) => fillMemo.sources.has(`show:${index}:winner:${slot}`))
+          ...(canResyncWinners(draft, index, fillMemo, winnerShots)
             ? [resyncButton(() => resyncWinners(draft, index, fillMemo))]
             : []),
         ]),
