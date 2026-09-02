@@ -54,7 +54,7 @@ function renderShow(show: Show, number: number, live: boolean, players: Player[]
  * The show on screen is not in event.json until it is typed in, so the log speaks for it and the
  * round being played shows up here rather than only once the show is saved.
  */
-function renderPlaying(now: LiveNow): string {
+function renderPlaying(now: LiveNow, players: Player[]): string {
   const round =
     now.map === null
       ? `<p class="empty">Loading the next round…</p>`
@@ -75,6 +75,7 @@ function renderPlaying(now: LiveNow): string {
           <span class="champ playing">● Playing now</span>
         </header>
         <div class="rounds">${round}</div>
+        ${renderShowField({ name: now.show, rounds: [] }, players)}
       </div>
     </div>`;
 }
@@ -85,7 +86,7 @@ export function renderResults(
   now: LiveNow | null = null,
 ): string {
   const unrecorded = now !== null && now.showNumber > shows.length;
-  const playing = unrecorded ? renderPlaying(now) : "";
+  const playing = unrecorded ? renderPlaying(now, players) : "";
 
   if (shows.length === 0) {
     return playing || `<p class="empty">No shows played yet.</p>`;

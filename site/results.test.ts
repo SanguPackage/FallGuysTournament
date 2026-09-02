@@ -107,3 +107,9 @@ test("between rounds the show is still listed", () => {
   expect(html).toContain("Playing now");
   expect(html).toContain("Loading the next round");
 });
+
+test("the show being played carries the field like every other box", () => {
+  const html = renderResults([], ROSTER, NOW);
+  // Nothing has been read for it yet, so the whole field is still in.
+  expect([...html.matchAll(/class="bn playing"/g)]).toHaveLength(ROSTER.length);
+});
