@@ -10,6 +10,8 @@ export interface RoundDraft {
   map: string;
   type: RoundType;
   first: string;
+  /** One slot per name the log counted through this round. */
+  qualified: string[];
   /** Set once the admin picks a type, so the log never overrides their judgement. */
   typeEdited?: boolean;
 }
@@ -17,12 +19,11 @@ export interface RoundDraft {
 export interface ShowDraft {
   name: string;
   rounds: RoundDraft[];
-  finalists: string[];
   winners: string[];
 }
 
 export function draftFor(parsed: ParsedShow, name = ""): ShowDraft {
-  const draft: ShowDraft = { name, rounds: [], finalists: [], winners: [] };
+  const draft: ShowDraft = { name, rounds: [], winners: [] };
   syncDraft(draft, parsed);
   return draft;
 }
@@ -33,19 +34,20 @@ export function draftFor(parsed: ParsedShow, name = ""): ShowDraft {
  */
 export function syncDraft(draft: ShowDraft, parsed: ParsedShow): void {
   for (const round of parsed.rounds.slice(draft.rounds.length)) {
-    draft.rounds.push({ map: round.name, type: round.type, first: "" });
+    draft.rounds.push({ map: round.name, type: round.type, first: "", qualified: [] });
   }
 
   parsed.rounds.forEach((round, index) => {
     const entry = draft.rounds[index];
-    if (entry && !entry.typeEdited) entry.type = round.type;
+    if (!entry) return;
+    if (!entry.typeEdited) entry.type = round.type;
+    fit(entry.qualified, round.qualified.length);
   });
 
   // parseLog calls the last round a final, but mid-show that is only the round being played.
   const last = parsed.rounds.at(-1);
   const final = last?.type === "final" || parsed.winnerId !== undefined ? last : undefined;
 
-  fit(draft.finalists, final?.present.length ?? 0);
   // Whoever succeeded in the final won it, however many that turns out to be.
   fit(draft.winners, Math.max(final?.qualified.length ?? 0, parsed.winnerId === undefined ? 0 : 1));
 }
@@ -64,9 +66,9 @@ export function draftFromShow(show: Show, parsed: ParsedShow): ShowDraft {
       map: round.map,
       type: round.type,
       first: round.first ?? "",
+      qualified: [...(round.qualified ?? [])],
       typeEdited: true,
     })),
-    finalists: [...finalistsOf(show)],
     winners: [...(show.winners ?? [])],
   };
   syncDraft(draft, parsed);
@@ -94,20 +96,16 @@ function filled(names: string[]): string[] {
 export function toShow(draft: ShowDraft): Show {
   const rounds: Round[] = draft.rounds.map((round) => {
     const first = round.first.trim();
-    return SCORES_FIRST.has(round.type) && first
-      ? { map: round.map, type: round.type, first }
-      : { map: round.map, type: round.type };
+    const qualified = filled(round.qualified);
+    return {
+      map: round.map,
+      type: round.type,
+      ...(SCORES_FIRST.has(round.type) && first ? { first } : {}),
+      ...(qualified.length > 0 ? { qualified } : {}),
+    };
   });
 
-  const finalists = filled(draft.finalists);
-  const semi = rounds.at(-1)?.type === "final" ? rounds.at(-2) : undefined;
-  if (semi && finalists.length > 0) semi.qualified = finalists;
-
-  return {
-    name: draft.name.trim(),
-    rounds,
-    winners: filled(draft.winners),
-  };
+  return { name: draft.name.trim(), rounds, winners: filled(draft.winners) };
 }
 
 /** What still has to be typed into a show, for the collapsed rows that have no fields on show. */
@@ -137,9 +135,13 @@ export function validate(draft: ShowDraft): string[] {
 
   if (!draft.name.trim()) problems.push("Give the show a name.");
 
-  const finalists = filled(draft.finalists);
-  const twice = finalists.filter((name, index) => finalists.indexOf(name) !== index);
-  for (const name of new Set(twice)) problems.push(`${name} is listed twice as a finalist.`);
+  draft.rounds.forEach((round, index) => {
+    const names = filled(round.qualified);
+    const twice = names.filter((name, at) => names.indexOf(name) !== at);
+    for (const name of new Set(twice)) {
+      problems.push(`${name} is listed twice as qualifying from round ${index + 1}.`);
+    }
+  });
 
   return problems;
 }
@@ -187,7 +189,10 @@ export function namesByPoints(event: TournamentEvent, players: Players): string[
 /** The same keys `nameInput` files its fields under, so a source can be looked up per field. */
 function fieldKey(showIndex: number, fill: SlotFill, slot: number): string {
   if (fill.slot === "first") return `show:${showIndex}:round:${fill.roundIndex}:first`;
-  return `show:${showIndex}:${fill.slot === "finalists" ? "finalist" : "winner"}:${slot}`;
+  if (fill.slot === "qualified") {
+    return `show:${showIndex}:round:${fill.roundIndex}:qualified:${slot}`;
+  }
+  return `show:${showIndex}:winner:${slot}`;
 }
 
 /** What the page remembers between polls: where each name came from, and what has been used. */
@@ -231,15 +236,18 @@ export function applyFills(
       continue;
     }
 
-    const slot = fill.slot === "finalists" ? draft.finalists : draft.winners;
+    const round = fill.roundIndex === undefined ? undefined : draft.rounds[fill.roundIndex];
+    const slot = fill.slot === "qualified" ? round?.qualified : draft.winners;
+    if (!slot) continue;
+    const spent = fill.slot === "qualified" ? `${fill.roundIndex}:qualified` : "winners";
     for (const name of fill.names) {
       if (slot.includes(name)) continue;
-      if (memo.applied.has(`${showIndex}:${fill.slot}=${name}`)) continue;
+      if (memo.applied.has(`${showIndex}:${spent}=${name}`)) continue;
       const blank = slot.indexOf("");
       if (blank === -1) break;
       slot[blank] = name;
       memo.sources.set(fieldKey(showIndex, fill, blank), fill.from);
-      memo.applied.add(`${showIndex}:${fill.slot}=${name}`);
+      memo.applied.add(`${showIndex}:${spent}=${name}`);
       changed = true;
     }
   }

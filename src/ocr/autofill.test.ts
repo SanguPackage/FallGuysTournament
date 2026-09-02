@@ -9,18 +9,32 @@ function shot(file: string, extra: Partial<PlacedShot> = {}): PlacedShot {
   return { file, takenAt: 0, showIndex: 0, ...extra };
 }
 
-test("a board read after the round before the final becomes the finalists", () => {
+test("a board read after the round before the final names the finalists", () => {
   const shots = [shot("g.jpg", { slot: "round", roundIndex: 2, namesFinalists: true })];
   const reads: Record<string, ShotRead> = {
     "g.jpg": { screen: "grid", tokens: ["Diego_9942", "Serxav_9"] },
   };
   expect(fillsFor(shots, reads, ROSTER)).toEqual([
-    { showIndex: 0, slot: "finalists", names: ["Diego_9942", "Serxav_9"], from: "g.jpg" },
+    {
+      showIndex: 0,
+      slot: "qualified",
+      roundIndex: 2,
+      names: ["Diego_9942", "Serxav_9"],
+      from: "g.jpg",
+    },
   ]);
 });
 
-test("a board read anywhere else names nobody, because only the final is scored", () => {
+test("a board read after any other round names that round's survivors", () => {
   const shots = [shot("g.jpg", { slot: "round", roundIndex: 0 })];
+  const reads: Record<string, ShotRead> = { "g.jpg": { screen: "grid", tokens: ["Diego_9942"] } };
+  expect(fillsFor(shots, reads, ROSTER)).toEqual([
+    { showIndex: 0, slot: "qualified", roundIndex: 0, names: ["Diego_9942"], from: "g.jpg" },
+  ]);
+});
+
+test("a board caught during the final belongs to no round, so it fills nothing", () => {
+  const shots = [shot("g.jpg", { slot: "finalists" })];
   const reads: Record<string, ShotRead> = { "g.jpg": { screen: "grid", tokens: ["Diego_9942"] } };
   expect(fillsFor(shots, reads, ROSTER)).toEqual([]);
 });

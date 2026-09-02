@@ -316,7 +316,7 @@ function shotImages(shots: PlacedShot[]): Node[] {
 
 const SLOT_LABELS: Record<Selection["slot"], string> = {
   round: "This round",
-  finalists: "Finalists",
+  finalists: "The final",
   winners: "Winners",
   show: "Between this show's rounds",
   all: "Everything from this show",
@@ -461,14 +461,23 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
       ]),
     );
 
+    // The final has no board of its own — the winner screen stands in — so it gets no block.
+    if (entry.type !== "final") {
+      const qualified = entry.qualified.map((value, slot) =>
+        nameInput(`show:${index}:round:${roundIndex}:qualified:${slot}`, value, (next) => {
+          entry.qualified[slot] = next;
+        }),
+      );
+      cells.push(
+        el("div", { class: "field qualified" }, [
+          el("label", {}, [`Qualified (${qualified.length})`]),
+          el("div", { class: "names" }, qualified),
+        ]),
+      );
+    }
+
     return selectable(el("li", {}, cells), index, slot);
   });
-
-  const finalists = draft.finalists.map((value, slot) =>
-    nameInput(`show:${index}:finalist:${slot}`, value, (next) => {
-      draft.finalists[slot] = next;
-    }),
-  );
 
   const winners = draft.winners.map((value, slot) =>
     nameInput(`show:${index}:winner:${slot}`, value, (next) => {
@@ -532,14 +541,6 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
       ]),
     ]),
     el("ol", { class: "rounds" }, rounds),
-    selectable(
-      el("div", { class: "field" }, [
-        el("label", {}, [`Finalists (${finalists.length})`]),
-        el("div", { class: "names" }, finalists),
-      ]),
-      index,
-      { slot: "finalists" },
-    ),
     selectable(
       el("div", { class: "field" }, [
         el("label", {}, [`Winners (${winners.length})`]),

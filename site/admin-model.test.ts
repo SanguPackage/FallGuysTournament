@@ -36,8 +36,8 @@ test("a draft mirrors the parsed rounds, with the last marked final", () => {
   expect(draft.rounds.map((round) => round.type)).toEqual(["race", "final"]);
 });
 
-test("a draft asks for one finalist name per player who started the final", () => {
-  expect(draftFor(parsed).finalists).toHaveLength(3);
+test("a draft asks for one name per player the log counted through the round", () => {
+  expect(draftFor(parsed).rounds[0]!.qualified).toHaveLength(3);
 });
 
 test("a draft asks for one winner, since the log reports one", () => {
@@ -57,7 +57,7 @@ test("a draft becomes a show, dropping the final from the scored rounds' first p
   const draft = draftFor(parsed);
   draft.name = "Finals Marathon";
   draft.rounds[0]!.first = "oopman";
-  draft.finalists = ["oopman", "nicksonn", "f1xel"];
+  draft.rounds[0]!.qualified = ["oopman", "nicksonn", "f1xel"];
   draft.winners = ["oopman"];
 
   expect(toShow(draft)).toEqual({
@@ -87,7 +87,7 @@ function complete() {
   const draft = draftFor(parsed);
   draft.name = "Finals Marathon";
   draft.rounds[0]!.first = "oopman";
-  draft.finalists = ["oopman", "nicksonn", "f1xel"];
+  draft.rounds[0]!.qualified = ["oopman", "nicksonn", "f1xel"];
   draft.winners = ["oopman"];
   return draft;
 }
@@ -115,7 +115,7 @@ test("a saved show reopens with everything that was entered", () => {
 
   expect(draft.name).toBe("Solos");
   expect(draft.rounds[0]).toMatchObject({ map: "one", type: "race", first: "oopman" });
-  expect(draft.finalists).toEqual(["oopman", "f1xel"]);
+  expect(draft.rounds[0]!.qualified).toEqual(["oopman", "f1xel"]);
   expect(draft.winners).toEqual(["oopman"]);
 });
 
@@ -136,7 +136,7 @@ test("reopening keeps a round type the log would have guessed differently", () =
 
 test("blanks are dropped from the saved show", () => {
   const draft = complete();
-  draft.finalists = ["oopman", "", "f1xel"];
+  draft.rounds[0]!.qualified = ["oopman", "", "f1xel"];
   expect(toShow(draft).rounds[0]!.qualified).toEqual(["oopman", "f1xel"]);
 });
 
@@ -179,7 +179,7 @@ test("a show the log has not reached has no name to suggest", () => {
 
 test("a round that appears in the log while typing is appended, leaving entries alone", () => {
   const draft = draftFor({ showId: "s", rounds: [], winnerId: undefined }, "Solos");
-  draft.rounds.push({ map: "Wall Guys", type: "race", first: "Alpha" });
+  draft.rounds.push({ map: "Wall Guys", type: "race", first: "Alpha", qualified: [] });
 
   syncDraft(draft, {
     showId: "s",
@@ -191,24 +191,32 @@ test("a round that appears in the log while typing is appended, leaving entries 
   });
 
   expect(draft.rounds).toHaveLength(2);
-  expect(draft.rounds[0]).toEqual({ map: "Wall Guys", type: "race", first: "Alpha" });
+  expect(draft.rounds[0]).toEqual({ map: "Wall Guys", type: "race", first: "Alpha", qualified: [] });
   expect(draft.rounds[1]!.map).toBe("Hex-A-Gone");
   expect(draft.rounds[1]!.type).toBe("final");
 });
 
-test("the finalist slots grow with the final's field, keeping the names already typed", () => {
+test("the qualified slots grow with the log's count, keeping the names already typed", () => {
   const draft = draftFor({ showId: "s", rounds: [], winnerId: undefined }, "Solos");
-  draft.finalists = ["Alpha"];
 
   syncDraft(draft, {
     showId: "s",
     rounds: [
-      { id: "final", name: "final", type: "final", isFinal: true, timedOut: false, present: [1, 2, 3], qualified: [], eliminated: [] },
+      { id: "one", name: "one", type: "race", isFinal: false, timedOut: false, present: [1, 2, 3, 4], qualified: [1], eliminated: [] },
+    ],
+    winnerId: undefined,
+  });
+  draft.rounds[0]!.qualified = ["Alpha"];
+
+  syncDraft(draft, {
+    showId: "s",
+    rounds: [
+      { id: "one", name: "one", type: "race", isFinal: false, timedOut: false, present: [1, 2, 3, 4], qualified: [1, 2, 3], eliminated: [] },
     ],
     winnerId: undefined,
   });
 
-  expect(draft.finalists).toEqual(["Alpha", "", ""]);
+  expect(draft.rounds[0]!.qualified).toEqual(["Alpha", "", ""]);
 });
 
 test("a winner appearing in the log opens a slot for their name", () => {
@@ -348,15 +356,15 @@ test("a show needs a name", () => {
   expect(validate(draft)).toEqual(["Give the show a name."]);
 });
 
-test("the same finalist twice is a slip worth catching", () => {
+test("the same name twice on one board is a slip worth catching", () => {
   const draft = complete();
-  draft.finalists = ["oopman", "oopman", "f1xel"];
-  expect(validate(draft)).toEqual(["oopman is listed twice as a finalist."]);
+  draft.rounds[0]!.qualified = ["oopman", "oopman", "f1xel"];
+  expect(validate(draft)).toEqual(["oopman is listed twice as qualifying from round 1."]);
 });
 
 test("a winner who was never listed as a finalist is taken as entered", () => {
   const draft = complete();
-  draft.finalists = ["oopman"];
+  draft.rounds[0]!.qualified = ["oopman"];
   draft.winners = ["f1xel"];
   expect(validate(draft)).toEqual([]);
 });
@@ -435,13 +443,25 @@ test("a round is drafted under its published name and type, not the log's level 
 
 test("a first typed into a round that turns out to score nothing is dropped on save", () => {
   const draft = draftFor({ showId: "s", rounds: [], winnerId: undefined }, "Solos");
-  draft.rounds.push({ map: "Hex-A-Gone", type: "survival", first: "Alpha", typeEdited: true });
+  draft.rounds.push({
+    map: "Hex-A-Gone",
+    type: "survival",
+    first: "Alpha",
+    qualified: [],
+    typeEdited: true,
+  });
   expect(toShow(draft).rounds[0]).toEqual({ map: "Hex-A-Gone", type: "survival" });
 });
 
 test("a first typed into a hunt round is kept on save", () => {
   const draft = draftFor({ showId: "s", rounds: [], winnerId: undefined }, "Solos");
-  draft.rounds.push({ map: "Airtime", type: "hunt", first: "Alpha", typeEdited: true });
+  draft.rounds.push({
+    map: "Airtime",
+    type: "hunt",
+    first: "Alpha",
+    qualified: [],
+    typeEdited: true,
+  });
   expect(toShow(draft).rounds[0]).toEqual({ map: "Airtime", type: "hunt", first: "Alpha" });
 });
 
@@ -508,38 +528,40 @@ const playing = (id: string, type: RoundType, present: number[], qualified: numb
   eliminated: [],
 });
 
-test("a round still being played opens no finalist slots", () => {
+test("a round still being played opens no qualified slots", () => {
   const draft = draftFor(midShow([playing("wall_guys", "race", [1, 2, 3, 4, 5])]), "Solos 1");
-  expect(draft.finalists).toEqual([]);
+  expect(draft.rounds[0]!.qualified).toEqual([]);
   expect(draft.winners).toEqual([]);
 });
 
-test("the slots follow the final's field as the log fills it in", () => {
+test("the slots follow what the log has counted through", () => {
   const draft = draftFor(midShow([playing("wall_guys", "race", [1, 2, 3, 4, 5])]), "Solos 1");
 
-  syncDraft(draft, midShow([playing("wall_guys", "race", [1, 2, 3, 4, 5]), playing("hex", "final", [1, 2])]));
-  expect(draft.finalists).toEqual(["", ""]);
+  syncDraft(draft, midShow([playing("wall_guys", "race", [1, 2, 3, 4, 5], [1, 2])]));
+  expect(draft.rounds[0]!.qualified).toEqual(["", ""]);
 
-  syncDraft(draft, midShow([playing("wall_guys", "race", [1, 2, 3, 4, 5]), playing("hex", "final", [1, 2, 3])]));
-  expect(draft.finalists).toEqual(["", "", ""]);
+  syncDraft(draft, midShow([playing("wall_guys", "race", [1, 2, 3, 4, 5], [1, 2, 3])]));
+  expect(draft.rounds[0]!.qualified).toEqual(["", "", ""]);
 });
 
 test("slots that shrink give back only the ones nobody typed into", () => {
-  const draft = draftFor(midShow([playing("hex", "final", [1, 2, 3, 4])]), "Solos 1");
-  draft.finalists[0] = "oopman";
+  const draft = draftFor(
+    midShow([playing("wall_guys", "race", [1, 2, 3, 4], [1, 2, 3, 4])]),
+    "Solos 1",
+  );
+  draft.rounds[0]!.qualified[0] = "oopman";
 
-  syncDraft(draft, midShow([playing("hex", "final", [1, 2])]));
-  expect(draft.finalists).toEqual(["oopman", ""]);
+  syncDraft(draft, midShow([playing("wall_guys", "race", [1, 2, 3, 4], [1, 2])]));
+  expect(draft.rounds[0]!.qualified).toEqual(["oopman", ""]);
 });
 
 function draftOf(): ShowDraft {
   return {
     name: "Solos",
     rounds: [
-      { map: "Wall Guys", type: "race", first: "" },
-      { map: "Airtime", type: "hunt", first: "Optinux_Prime" },
+      { map: "Wall Guys", type: "race", first: "", qualified: ["", ""] },
+      { map: "Airtime", type: "hunt", first: "Optinux_Prime", qualified: [] },
     ],
-    finalists: ["", ""],
     winners: [""],
   };
 }
@@ -547,7 +569,13 @@ function draftOf(): ShowDraft {
 const FILLS: SlotFill[] = [
   { showIndex: 0, slot: "first", roundIndex: 0, names: ["Serxav_9"], from: "a.jpg" },
   { showIndex: 0, slot: "first", roundIndex: 1, names: ["Diego_9942"], from: "b.jpg" },
-  { showIndex: 0, slot: "finalists", names: ["Diego_9942", "Serxav_9"], from: "c.jpg" },
+  {
+    showIndex: 0,
+    slot: "qualified",
+    roundIndex: 0,
+    names: ["Diego_9942", "Serxav_9"],
+    from: "c.jpg",
+  },
   { showIndex: 0, slot: "winners", names: ["Diego_9942"], from: "d.jpg" },
 ];
 
@@ -556,7 +584,7 @@ test("a fill lands only where nothing has been typed", () => {
   expect(applyFills(draft, FILLS, 0, newFillMemo())).toBe(true);
   expect(draft.rounds[0]!.first).toBe("Serxav_9");
   expect(draft.rounds[1]!.first).toBe("Optinux_Prime");
-  expect(draft.finalists).toEqual(["Diego_9942", "Serxav_9"]);
+  expect(draft.rounds[0]!.qualified).toEqual(["Diego_9942", "Serxav_9"]);
   expect(draft.winners).toEqual(["Diego_9942"]);
 });
 
@@ -564,7 +592,7 @@ test("every filled field records the capture it was read off", () => {
   const memo = newFillMemo();
   applyFills(draftOf(), FILLS, 0, memo);
   expect(memo.sources.get("show:0:round:0:first")).toBe("a.jpg");
-  expect(memo.sources.get("show:0:finalist:0")).toBe("c.jpg");
+  expect(memo.sources.get("show:0:round:0:qualified:0")).toBe("c.jpg");
   expect(memo.sources.get("show:0:winner:0")).toBe("d.jpg");
   expect(memo.sources.has("show:0:round:1:first")).toBe(false);
 });
@@ -581,17 +609,17 @@ test("a field emptied on purpose is not filled again", () => {
   const memo = newFillMemo();
   applyFills(draft, FILLS, 0, memo);
   draft.rounds[0]!.first = "";
-  draft.finalists = ["", ""];
+  draft.rounds[0]!.qualified = ["", ""];
   expect(applyFills(draft, FILLS, 0, memo)).toBe(false);
   expect(draft.rounds[0]!.first).toBe("");
-  expect(draft.finalists).toEqual(["", ""]);
+  expect(draft.rounds[0]!.qualified).toEqual(["", ""]);
 });
 
 test("a fill for another show is ignored", () => {
   const draft = draftOf();
   const other: SlotFill[] = [
-    { showIndex: 1, slot: "finalists", names: ["Diego_9942"], from: "c.jpg" },
+    { showIndex: 1, slot: "qualified", roundIndex: 0, names: ["Diego_9942"], from: "c.jpg" },
   ];
   expect(applyFills(draft, other, 0, newFillMemo())).toBe(false);
-  expect(draft.finalists).toEqual(["", ""]);
+  expect(draft.rounds[0]!.qualified).toEqual(["", ""]);
 });
