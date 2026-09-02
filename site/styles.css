@@ -410,6 +410,22 @@ h2 {
 .bn.out { background: #ff6b6b1c; border-color: #ff6b6b4d; color: #ffffff70; }
 .bn.out b { text-decoration: line-through; }
 
+.shownow { margin-bottom: 1.6rem; }
+.shownow > header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
+.shownow h3 { margin: 0; font: 400 26px/1 "Bebas Neue", sans-serif; letter-spacing: 0.06em; }
+
+.shownow .num {
+  font-family: "Titan One", cursive;
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--cyan);
+  border-radius: 8px;
+  padding: 0.15rem 0.5rem;
+}
+
+.shownow .count { margin-left: auto; font-weight: 800; color: var(--lime); }
+.shownow .champ { margin-left: auto; font-weight: 800; }
+
 /* show order */
 
 .orderlist { display: flex; flex-direction: column; gap: 0.5rem; }

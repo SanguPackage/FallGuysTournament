@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
-import type { Player, Show } from "../src/types";
-import { renderShowField } from "./show-field";
+import type { LiveStatus } from "../src/live";
+import type { Player, Show, TournamentEvent } from "../src/types";
+import { renderShowField, renderShowNow } from "./show-field";
 
 const ROSTER: Player[] = [
   { fom: "Alpha_FOM", ingame: "Alpha" },
@@ -47,4 +48,58 @@ test("a name is escaped", () => {
   const html = renderShowField(FINISHED, [{ fom: "X", ingame: "<script>" }]);
   expect(html).not.toContain("<script>");
   expect(html).toContain("&lt;script&gt;");
+});
+
+const LIVE: Show = {
+  name: "Sweet Thieves",
+  rounds: [
+    { map: "Dizzy Heights", type: "race", first: "Alpha", qualified: ["Alpha", "Bravo"] },
+    { map: "Roll Out", type: "survival" },
+  ],
+};
+
+const PLAYING: LiveStatus = {
+  state: "playing",
+  showNumber: 2,
+  showName: "Sweet Thieves",
+  orderIndex: 1,
+  round: 2,
+  lastRound: { map: "Roll Out", type: "survival" },
+  roundLive: true,
+};
+
+function event(shows: Show[]): TournamentEvent {
+  return { name: "FOM", date: "2026-09-01", shows, penalties: [] };
+}
+
+test("the panel names the show, its number and the round on screen", () => {
+  const html = renderShowNow(event([FINISHED, LIVE]), ROSTER, PLAYING);
+  expect(html).toContain("Sweet Thieves");
+  expect(html).toContain("Round 2");
+  expect(html).toContain("Roll Out");
+});
+
+test("the panel counts who is left", () => {
+  const html = renderShowNow(event([FINISHED, LIVE]), ROSTER, PLAYING);
+  expect(html).toContain("2 of 3 still in");
+});
+
+test("a finished show is counted by its crown, not by who is left", () => {
+  const html = renderShowNow(event([FINISHED]), ROSTER, {
+    state: "between",
+    showNumber: 1,
+    showName: "Solos",
+    orderIndex: 0,
+  });
+  expect(html).toContain("👑");
+  expect(html).not.toContain("still in");
+});
+
+test("a show being played that has not been recorded falls back to the last recorded one", () => {
+  const html = renderShowNow(event([FINISHED]), ROSTER, { ...PLAYING, showNumber: 2 });
+  expect(html).toContain("Solos");
+});
+
+test("nothing recorded yet renders nothing", () => {
+  expect(renderShowNow(event([]), ROSTER, PLAYING)).toBe("");
 });

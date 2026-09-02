@@ -6,6 +6,7 @@ import type { LivePage } from "../site/page";
 import { page } from "../site/page";
 import { renderField, renderPodium, renderStandings, renderStatus } from "../site/render";
 import { renderResults } from "../site/results";
+import { renderShowNow } from "../site/show-field";
 import { parseShowOrder, renderMarkdown, renderShowOrder } from "../site/rules";
 
 const OUT = "dist";
@@ -52,7 +53,12 @@ const PAGES: { file: string; heading: string; title: string; live?: LivePage; bo
     heading: TITLE,
     title: TITLE,
     live: "dashboard",
-    body: data(renderStatus(status, order) + renderPodium(rows) + renderField(rows)),
+    body: data(
+      renderStatus(status, order) +
+        renderShowNow(event, players.players, status) +
+        renderPodium(rows) +
+        renderField(rows),
+    ),
   },
   {
     file: "standings.html",
