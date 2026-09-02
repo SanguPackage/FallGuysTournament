@@ -1,6 +1,6 @@
 /**
- * A moment inside the segment still recording cannot be found yet, so failing is normal and
- * retrying is the point. Three attempts across three sweeps is well past the segment closing.
+ * Attempts are only spent once the recording has passed a moment's window, so these are three
+ * goes at footage that is on disk rather than three goes at footage still being written.
  */
 export const MAX_ATTEMPTS = 3;
 

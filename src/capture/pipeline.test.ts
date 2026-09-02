@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
 import { mkdir, mkdtemp, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { Ledger } from "./ledger";
+import { Ledger, MAX_ATTEMPTS } from "./ledger";
 import { captureMoment, cutShowClip } from "./pipeline";
-import type { Moment } from "./moments";
+import { momentKey, type Moment } from "./moments";
 
 const AT = Date.parse("2026-09-05T20:01:40Z");
 const MOMENT: Moment = {
@@ -44,6 +44,7 @@ async function harness() {
       },
       frameOf: async () => ({ width: 2, height: 2, at: () => [0, 0, 0] as const }),
       screenOf: () => "toast" as const,
+      now: () => AT,
     },
   };
 }
@@ -180,4 +181,33 @@ test("a clip the segments do not cover yet is left pending", async () => {
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+/**
+ * A board's window runs 30s past the stamp and a segment takes as long again to close, so a moment
+ * spends its first sweeps waiting. Counting those as failures abandoned every capture before the
+ * footage holding it had been written.
+ */
+test("waiting on a segment still being written costs no attempt", async () => {
+  const { dir, deps } = await harness();
+  const ledger = new Ledger();
+  const board: Moment = { ...MOMENT, kind: "finalists", from: AT + 1000, to: AT + 30_000, fps: 2 };
+  const key = momentKey(board);
+
+  // The segment holding the board has not closed yet, and will not for another half minute.
+  const writing = [{ file: "seg-00003.mkv", dir: RUN, from: AT - 20_000, to: AT + 10_000 }];
+  const sweeping = { ...deps, now: () => AT + 20_000 };
+  for (let sweep = 0; sweep < 10; sweep++) {
+    expect(await captureMoment(board, writing, ledger, sweeping)).toEqual([]);
+  }
+  expect(ledger.pending(key)).toBe(true);
+
+  // Long past the window, whatever was going to be written has been. This is a real miss.
+  const settled = { ...deps, now: () => AT + 30_000 + 200_000 };
+  for (let sweep = 0; sweep < MAX_ATTEMPTS; sweep++) {
+    await captureMoment(board, writing, ledger, settled);
+  }
+  expect(ledger.pending(key)).toBe(false);
+
+  await rm(dir, { recursive: true, force: true });
 });

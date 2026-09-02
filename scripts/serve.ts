@@ -236,6 +236,7 @@ async function sweepCaptures(): Promise<void> {
         run: runFfmpeg,
         frameOf: frameFrom,
         screenOf: identify,
+        now: () => Date.now(),
       });
     });
   }

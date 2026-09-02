@@ -30,7 +30,14 @@ export interface CaptureDeps {
   run: (argv: string[]) => Promise<RunResult>;
   frameOf: (path: string) => Promise<Frame>;
   screenOf: (frame: Frame) => Screen | undefined;
+  now: () => number;
 }
+
+/**
+ * How long after a moment's window the footage holding it is certainly on disk: a segment is only
+ * listed once it closes, which is up to its own length after the frames went into it.
+ */
+const SETTLE_MS = 90_000;
 
 const pad = (n: number, width: number) => String(n).padStart(width, "0");
 
@@ -62,7 +69,9 @@ export async function captureMoment(
   const key = momentKey(moment);
   const { parts, complete } = coverage(segments, moment.from, moment.to);
   if (!complete) {
-    ledger.failed(key);
+    // Waiting on a segment still being written is the normal case for the first half-minute, and
+    // spending an attempt on it abandons the moment before the footage holding it exists.
+    if (deps.now() > moment.to + SETTLE_MS) ledger.failed(key);
     return [];
   }
 
