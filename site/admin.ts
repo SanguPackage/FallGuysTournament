@@ -1,6 +1,8 @@
 import type { ParsedShow } from "../src/log";
 import type { Players, TournamentEvent } from "../src/types";
 import {
+  applyFills,
+  newFillMemo,
   defaultMessage,
   draftFor,
   draftFromShow,
@@ -15,6 +17,7 @@ import {
   type ShowDraft,
 } from "./admin-model";
 import type { DataProblem } from "../src/data-check";
+import type { SlotFill } from "../src/ocr/autofill";
 import type { PublishResult } from "../src/publish";
 import type { ShowInOrder } from "./rules";
 import { shotsForSlot, type PlacedShot, type Selection, type ShowTimes } from "../src/screenshots";
@@ -29,6 +32,8 @@ interface State {
   times: ShowTimes[];
   shotDir: string | null;
   shots: PlacedShot[];
+  /** Names read off the captures, for whatever fields are still blank. */
+  fills: SlotFill[];
   /** Whether a save also commits and pushes, which is the flag the server was started with. */
   autoPublish: boolean;
   /** Anything in data/ that would break the published board. Blocks publishing while non-empty. */
@@ -78,6 +83,8 @@ let panelShowing = "";
 /** Set while the panel is being scrolled back to where it was, so that is not read as a move. */
 let replacing = false;
 const drafts = new Map<number, ShowDraft>();
+/** Where each auto-filled name came from, and which fills have been spent. */
+const fillMemo = newFillMemo();
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -363,7 +370,17 @@ function renderShots(): void {
 function nameInput(key: string, value: string, onChange: (value: string) => void): HTMLInputElement {
   const input = el("input", { type: "text", list: "registered", value, placeholder: "name" });
   input.dataset.focusKey = key;
-  input.addEventListener("input", () => onChange(input.value));
+  const source = fillMemo.sources.get(key);
+  if (source && value) {
+    input.classList.add("read");
+    input.title = `Read from ${source}`;
+  }
+  input.addEventListener("input", () => {
+    fillMemo.sources.delete(key);
+    input.classList.remove("read");
+    input.removeAttribute("title");
+    onChange(input.value);
+  });
   return input;
 }
 
@@ -379,6 +396,7 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
       ? draftFromShow(saved, parsed)
       : draftFor(parsed, suggestShowName(state.order, recordedShowNames())));
   syncDraft(draft, parsed);
+  applyFills(draft, state.fills, index, fillMemo);
   drafts.set(index, draft);
 
   const name = el("input", {
@@ -632,7 +650,7 @@ function render(): void {
  * poll: players and drafts are whatever is being typed here.
  */
 async function watchLog(): Promise<void> {
-  let seen = JSON.stringify([state.shows, state.shots, state.times, state.problems]);
+  let seen = JSON.stringify([state.shows, state.shots, state.times, state.problems, state.fills]);
   setInterval(async () => {
     let next: State;
     try {
@@ -642,12 +660,13 @@ async function watchLog(): Promise<void> {
       return;
     }
     status("watch-status", `Watching the log · ${next.shows.length} shows`);
-    const signature = JSON.stringify([next.shows, next.shots, next.times, next.problems]);
+    const signature = JSON.stringify([next.shows, next.shots, next.times, next.problems, next.fills]);
     if (signature === seen) return;
     seen = signature;
     state.shows = next.shows;
     state.shots = next.shots;
     state.times = next.times;
+    state.fills = next.fills;
     state.order = next.order;
     state.problems = next.problems;
     render();

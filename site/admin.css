@@ -9,6 +9,7 @@
   --accent: #ffd23f;
   --bad: #ff8f8f;
   --line: #2a2a3a;
+  --read: #6fd08c;
   --field: #1b1b26;
 }
 
@@ -188,3 +189,6 @@ button.danger { color: var(--bad); }
 
 .publish { margin-top: 0; }
 .publish input { width: 100%; }
+
+/* Filled from a capture rather than typed, so it is worth a glance before saving. */
+input.read { border-color: var(--read); background: color-mix(in srgb, var(--read) 12%, var(--field)); }
