@@ -21,8 +21,8 @@ const SHOW = `
 test("every round with a qualifier yields a first moment, windowed around it", () => {
   const firsts = momentsIn(parseLog(SHOW), DATE).filter((m) => m.kind === "first");
   expect(firsts.map((m) => [m.roundIndex, m.at, m.from, m.to, m.fps])).toEqual([
-    [0, at("20:00:40"), at("20:00:40") - 500, at("20:00:40") + 1500, 30],
-    [1, at("20:01:30"), at("20:01:30") - 500, at("20:01:30") + 1500, 30],
+    [0, at("20:00:40"), at("20:00:40") - 500, at("20:00:40") + 10_000, 30],
+    [1, at("20:01:30"), at("20:01:30") - 500, at("20:01:30") + 10_000, 30],
   ]);
 });
 
