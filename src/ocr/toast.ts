@@ -3,6 +3,12 @@ import type { Box } from "./geometry";
 
 const NAME_X = 1735 / 1920;
 const NAME_W = 95 / 1920;
+/**
+ * The lozenge is right-anchored under the trophy and grows leftwards with the name, so reading it
+ * takes a wider box than finding it does: `S0rr0wsPray3rs15` runs well past where `Zqxts` stops.
+ */
+const READ_X = 1690 / 1920;
+const READ_W = 160 / 1920;
 const FIRST_Y = 291 / 1080;
 const PITCH = 30 / 1080;
 const HEIGHT = 24 / 1080;
@@ -29,6 +35,15 @@ export function pillBox(frame: Frame, index: number): Box {
     y: Math.round((FIRST_Y + PITCH * index) * frame.height),
     w: Math.round(NAME_W * frame.width),
     h: Math.round(HEIGHT * frame.height),
+  };
+}
+
+/** The whole name, where `pillBox` is only the slice `hasPill` and the trophy are measured over. */
+export function nameBox(frame: Frame, index: number): Box {
+  return {
+    ...pillBox(frame, index),
+    x: Math.round(READ_X * frame.width),
+    w: Math.round(READ_W * frame.width),
   };
 }
 

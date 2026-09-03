@@ -4,7 +4,7 @@ import { nameBand, qualifiedCards } from "./grid";
 import { identify, type Screen } from "./recognizers";
 import { maskToPng } from "./mask";
 import { cleanToken, dropLevel } from "./match";
-import { pillBox, trophyPill } from "./toast";
+import { nameBox, trophyPill } from "./toast";
 import type { Box } from "./geometry";
 
 export interface ShotRead {
@@ -16,8 +16,17 @@ export interface ShotRead {
 
 const WINNER_PLATE = { x: 855 / 1920, y: 915 / 1080, w: 260 / 1920, h: 44 / 1080 };
 
-/** The toast pills are pale, so their text needs a higher cutoff than the rest. */
-const CUTOFF = { grid: 190, winner: 190, toast: 195 } as const;
+const CUTOFF = { grid: 190, winner: 190 } as const;
+/**
+ * A pill's white text sits on a translucent lozenge, so what separates the two is whatever level
+ * shows through it. On a dark one the low cutoff has the text to itself; on a pale one it takes the
+ * whole strip and the mask comes out a solid block. Both are read and the fuller answer kept.
+ */
+const TOAST_CUTOFFS = [195, 240];
+
+function glyphs(text: string): number {
+  return (text.match(/[A-Za-z0-9]/g) ?? []).length;
+}
 /**
  * How tall each band is blown up to before Tesseract sees it. There is a window either side: too
  * small and it reads nothing, too large and it returns nothing at all for some names while reading
@@ -96,6 +105,12 @@ export async function readShot(path: string): Promise<ShotRead> {
     return { screen, tokens: [plate] };
   }
 
-  const pill = pillBox(frame, trophyPill(frame)!);
-  return { screen, tokens: [await textIn(frame, pill, CUTOFF.toast, scaleFor("toast", pill))] };
+  const pill = nameBox(frame, trophyPill(frame)!);
+  const scale = scaleFor("toast", pill);
+  let best = "";
+  for (const cutoff of TOAST_CUTOFFS) {
+    const text = await textIn(frame, pill, cutoff, scale);
+    if (glyphs(text) > glyphs(best)) best = text;
+  }
+  return { screen, tokens: [best] };
 }
