@@ -828,6 +828,20 @@ test("a board short of a name is one still being typed, so it eliminates nobody"
   expect(candidatesFor(draft, FIELD, { slot: "qualified", roundIndex: 1, at: 0 })).toEqual(FIELD);
 });
 
+/**
+ * A public lobby is nearly all strangers, so the roster names next to none of the survivors: the
+ * board just read is the only list of who is still in.
+ */
+test("a board naming somebody off the roster offers them to the round after it", () => {
+  const draft = typing();
+  draft.rounds[0]!.qualified = ["Alpha", "Bravo", "Echo"];
+  expect(candidatesFor(draft, FIELD, { slot: "qualified", roundIndex: 1, at: 0 })).toEqual([
+    "Alpha",
+    "Bravo",
+    "Echo",
+  ]);
+});
+
 test("whoever crossed first qualified, so first is offered that round's own survivors", () => {
   expect(candidatesFor(typing(), FIELD, { slot: "first", roundIndex: 0 })).toEqual([
     "Alpha",

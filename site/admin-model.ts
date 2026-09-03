@@ -250,6 +250,20 @@ function completeBoards(draft: ShowDraft): Show {
 }
 
 /**
+ * Everyone this show's own screens have named. A public lobby is nearly all strangers, so the
+ * roster covers next to none of the survivors and the boards already read are the only list of
+ * who is still in.
+ */
+function namesInDraft(draft: ShowDraft): string[] {
+  return [
+    ...draft.rounds.flatMap((round) => [round.first, ...round.qualified]),
+    ...draft.winners,
+  ]
+    .map((name) => name.trim())
+    .filter(Boolean);
+}
+
+/**
  * Everyone a slot could still hold: whoever the boards before it left in, less the names already
  * standing beside it. Whoever crossed a round first qualified out of it, so `first` is offered
  * that round's own survivors rather than the people who went into it.
@@ -274,7 +288,8 @@ export function candidatesFor(draft: ShowDraft, names: string[], slot: NameSlot)
     beside.flatMap((name, index) => (index === at ? [] : [name.trim()])).filter(Boolean),
   );
 
-  return aliveInto(show, names, into).filter((name) => !taken.has(name));
+  const pool = [...new Set([...names, ...namesInDraft(draft)])];
+  return aliveInto(show, pool, into).filter((name) => !taken.has(name));
 }
 
 /** The same keys `nameInput` files its fields under, so a source can be looked up per field. */
