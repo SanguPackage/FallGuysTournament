@@ -289,7 +289,7 @@ h2 {
 
 .row {
   display: grid;
-  grid-template-columns: 3rem 1fr auto auto;
+  grid-template-columns: 3rem 1fr auto auto 2rem;
   gap: 0.75rem;
   align-items: center;
   background: var(--face);
@@ -331,6 +331,10 @@ h2 {
 .row.r3 { border-color: var(--pink); }
 .row.r1 .rk, .row.r2 .rk, .row.r3 .rk { color: #fff; }
 .row.pending { opacity: 0.55; border-style: dashed; }
+
+button.row { width: 100%; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+button.row:hover, button.row:focus-visible { border-color: #fff; }
+button.row:hover .look, button.row:focus-visible .look { border-color: var(--yellow); background: #ffd23f3d; }
 
 /* results */
 
@@ -550,21 +554,20 @@ footer .it .name { font-family: "Bebas Neue", sans-serif; font-size: 21px; lette
 
 /* player details */
 
-button.bn, .look { font: inherit; cursor: pointer; }
+button.bn { font: inherit; cursor: pointer; }
 
 .look {
+  display: grid;
+  place-items: center;
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  border: 2px solid var(--edge);
-  background: var(--face);
-  font-size: 14px;
+  border: 2px solid #ffffff45;
+  background: #ffffff1f;
+  font-size: 15px;
   line-height: 1;
-  opacity: 0.55;
-  transition: opacity 0.12s, border-color 0.12s;
+  transition: background 0.12s, border-color 0.12s;
 }
-
-.look:hover, .look:focus-visible { opacity: 1; border-color: var(--yellow); }
 button.bn:hover, button.bn:focus-visible { border-color: #fff; }
 
 .detail {
@@ -717,13 +720,14 @@ button.bn:hover, button.bn:focus-visible { border-color: #fff; }
 
   .row {
     grid-template-columns: 2.4rem 1fr auto;
-    grid-template-areas: "rk who pts" "rk stats stats";
+    grid-template-areas: "rk who look" "rk stats pts";
     row-gap: 0.5rem;
   }
   .row .rk { grid-area: rk; }
   .row .who { grid-area: who; }
   .row .stats { grid-area: stats; }
   .row .pts { grid-area: pts; }
+  .row .look { grid-area: look; }
 
   .rnd {
     grid-template-columns: 1.5rem 1fr auto;

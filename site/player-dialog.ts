@@ -8,7 +8,7 @@ export interface PlayerDialog {
 }
 
 /**
- * The dialog is opened by any `.open-player` on the page — the standings' magnifiers and every
+ * The dialog is opened by any `.open-player` on the page — a whole standings row and every
  * badge on the dashboard and results. They are redrawn on every poll, so the listener is on the
  * document rather than on any of them.
  */

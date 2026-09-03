@@ -174,7 +174,7 @@ the round on screen, red is out with the round number that did it. The field is 
 everyone in `players.json` who is not an admin and has an `ingame` name — because a player knocked
 out in round 1 is named on no screen at all.
 
-Clicking any of those badges — or the 🔍 on a standings row — opens that player's whole
+Clicking any of those badges — or anywhere on a standings row — opens that player's whole
 tournament: one row per show, one cell per round.
 
 | Mark | Means                                                                    |
