@@ -25,6 +25,11 @@ function ingame(row: LeaderboardRow): string {
 
 const EMPTY = `<p class="empty">No players registered yet.</p>`;
 
+function crownRank(row: LeaderboardRow): string {
+  if (row.crownRank === undefined) return "";
+  return ` · <span class="crown-rank">👑${row.crownRank}</span>`;
+}
+
 /** Second, first and third, so the tallest card sits in the middle. */
 const PODIUM_ORDER = [1, 0, 2];
 
@@ -85,7 +90,7 @@ export function renderStandings(rows: LeaderboardRow[], movers: Set<string> = ne
       return `
       <div class="${classes.join(" ")}">
         <span class="rk">${rank[index]}</span>
-        <span class="who"><b>${escapeHtml(row.fom)}</b><small>${ingame(row)}${penalty}</small></span>
+        <span class="who"><b>${escapeHtml(row.fom)}</b><small>${ingame(row)}${crownRank(row)}${penalty}</small></span>
         <span class="stats">
           <span class="stat"><b>${row.raceWins}</b><span>Races</span></span>
           <span class="stat"><b>${row.finalsReached}</b><span>Finals</span></span>

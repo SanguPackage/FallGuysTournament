@@ -324,6 +324,7 @@ h2 {
 
 .row .pts { font-family: "Titan One", cursive; font-size: 26px; color: var(--yellow); min-width: 2.6rem; text-align: right; }
 .row .pen { color: #ff9d9d; font-weight: 700; }
+.row .crown-rank { color: var(--yellow); font-weight: 700; white-space: nowrap; }
 
 .row.r1 { border-color: var(--yellow); background: linear-gradient(90deg, #ffd23f2e, var(--face)); }
 .row.r2 { border-color: var(--cyan); }

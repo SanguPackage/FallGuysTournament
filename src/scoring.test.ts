@@ -332,3 +332,11 @@ test("someone who did not join is left off the leaderboard", () => {
   };
   expect(score(emptyEvent(), absent).map((r) => r.fom)).toEqual(["Ann"]);
 });
+
+test("a crown rank is carried onto the row, so the board can print it beside the name", () => {
+  const rows = score(emptyEvent(), {
+    players: [{ ingame: "Alpha", fom: "Ann", crownRank: 50 }, { ingame: "Bravo", fom: "Bob" }],
+  });
+  expect(rows.find((r) => r.fom === "Ann")?.crownRank).toBe(50);
+  expect(rows.find((r) => r.fom === "Bob")?.crownRank).toBeUndefined();
+});

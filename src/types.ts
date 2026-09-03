@@ -64,6 +64,7 @@ export interface Players {
 export interface LeaderboardRow {
   ingame?: string;
   fom: string;
+  crownRank?: number;
   points: number;
   raceWins: number;
   finalsReached: number;

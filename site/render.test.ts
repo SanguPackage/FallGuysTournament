@@ -104,6 +104,15 @@ test("a penalty is spelled out under the name", () => {
   expect(html).toContain("-2");
 });
 
+test("a crown rank is shown beside the in-game name", () => {
+  const html = renderStandings([row({ fom: "Ann", ingame: "Alpha", crownRank: 50 })]);
+  expect(html).toContain("\u{1F451}50");
+});
+
+test("a player who never reported a crown rank gets no crown at all", () => {
+  expect(renderStandings([row({ fom: "Ann" })])).not.toContain("crown-rank");
+});
+
 test("a player with no in-game name yet is marked as pending", () => {
   expect(renderStandings([row({ fom: "Ann", ingame: undefined })])).toContain("pending");
 });

@@ -14,6 +14,7 @@ export function score(event: TournamentEvent, players: Players): LeaderboardRow[
     const row: LeaderboardRow = {
       ingame: player.ingame,
       fom: player.fom,
+      ...(player.crownRank === undefined ? {} : { crownRank: player.crownRank }),
       points: 0,
       raceWins: 0,
       finalsReached: 0,
