@@ -34,7 +34,7 @@ function detail(shows: Show[], fom: string) {
 }
 
 test("the header carries the player's names, crown rank and leaderboard totals", () => {
-  const { row } = detail([played("Solos 1", ["Alpha"])], "Alpha_FOM");
+  const { row } = detail([played("Solos 1", ["Alpha"])], "Alpha_FOM")!;
   expect(row).toMatchObject({
     fom: "Alpha_FOM",
     ingame: "Alpha",

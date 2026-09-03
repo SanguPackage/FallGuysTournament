@@ -44,6 +44,17 @@ function footer(): string {
     </footer>`;
 }
 
+/**
+ * Outside `.wrap`, and so outside `#data`, which every poll overwrites wholesale. `showModal()`
+ * lifts it into the top layer, so where it sits in the document does not decide where it draws.
+ */
+function playerDialog(): string {
+  return `    <dialog id="player" class="detail">
+      <button type="button" class="x" data-close-player aria-label="Close">✕</button>
+      <div id="player-body"></div>
+    </dialog>`;
+}
+
 export function page({ event, title, heading, current, body, live }: PageOptions): string {
   return `<!doctype html>
 <html lang="en">
@@ -74,7 +85,7 @@ export function page({ event, title, heading, current, body, live }: PageOptions
 ${body}
       ${footer()}
     </div>
-${live ? `    <script type="module" src="./main.js"></script>\n` : ""}  </body>
+${live ? `${playerDialog()}\n    <script type="module" src="./main.js"></script>\n` : ""}  </body>
 </html>
 `;
 }
