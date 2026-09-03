@@ -232,6 +232,20 @@ Only blank fields are filled, and a filled field is ringed in green with the cap
 on hover. Type over one and it is yours — nothing later overwrites it, and clearing it on purpose
 does not bring the name back.
 
+### The answer key
+
+`data/ingame-names.txt` is every in-game name the tournament has seen, one per line. It is what
+the reading is scored against, and it only ever grows.
+
+```bash
+bun run scripts/collect-names.ts              # from event.json, players.json and ocr-truth.json
+pbpaste | bun run scripts/collect-names.ts    # and whatever you read off a screen by eye
+```
+
+`event.json` cannot tell a name somebody typed from a reading nobody corrected, so a name that
+reaches no roster entry goes in exactly as it was read. Run an eye over the file after an evening
+of testing outside the tournament.
+
 ### Scoring the reading
 
 ```bash
