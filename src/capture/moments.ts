@@ -1,7 +1,7 @@
 import { absoluteTimes } from "../screenshots";
 import type { ParsedShow } from "../log";
 
-export type MomentKind = "first" | "finalists" | "winner";
+export type MomentKind = "first" | "finalists" | "winner" | "field";
 
 export interface Moment {
   kind: MomentKind;
@@ -47,6 +47,7 @@ const WINDOW: Record<MomentKind, { from: number; to: number; fps: number }> = {
   first: { from: -500, to: 10_000, fps: 30 },
   finalists: { from: 1000, to: 30_000, fps: 2 },
   winner: { from: 2000, to: 20_000, fps: 2 },
+  field: { from: 2000, to: 20_000, fps: 5 },
 };
 
 /** How far past the last thing that happened a clip runs, so the screen that follows is in it. */
@@ -85,6 +86,15 @@ export function momentsIn(shows: ParsedShow[], date: string): Moment[] {
     span.firsts.forEach((at, roundIndex) => {
       if (at !== undefined) moments.push(moment("first", showIndex, date, at, roundIndex));
     });
+
+    // Round one is the only board that has the whole field on it, and only while it still reads
+    // REMAIN — `pick` keeps earliest first, so the frames it takes are the ones with the fewest
+    // cards flipped.
+    //
+    // Held back until the round after it has loaded: `ends[0]` is the last result *so far*, so
+    // while round one is still being played it walks forward with every qualifier.
+    const opened = show.rounds.length > 1 ? span.ends[0] : undefined;
+    if (opened !== undefined) moments.push(moment("field", showIndex, date, opened, 0));
 
     // The board comes up after every round, so it only names finalists after the one before the
     // final. Same placement the capture panel uses.
