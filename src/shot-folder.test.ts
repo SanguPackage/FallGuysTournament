@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { mkdir, mkdtemp, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
-import { listShots, resolveShot } from "./shot-folder";
+import { listShots, listShowShots, resolveShot } from "./shot-folder";
 
 const TAKEN = new Date("2026-09-01T20:25:20");
 
@@ -44,4 +44,41 @@ test("a name walking out of the folder resolves to nothing", () => {
 
 test("an absolute name is not allowed to replace the folder", () => {
   expect(resolveShot("/shots", "/etc/passwd")).toBeUndefined();
+});
+
+async function showFolders(): Promise<string> {
+  const dir = await mkdtemp(`${tmpdir()}/shows-`);
+  for (const name of [
+    "show-2026-09-01T22h10-solos-1",
+    "show-2026-09-02T23h25-solos-4",
+    "show-2026-09-03T00h29-solos-5",
+  ]) {
+    await mkdir(`${dir}/${name}`);
+  }
+  await writeFile(`${dir}/show-2026-09-01T22h10-solos-1/round-01-winner-01.jpg`, "");
+  await writeFile(`${dir}/show-2026-09-02T23h25-solos-4/round-01-whole-field-01.jpg`, "");
+  await writeFile(`${dir}/show-2026-09-02T23h25-solos-4/transcript.txt`, "");
+  await writeFile(`${dir}/show-2026-09-03T00h29-solos-5/2026-09-02-show-05-solos-5.mp4`, "");
+  await writeFile(`${dir}/show-2026-09-03T00h29-solos-5/round-02-winner-01.jpg`, "");
+  await utimes(`${dir}/show-2026-09-02T23h25-solos-4/round-01-whole-field-01.jpg`, TAKEN, TAKEN);
+  return dir;
+}
+
+test("only this evening's show folders are read, images only", async () => {
+  const shots = await listShowShots(await showFolders(), "2026-09-02");
+  expect(shots.map((shot) => shot.file).sort()).toEqual([
+    "show-2026-09-02T23h25-solos-4/round-01-whole-field-01.jpg",
+    "show-2026-09-03T00h29-solos-5/round-02-winner-01.jpg",
+  ]);
+  expect(shots.every((shot) => shot.source === "auto")).toBe(true);
+});
+
+test("a capture carries the time it was taken, which is what places it", async () => {
+  const shots = await listShowShots(await showFolders(), "2026-09-02");
+  const field = shots.find((shot) => shot.file.includes("whole-field"))!;
+  expect(field.takenAt).toBe(TAKEN.getTime());
+});
+
+test("a shows root that does not exist yet is empty rather than an error", async () => {
+  expect(await listShowShots("/nowhere/at/all", "2026-09-02")).toEqual([]);
 });
