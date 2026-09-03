@@ -6,7 +6,7 @@ const PAGES = new Set<string>(sangu.levelPages);
 const ICONS = new Set<string>(sangu.levelIcons);
 
 /** One glyph for every way out to sangu.be, so a mark beside a map reads as "clips for this". */
-export function sanguMark(size = 14): string {
+export function sanguMark(size = 16): string {
   return `<svg width="${size}" height="${size}" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="1.5" y="3.5" width="17" height="13" rx="4" stroke="currentColor" stroke-width="2.4"/><path d="M8.4 7.2 13.6 10l-5.2 2.8V7.2Z" fill="currentColor"/></svg>`;
 }
 

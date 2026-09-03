@@ -386,8 +386,8 @@ button.row:hover .look, button.row:focus-visible .look { border-color: var(--yel
 }
 
 .rnd .i { color: #ffffff70; font-weight: 800; font-size: 13px; }
-.rnd .map { font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; }
-.rnd .map .mapicon { width: 30px; height: 26px; object-fit: contain; flex: none; }
+.rnd .map { font-weight: 700; font-size: 20px; display: inline-flex; align-items: center; gap: 0.45rem; }
+.rnd .map .mapicon { width: 36px; height: 32px; object-fit: contain; flex: none; }
 .rnd .map .sangu { color: #ffffff59; line-height: 0; transition: color 0.15s; }
 .rnd .map .sangu:hover { color: var(--cyan); }
 .rnd .winner { color: var(--lime); font-weight: 800; }

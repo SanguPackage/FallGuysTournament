@@ -592,9 +592,11 @@ const server = Bun.serve({
       return new Response(built.outputs[0]!, { headers: fresh("text/javascript") });
     }
 
+    // A cached bundle repaints `#data` a second after load, so a stale main.js quietly undoes the
+    // build you just ran. Pages Cache-Controls the published site; this server is for seeing edits.
     const file = Bun.file(`dist${pathname === "/" ? "/index.html" : pathname}`);
     if (!(await file.exists())) return new Response("Not found", { status: 404 });
-    return new Response(file);
+    return new Response(file, { headers: { "cache-control": "no-store" } });
   },
 });
 
