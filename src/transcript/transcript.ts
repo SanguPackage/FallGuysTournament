@@ -27,6 +27,8 @@ export interface TranscriptOptions {
   out: (text: string) => void;
   /** Absent when there is nowhere to write, which is not a reason to lose the terminal. */
   file?: (text: string) => void;
+  /** Every line, before any filtering, so the per-show transcripts can be cut from them. */
+  tap?: (line: Entry) => void;
 }
 
 /**
@@ -37,6 +39,7 @@ export class Transcript {
   constructor(private readonly options: TranscriptOptions) {}
 
   write(line: Entry): void {
+    this.options.tap?.(line);
     this.options.file?.(formatLine(line));
     if (this.shows(line)) this.options.out(formatLine(line, this.options.colour));
   }
@@ -47,9 +50,9 @@ export class Transcript {
   }
 }
 
-/** Sits with the month of images it describes. `listShots` takes only `.png/.jpg`, so it is ignored. */
-export function transcriptPath(capturesDir: string, date: string): string {
-  return `${capturesDir.replace(/\/+$/, "")}/${date.slice(0, 7)}/${date}.transcript.txt`;
+/** One file for the evening, at the root of the capture tree the show folders sit in. */
+export function transcriptPath(captureDir: string, date: string): string {
+  return `${captureDir.replace(/\/+$/, "")}/${date}.transcript.txt`;
 }
 
 export interface TranscriptFile {
