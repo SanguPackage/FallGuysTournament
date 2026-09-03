@@ -44,6 +44,10 @@ test("every page credits the source and itenium", () => {
   expect(html).toContain("https://itenium.be");
 });
 
+test("every page points at the Fall Guys clips on sangu.be", () => {
+  expect(page(RULES)).toContain(`href="https://sangu.be/fallguys/"`);
+});
+
 test("the badge carries the event's own name", () => {
   expect(page({ ...RULES, event: "FOM 2027" })).toContain(">FOM 2027<");
 });
