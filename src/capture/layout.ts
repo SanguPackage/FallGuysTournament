@@ -88,3 +88,8 @@ export function showDirsFor(names: string[], date: string): string[] {
     return stamped !== null && nights.has(stamped[1]!);
   });
 }
+
+/** No extension: `cutShowClip` adds `.mp4`. */
+export function clipFile(date: string, showIndex: number, slug: string): string {
+  return `${date}-show-${pad(showIndex + 1)}-${slug}`;
+}

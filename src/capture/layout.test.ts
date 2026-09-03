@@ -108,3 +108,9 @@ test("anything that is not a show folder is skipped", () => {
   const names = ["segments", "2026-09-02.transcript.txt", "show-nonsense", "show-2026-09-02T23h25"];
   expect(showDirsFor(names, "2026-09-02")).toEqual(["show-2026-09-02T23h25"]);
 });
+
+import { clipFile } from "./layout";
+
+test("a clip keeps the name that says what it is once dragged out of its folder", () => {
+  expect(clipFile("2026-09-02", 3, "solos-4")).toBe("2026-09-02-show-04-solos-4");
+});
