@@ -159,6 +159,21 @@ the round on screen, red is out with the round number that did it. The field is 
 everyone in `players.json` who is not an admin and has an `ingame` name — because a player knocked
 out in round 1 is named on no screen at all.
 
+Clicking any of those badges — or the 🔍 on a standings row — opens that player's whole
+tournament: one row per show, one cell per round.
+
+| Mark | Means                                                                    |
+|------|---------------------------------------------------------------------------|
+| ⚡   | crossed the line first                                                    |
+| ✓    | named on that round's qualification board                                 |
+| ✗    | still in going into the round, absent from its board                      |
+| 👑   | won the show                                                              |
+| ?    | nobody read a board for that round, so it says nothing either way         |
+| ·    | the show has no such round, or they were already out                      |
+
+A show reads `Winner`, `Finalist` or `Contestant`. Only the last show can read `Still in`: an
+earlier show missing its winners was typed in short, not left unfinished.
+
 Every page but the rules refreshes itself every 15 seconds, so nobody has to reload during
 the event. Players who gained points since the last refresh are ringed in green for a few
 seconds.
