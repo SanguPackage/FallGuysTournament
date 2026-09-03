@@ -77,11 +77,13 @@ function moversSince(previous: Map<string, number>, rows: LeaderboardRow[]): Set
   return movers;
 }
 
-/** The badge sits outside `#data`, so the poll has to reach it on its own. */
+/** The badge and its join steps sit outside `#data`, so the poll has to reach them on its own. */
 function paintLobby(lobby: HTMLElement | null, code?: string): void {
   if (!lobby) return;
   lobby.hidden = !code;
-  lobby.querySelector("b")!.textContent = (code ?? "").toUpperCase();
+  document.querySelectorAll<HTMLElement>("[data-lobby-code]").forEach((slot) => {
+    slot.textContent = (code ?? "").toUpperCase();
+  });
 }
 
 function main(): void {

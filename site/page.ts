@@ -28,10 +28,25 @@ export interface PageOptions {
 /**
  * Read off a phone across the room, so it is set in the largest thing on the bar. Always in the
  * markup: the poll fills it in, so a lobby opened after the build still reaches the board.
+ *
+ * The steps are a popover rather than a `<dialog>`: they are on every page, and the pages that
+ * are not live carry no script to open one with.
  */
 function lobbyBadge(code?: string): string {
   const shown = code ? escapeHtml(code.toUpperCase()) : "";
-  return `<span class="lobby"${code ? "" : " hidden"} id="lobby"><small>Lobby code</small><b>${shown}</b></span>`;
+  return `<span class="lobby"${code ? "" : " hidden"} id="lobby">
+        <button class="how" type="button" popovertarget="join" title="How to join" aria-label="How to join">?</button>
+        <small>Lobby code</small><b data-lobby-code>${shown}</b>
+      </span>
+      <div class="join" id="join" popover>
+        <h2>How to join</h2>
+        <ol>
+          <li>Open <b>Change Game</b></li>
+          <li>Pick <b>Custom Games</b>, then <b>Join</b></li>
+          <li>Enter the code <b class="code" data-lobby-code>${shown}</b></li>
+        </ol>
+        <button type="button" class="primary" popovertarget="join" popovertargetaction="hide">Got it</button>
+      </div>`;
 }
 
 export function nav(current: string): string {

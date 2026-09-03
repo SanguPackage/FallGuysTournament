@@ -74,6 +74,19 @@ test("the badge is in the page but hidden when there is no lobby code", () => {
   expect(page(RULES)).toContain(`class="lobby" hidden`);
 });
 
+test("the badge carries a help button that opens the join steps", () => {
+  const html = page({ ...RULES, lobbyCode: "abc123" });
+  expect(html).toContain(`popovertarget="join"`);
+  expect(html).toContain(`title="How to join"`);
+  expect(html).toContain(`id="join"`);
+  expect(html).toContain("Custom Games");
+});
+
+test("the join steps repeat the code, so it is on screen while reading them", () => {
+  const html = page({ ...RULES, lobbyCode: "abc123" });
+  expect(html.match(/>ABC123</g)).toHaveLength(2);
+});
+
 test("a lobby code is escaped", () => {
   expect(page({ ...RULES, lobbyCode: "<b>" })).not.toContain("<B>");
 });

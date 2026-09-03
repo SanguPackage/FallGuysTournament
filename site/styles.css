@@ -125,6 +125,7 @@ nav [aria-current] {
 .masthead { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 
 .lobby {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -136,6 +137,65 @@ nav [aria-current] {
 }
 
 .lobby[hidden] { display: none; }
+
+/* Hangs off the corner rather than sitting inside it: the code stays the widest thing on the badge. */
+.how {
+  position: absolute;
+  top: -0.7rem;
+  right: -0.7rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  border-radius: 50%;
+  border: 3px solid var(--ink);
+  background: var(--yellow);
+  color: var(--ink);
+  font: 800 15px/1 "Baloo 2", system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.how:hover, .how:focus-visible { background: #fff; }
+
+.join {
+  width: min(28rem, calc(100vw - 2rem));
+  margin: auto;
+  padding: 1.2rem 1.4rem 1.4rem;
+  border: 3px solid var(--edge);
+  border-radius: 20px;
+  background: linear-gradient(160deg, #4a34a8, #2a1e6e 70%);
+  color: #fff;
+  font: 16px/1.5 "Baloo 2", system-ui, sans-serif;
+}
+
+.join::backdrop { background: #150c37cc; backdrop-filter: blur(3px); }
+
+.join h2 { margin: 0 0 0.6rem; }
+
+.join ol { margin: 0; padding-left: 1.2rem; }
+
+.join li { margin: 0.35rem 0; }
+
+.join li b { color: var(--cyan); }
+
+.join li b.code {
+  font: 400 26px/1 "Bebas Neue", sans-serif;
+  letter-spacing: 0.12em;
+  color: var(--yellow);
+}
+
+.join button {
+  margin-top: 1.1rem;
+  width: 100%;
+  padding: 0.5rem;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background: var(--yellow);
+  color: var(--ink);
+  font: 800 16px "Baloo 2", system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.join button:hover { background: #fff; }
 
 .lobby small {
   font: 600 13px/1.2 "Barlow Condensed", sans-serif;
