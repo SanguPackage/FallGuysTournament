@@ -425,8 +425,19 @@ h2 {
 .bn.playing { border-color: #ffffff2e; }
 .bn.out { background: #ff6b6b3d; border-color: #ff6b6b; color: #fff; }
 .bn.first { background: linear-gradient(#ffe27a, var(--yellow)); border-color: var(--ink); color: var(--ink); }
+.bn .firsts {
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 999px;
+  padding: 0.05rem 0.35rem;
+  background: #6ee7872e;
+  color: var(--lime);
+}
+
 .bn.won .rank,
-.bn.first .rank { background: #2a15522e; color: var(--ink); }
+.bn.first .rank,
+.bn.won .firsts,
+.bn.first .firsts { background: #2a15522e; color: var(--ink); }
 
 .shownow { margin-bottom: 1.6rem; }
 .shownow > header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }

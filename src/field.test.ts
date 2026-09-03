@@ -280,3 +280,53 @@ test("a round nobody has read a board off drops nobody", () => {
   };
   expect(aliveInto(show, ["Alpha", "Bravo"], 2)).toEqual(["Alpha", "Bravo"]);
 });
+
+/* -------------------------------------------------------------- firsts */
+
+const RACED: Show = {
+  name: "Solos",
+  rounds: [
+    { map: "Tundra Run", type: "race", first: "Alpha", qualified: ["Alpha", "Bravo", "Charlie"] },
+    { map: "Hoop Chute", type: "hunt", first: "Alpha", qualified: ["Alpha", "Bravo"] },
+    { map: "Slime Climb", type: "race", first: "Bravo", qualified: ["Alpha", "Bravo"] },
+  ],
+};
+
+function firstsOf(show: Show): Record<string, number | undefined> {
+  return Object.fromEntries(fieldOf(show, ROSTER).map((p) => [p.ingame, p.firsts]));
+}
+
+test("the field counts how many rounds each player crossed first", () => {
+  expect(firstsOf(RACED)).toEqual({
+    Alpha: 2,
+    Bravo: 1,
+    Charlie: undefined,
+    Delta: undefined,
+  });
+});
+
+test("a round the game does not qualify one at a time counts for nobody", () => {
+  const show: Show = {
+    name: "Solos",
+    rounds: [{ map: "Roll Off", type: "survival", first: "Alpha", qualified: ["Alpha"] }],
+  };
+  expect(fieldOf(show, ROSTER).find((p) => p.ingame === "Alpha")?.firsts).toBeUndefined();
+});
+
+test("a player knocked out still keeps the firsts they earned", () => {
+  const show: Show = {
+    name: "Solos",
+    rounds: [
+      { map: "Tundra Run", type: "race", first: "Delta", qualified: ["Alpha", "Delta"] },
+      { map: "Slime Climb", type: "race", qualified: ["Alpha"] },
+    ],
+  };
+  const delta = fieldOf(show, ROSTER).find((p) => p.ingame === "Delta");
+  expect(delta).toMatchObject({ state: "out", outAt: 2, firsts: 1 });
+});
+
+test("the per-round badges count nothing: each round names its own first-crosser", () => {
+  for (const beans of roundFieldsOf(RACED, ROSTER)) {
+    for (const bean of beans) expect(bean.firsts).toBeUndefined();
+  }
+});

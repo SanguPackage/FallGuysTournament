@@ -123,3 +123,27 @@ test("a show being played that has not been recorded falls back to the last reco
 test("nothing recorded yet renders nothing", () => {
   expect(renderShowNow(event([]), ROSTER, PLAYING)).toBe("");
 });
+
+test("the dashboard badge counts a player's firsts", () => {
+  const show: Show = {
+    name: "Solos",
+    rounds: [
+      { map: "Dizzy Heights", type: "race", first: "Alpha", qualified: ["Alpha", "Bravo"] },
+      { map: "Hoop Chute", type: "hunt", first: "Alpha", qualified: ["Alpha", "Bravo"] },
+    ],
+  };
+  const html = renderShowNow(event([show]), ROSTER, PLAYING);
+  expect(html).toContain(`<span class="firsts">⚡2</span>`);
+  expect([...html.matchAll(/class="firsts"/g)]).toHaveLength(1);
+});
+
+test("a player who crossed nobody's line first gets no count", () => {
+  const html = renderShowNow(event([FINISHED]), ROSTER, PLAYING);
+  expect([...html.matchAll(/class="firsts"/g)]).toHaveLength(1);
+  expect(html).toContain(`⚡1`);
+});
+
+test("the results badges carry no running total, since each round names its own", () => {
+  const html = renderRoundBeans(roundFieldsOf(FINISHED, ROSTER)[0]!);
+  expect(html).not.toContain("firsts");
+});

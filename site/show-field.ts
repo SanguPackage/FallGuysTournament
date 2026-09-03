@@ -15,10 +15,12 @@ function chip(player: FieldPlayer, detail = ""): string {
     player.crownRank === undefined
       ? ""
       : `<span class="rank"${title ? ` title="${title}"` : ""}>👑${player.crownRank}</span>`;
+  const firsts =
+    player.firsts === undefined ? "" : `<span class="firsts">⚡${player.firsts}</span>`;
   const first = player.wasFirst ? " first" : "";
   return `<button type="button" class="bn open-player ${player.state}${first}" data-player="${escapeHtml(
     player.fom,
-  )}">${mark}<b>${escapeHtml(player.ingame)}</b>${rank}${
+  )}">${mark}<b>${escapeHtml(player.ingame)}</b>${rank}${firsts}${
     detail ? `<small>${detail}</small>` : ""
   }</button>`;
 }

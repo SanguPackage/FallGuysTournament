@@ -33,13 +33,11 @@ function crownRank(row: LeaderboardRow): string {
 }
 
 /**
- * A player who never reported an in-game name is on no board, so their details would be one empty
- * row per show. They get no opener rather than a button that explains nothing.
+ * The mark that says a row opens. The row around it is the button, so it names nothing and takes
+ * no clicks of its own.
  */
-function opener(row: LeaderboardRow): string {
-  if (!row.ingame) return `<span class="look"></span>`;
-  return `<button type="button" class="look open-player" data-player="${escapeHtml(row.fom)}"
-          aria-label="Details for ${escapeHtml(row.fom)}">🔍</button>`;
+function look(row: LeaderboardRow): string {
+  return row.ingame ? `<span class="look" aria-hidden="true">🔍</span>` : `<span class="look"></span>`;
 }
 
 /** Second, first and third, so the tallest card sits in the middle. */
@@ -99,8 +97,8 @@ export function renderStandings(rows: LeaderboardRow[], movers: Set<string> = ne
       if (movers.has(row.fom)) classes.push("up");
       const penalty = row.penaltyPoints !== 0 ? ` · <span class="pen">${row.penaltyPoints}</span>` : "";
 
-      return `
-      <div class="${classes.join(" ")}">
+      if (row.ingame) classes.push("open-player");
+      const cells = `
         <span class="rk">${rank[index]}</span>
         <span class="who"><b>${escapeHtml(row.fom)}</b><small>${ingame(row)}${crownRank(row)}${penalty}</small></span>
         <span class="stats">
@@ -109,7 +107,16 @@ export function renderStandings(rows: LeaderboardRow[], movers: Set<string> = ne
           <span class="stat"><b>${row.finalsWon}</b><span>Wins</span></span>
         </span>
         <span class="pts">${row.points}</span>
-        ${opener(row)}
+        ${look(row)}`;
+
+      // A row is read out by name rather than by its every cell, which would be the whole line.
+      return row.ingame
+        ? `
+      <button type="button" class="${classes.join(" ")}" data-player="${escapeHtml(row.fom)}"
+        aria-label="Details for ${escapeHtml(row.fom)}">${cells}
+      </button>`
+        : `
+      <div class="${classes.join(" ")}">${cells}
       </div>`;
     })
     .join("");

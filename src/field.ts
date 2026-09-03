@@ -1,3 +1,4 @@
+import { SCORES_FIRST } from "./rounds";
 import type { Player, Show } from "./types";
 
 export type FieldState = "won" | "through" | "playing" | "out";
@@ -9,6 +10,12 @@ export interface FieldPlayer {
   crownRank?: number;
   /** Set only on the round this player crossed first. Race rounds only. */
   wasFirst?: boolean;
+  /**
+   * How many of the show's rounds this player crossed first, counted the way the leaderboard
+   * counts them. Only `fieldOf` fills it: a per-round badge sits on a round that already names
+   * its own first-crosser, so a running total there would say it twice.
+   */
+  firsts?: number;
   /** 1-based round they went out on. Only set when out. */
   outAt?: number;
 }
@@ -52,6 +59,12 @@ export function aliveInto(show: Show, roster: string[], roundIndex: number): str
 export function fieldOf(show: Show, players: Player[]): FieldPlayer[] {
   const roster = rosterOf(players);
 
+  const firsts = new Map<string, number>();
+  for (const round of show.rounds) {
+    if (!SCORES_FIRST.has(round.type) || !round.first) continue;
+    firsts.set(round.first, (firsts.get(round.first) ?? 0) + 1);
+  }
+
   const outAt = new Map<string, number>();
   let alive = new Set(roster.map((player) => player.ingame));
   for (const [index, round] of show.rounds.entries()) {
@@ -81,6 +94,7 @@ export function fieldOf(show: Show, players: Player[]): FieldPlayer[] {
       fom: player.fom,
       state,
       ...(player.crownRank === undefined ? {} : { crownRank: player.crownRank }),
+      ...(firsts.has(player.ingame) ? { firsts: firsts.get(player.ingame) } : {}),
       ...(state === "out" ? { outAt: round } : {}),
     };
   });

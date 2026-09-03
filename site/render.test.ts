@@ -133,6 +133,22 @@ test("a player with no in-game name has nothing to open", () => {
   expect(html).not.toContain("open-player");
 });
 
+test("the row itself is the button, so nothing is tacked onto its end", () => {
+  const html = renderStandings([row({ fom: "Ann", ingame: "Alpha" })]);
+  expect(html).toMatch(/<button type="button" class="row [^"]*open-player"/);
+  expect([...html.matchAll(/<button/g)]).toHaveLength(1);
+});
+
+test("a row that opens nothing is no button at all", () => {
+  expect(renderStandings([row({ fom: "Ann", ingame: undefined })])).not.toContain("<button");
+});
+
+test("the mark that says a row opens is left to the row to name", () => {
+  const html = renderStandings([row({ fom: "Ann", ingame: "Alpha" })]);
+  expect(html).toContain(`aria-label="Details for Ann"`);
+  expect(html).toContain(`<span class="look" aria-hidden="true">`);
+});
+
 test("names are escaped", () => {
   const html = renderStandings([row({ fom: "<script>", ingame: "A&B" })]);
   expect(html).not.toContain("<script>");
