@@ -126,26 +126,26 @@ nav [aria-current] {
 .lobby {
   margin-right: auto;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  align-items: baseline;
+  gap: 0.4rem;
   background: linear-gradient(160deg, var(--pink), var(--purple));
   border: 3px solid var(--ink);
-  border-radius: 12px;
+  border-radius: 8px;
   box-shadow: 0 4px 0 var(--ink);
-  padding: 0.15rem 0.85rem 0.2rem;
+  padding: 0.3rem 0.6rem 0.15rem;
 }
 
 .lobby[hidden] { display: none; }
 
 .lobby small {
-  font: 600 11px/1.2 "Barlow Condensed", sans-serif;
+  font: 600 14px/1 "Barlow Condensed", sans-serif;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #ffffffd6;
 }
 
 .lobby b {
-  font: 400 22px/1.1 "Bebas Neue", sans-serif;
+  font: 400 22px/1 "Bebas Neue", sans-serif;
   letter-spacing: 0.12em;
   color: var(--yellow);
 }

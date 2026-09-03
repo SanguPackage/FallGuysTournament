@@ -58,7 +58,7 @@ test("the title is escaped", () => {
 
 test("a lobby code is shown as a badge beside the event name, upper case", () => {
   const html = page({ ...RULES, lobbyCode: "abc123" });
-  expect(html).toContain("Lobby code");
+  expect(html).toContain("Lobby code:");
   expect(html).toContain(">ABC123<");
   expect(html).not.toContain(`class="lobby" hidden`);
 });
