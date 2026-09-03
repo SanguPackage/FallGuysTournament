@@ -6,8 +6,9 @@ export interface FieldPlayer {
   ingame: string;
   fom: string;
   state: FieldState;
-  /** 1-based rounds this player crossed first. */
-  firsts: number[];
+  crownRank?: number;
+  /** Set only on the round this player crossed first. Race rounds only. */
+  wasFirst?: boolean;
   /** 1-based round they went out on. Only set when out. */
   outAt?: number;
 }
@@ -22,17 +23,12 @@ function rosterOf(players: Player[]): Rostered[] {
   );
 }
 
-function firstsIn(show: Show): Map<string, number[]> {
-  const firsts = new Map<string, number[]>();
-  for (const [index, round] of show.rounds.entries()) {
-    if (!round.first) continue;
-    firsts.set(round.first, [...(firsts.get(round.first) ?? []), index + 1]);
-  }
-  return firsts;
-}
-
 function byState(a: FieldPlayer, b: FieldPlayer): number {
-  return ORDER[a.state] - ORDER[b.state] || a.ingame.localeCompare(b.ingame);
+  return (
+    ORDER[a.state] - ORDER[b.state] ||
+    Number(b.wasFirst ?? false) - Number(a.wasFirst ?? false) ||
+    a.ingame.localeCompare(b.ingame)
+  );
 }
 
 /**
@@ -65,7 +61,6 @@ export function fieldOf(show: Show, players: Player[]): FieldPlayer[] {
     alive = new Set([...alive].filter((name) => through.has(name)));
   }
 
-  const firsts = firstsIn(show);
   const winners = new Set(show.winners ?? []);
   const finished = winners.size > 0;
   const resolved = show.rounds.findLastIndex((round) => round.qualified !== undefined);
@@ -85,7 +80,7 @@ export function fieldOf(show: Show, players: Player[]): FieldPlayer[] {
       ingame: player.ingame,
       fom: player.fom,
       state,
-      firsts: firsts.get(player.ingame) ?? [],
+      ...(player.crownRank === undefined ? {} : { crownRank: player.crownRank }),
       ...(state === "out" ? { outAt: round } : {}),
     };
   });
@@ -99,18 +94,18 @@ export function fieldOf(show: Show, players: Player[]): FieldPlayer[] {
  * still in and its casualties surface on the next round that was read.
  */
 export function roundFieldsOf(show: Show, players: Player[]): FieldPlayer[][] {
-  const firsts = firstsIn(show);
   const winners = new Set(show.winners ?? []);
-
-  const bean = (player: Rostered, state: FieldState): FieldPlayer => ({
-    ingame: player.ingame,
-    fom: player.fom,
-    state,
-    firsts: firsts.get(player.ingame) ?? [],
-  });
 
   let alive = rosterOf(players);
   return show.rounds.map((round) => {
+    const bean = (player: Rostered, state: FieldState): FieldPlayer => ({
+      ingame: player.ingame,
+      fom: player.fom,
+      state,
+      ...(player.crownRank === undefined ? {} : { crownRank: player.crownRank }),
+      ...(round.first === player.ingame ? { wasFirst: true } : {}),
+    });
+
     if (round.type === "final" && winners.size > 0) {
       // The finalists they beat are already placed on the round that sent them here, and a lone
       // winner is named in the round's own cell. Only a shared win needs badges to show the tie.

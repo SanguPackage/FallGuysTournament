@@ -32,8 +32,20 @@ test("a badge does not repeat the round it is sitting on", () => {
   expect(renderRoundBeans(roundFieldsOf(FINISHED, ROSTER)[0]!)).not.toContain("out R1");
 });
 
-test("rounds crossed first are marked on the badge", () => {
-  expect(renderRoundBeans(roundFieldsOf(SHARED, ROSTER)[1]!)).toContain("⚡1");
+test("the bean who crossed first wears a winner badge", () => {
+  const html = renderRoundBeans(roundFieldsOf(FINISHED, ROSTER)[0]!);
+  expect(html).toContain(`<span class="bn through first">⚡ <b>Alpha</b>`);
+  expect([...html.matchAll(/bn through first/g)]).toHaveLength(1);
+});
+
+test("a crown level rides along as a pill, and no pill without one", () => {
+  const roster: Player[] = [
+    { fom: "Alpha_FOM", ingame: "Alpha", crownRank: 50 },
+    { fom: "Bravo_FOM", ingame: "Bravo" },
+  ];
+  const html = renderRoundBeans(roundFieldsOf(FINISHED, roster)[0]!);
+  expect(html).toContain(`<span class="rank">👑50</span>`);
+  expect([...html.matchAll(/class="rank"/g)]).toHaveLength(1);
 });
 
 test("a round that took nobody renders nothing", () => {

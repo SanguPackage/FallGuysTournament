@@ -101,19 +101,29 @@ test("a finished show crowns its winners and leaves the finalists through", () =
   });
 });
 
-test("rounds crossed first are counted against the player", () => {
+test("the bean who crossed first leads its round and is marked", () => {
   const show: Show = {
     name: "Solos",
-    rounds: [
-      { map: "Dizzy Heights", type: "race", first: "Alpha" },
-      { map: "Tip Toe", type: "race", first: "Alpha" },
-      { map: "Hoopsie", type: "race", first: "Bravo" },
-    ],
+    rounds: [{ map: "Dizzy Heights", type: "race", first: "Delta", qualified: ["Alpha", "Delta"] }],
   };
-  const field = fieldOf(show, ROSTER);
-  expect(field.find((p) => p.ingame === "Alpha")?.firsts).toEqual([1, 2]);
-  expect(field.find((p) => p.ingame === "Bravo")?.firsts).toEqual([3]);
-  expect(field.find((p) => p.ingame === "Charlie")?.firsts).toEqual([]);
+  const beans = roundFieldsOf(show, ROSTER)[0]!;
+  expect(beans[0]?.ingame).toBe("Delta");
+  expect(beans[0]?.wasFirst).toBe(true);
+  expect(beans.filter((p) => p.wasFirst)).toHaveLength(1);
+});
+
+test("a badge carries the crown level of the player wearing it", () => {
+  const roster: Player[] = [
+    { fom: "Alpha_FOM", ingame: "Alpha", crownRank: 50 },
+    { fom: "Bravo_FOM", ingame: "Bravo" },
+  ];
+  const show: Show = { name: "Solos", rounds: [{ map: "Dizzy Heights", type: "race" }] };
+  const field = fieldOf(show, roster);
+  expect(field.find((p) => p.ingame === "Alpha")?.crownRank).toBe(50);
+  expect(field.find((p) => p.ingame === "Bravo")?.crownRank).toBeUndefined();
+  const beans = roundFieldsOf(show, roster)[0]!;
+  expect(beans.find((p) => p.ingame === "Alpha")?.crownRank).toBe(50);
+  expect(beans.find((p) => p.ingame === "Bravo")?.crownRank).toBeUndefined();
 });
 
 test("winners lead, then the living, then the out, alphabetically inside each", () => {
@@ -245,16 +255,6 @@ test("a round that took nobody greens the whole field", () => {
 
 test("a show with no rounds has no badge rows", () => {
   expect(roundFieldsOf({ name: "Solos", rounds: [] }, ROSTER)).toEqual([]);
-});
-
-test("a badge carries the rounds that player crossed first", () => {
-  const show: Show = {
-    name: "Solos",
-    rounds: [
-      { map: "Dizzy Heights", type: "race", first: "Delta", qualified: ["Alpha", "Bravo"] },
-    ],
-  };
-  expect(roundFieldsOf(show, ROSTER)[0]?.find((p) => p.ingame === "Delta")?.firsts).toEqual([1]);
 });
 
 test("who is still in going into a round is the roster minus every board before it", () => {

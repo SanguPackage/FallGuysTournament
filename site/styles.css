@@ -408,11 +408,23 @@ h2 {
 .bn b { font-weight: 800; }
 .bn small { font-size: 11px; font-weight: 800; opacity: 0.8; }
 
+.bn .rank {
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 999px;
+  padding: 0.05rem 0.35rem;
+  background: #ffd23f2e;
+  color: var(--yellow);
+}
+
 .bn.won { background: linear-gradient(#ffe27a, var(--yellow)); color: var(--ink); }
 .bn.through { background: #6ee78730; border-color: var(--lime); color: #fff; }
 .bn.playing { border-color: #ffffff2e; }
 .bn.out { background: #ff6b6b1c; border-color: #ff6b6b4d; color: #ffffff70; }
 .bn.out b { text-decoration: line-through; }
+.bn.first { background: linear-gradient(#ffe27a, var(--yellow)); border-color: var(--ink); color: var(--ink); }
+.bn.won .rank,
+.bn.first .rank { background: #2a15522e; color: var(--ink); }
 
 .shownow { margin-bottom: 1.6rem; }
 .shownow > header { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
