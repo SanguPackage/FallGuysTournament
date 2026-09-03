@@ -230,6 +230,20 @@ export function namesByPoints(event: TournamentEvent, players: Players): string[
     .sort((a, b) => (points.get(b) ?? 0) - (points.get(a) ?? 0) || a.localeCompare(b));
 }
 
+/**
+ * Everyone at the LAN who is playing, best scorer first. A reading the roster already claimed is
+ * corrected against the roster rather than against whoever a board happened to name, so this is
+ * what such a field offers — guests typed into a show are not among them.
+ */
+export function joinedNames(event: TournamentEvent, players: Players): string[] {
+  const joined = new Set(
+    players.players.flatMap((player) =>
+      player.ingame && !player.admin && player.joined !== false ? [player.ingame] : [],
+    ),
+  );
+  return namesByPoints(event, players).filter((name) => joined.has(name));
+}
+
 /** Which name field is being typed into, so the pool can be cut down to what could go in it. */
 export type NameSlot =
   | { slot: "first"; roundIndex: number }

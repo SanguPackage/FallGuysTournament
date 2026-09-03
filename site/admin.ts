@@ -13,6 +13,7 @@ import {
   draftFor,
   draftFromShow,
   everyPlayerNamed,
+  joinedNames,
   missingFrom,
   namesByPoints,
   ROUND_TYPES,
@@ -439,6 +440,62 @@ function resyncButton(forget: () => void): HTMLButtonElement {
 }
 
 /**
+ * One panel every name field shares, and what a `<datalist>` cannot be: the browser narrows a
+ * datalist by whatever the field already holds, so a field holding a reading to correct matches
+ * nothing and the list the admin most needs is the one that never opens.
+ */
+function pickerPanel(): HTMLElement {
+  return document.querySelector<HTMLElement>("#picker")!;
+}
+
+let pickFromPicker: ((name: string) => void) | undefined;
+
+function closePicker(): void {
+  const panel = pickerPanel();
+  panel.hidden = true;
+  panel.replaceChildren();
+  pickFromPicker = undefined;
+}
+
+function openPicker(input: HTMLInputElement, names: string[], pick: (name: string) => void): void {
+  if (names.length === 0) {
+    closePicker();
+    return;
+  }
+
+  const panel = pickerPanel();
+  pickFromPicker = pick;
+  panel.replaceChildren(
+    ...names.map((name) => {
+      const option = el("button", { type: "button", role: "option" }, [name]);
+      // Picking has to beat the blur that would otherwise close the panel out from under the click.
+      option.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+        pick(name);
+        closePicker();
+      });
+      return option;
+    }),
+  );
+
+  const box = input.getBoundingClientRect();
+  panel.style.left = `${box.left + window.scrollX}px`;
+  panel.style.top = `${box.bottom + window.scrollY}px`;
+  panel.style.minWidth = `${box.width}px`;
+  panel.hidden = false;
+}
+
+function movePicker(step: number): void {
+  const options = Array.from(pickerPanel().querySelectorAll<HTMLElement>("button"));
+  if (options.length === 0) return;
+  const at = options.findIndex((option) => option.classList.contains("active"));
+  const next = options[Math.min(Math.max(at + step, 0), options.length - 1)]!;
+  for (const option of options) option.classList.remove("active");
+  next.classList.add("active");
+  next.scrollIntoView({ block: "nearest" });
+}
+
+/**
  * The dropdown is filled on focus rather than up front: what could still go in a slot changes with
  * every name typed into the ones beside it, and none of that redraws the form.
  */
@@ -449,14 +506,67 @@ function nameInput(
   value: string,
   onChange: (value: string) => void,
 ): HTMLInputElement {
-  const input = el("input", { type: "text", list: "candidates", value, placeholder: "name" });
+  const input = el("input", { type: "text", value, placeholder: "name" });
   input.dataset.focusKey = key;
+
+  function forget(): void {
+    fillMemo.sources.delete(key);
+    fillMemo.unmatched.delete(key);
+    input.classList.remove("read", "unmatched");
+    input.removeAttribute("title");
+  }
+
+  /**
+   * A reading the roster claimed is corrected against the roster; anything else is unconfirmed, and
+   * the boards read so far are the better guide to who is still in.
+   */
+  function pool(): string[] {
+    return fillMemo.sources.has(key) && !fillMemo.unmatched.has(key)
+      ? joinedNames(state.event, state.players)
+      : candidatesFor(draft, knownNames(), slot);
+  }
+
+  function show(): void {
+    const names = pool();
+    // What the field arrived holding is the thing being replaced, so it narrows nothing until the
+    // admin types over it.
+    const typed = input.value.trim().toLowerCase();
+    const shown =
+      input.value === input.dataset.held
+        ? names
+        : names.filter((name) => name.toLowerCase().includes(typed));
+    openPicker(input, shown, (name) => {
+      input.value = name;
+      forget();
+      onChange(name);
+    });
+  }
+
   input.addEventListener("focus", () => {
-    const list = document.querySelector("#candidates")!;
-    list.replaceChildren(
-      ...candidatesFor(draft, knownNames(), slot).map((name) => el("option", { value: name })),
-    );
+    input.dataset.held = input.value;
+    show();
   });
+  input.addEventListener("blur", closePicker);
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closePicker();
+      return;
+    }
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      movePicker(event.key === "ArrowDown" ? 1 : -1);
+      return;
+    }
+    if (event.key === "Enter") {
+      const active = pickerPanel().querySelector<HTMLElement>("button.active");
+      if (!active) return;
+      event.preventDefault();
+      const name = active.textContent ?? "";
+      pickFromPicker?.(name);
+      closePicker();
+    }
+  });
+
   const source = fillMemo.sources.get(key);
   if (source && value) {
     // Everyone playing is registered, so text no roster entry claimed is a reading to check, not a
@@ -467,12 +577,11 @@ function nameInput(
       ? `Read from ${source}`
       : `Read from ${source}, but no player in players.json goes by this`;
   }
+
   input.addEventListener("input", () => {
-    fillMemo.sources.delete(key);
-    fillMemo.unmatched.delete(key);
-    input.classList.remove("read", "unmatched");
-    input.removeAttribute("title");
+    forget();
     onChange(input.value);
+    show();
   });
   return input;
 }

@@ -5,6 +5,7 @@ import {
   newFillMemo,
   defaultMessage,
   draftFor,
+  joinedNames,
   namesByPoints,
   resyncRound,
   resyncShow,
@@ -353,6 +354,19 @@ test("an admin name that found its way into a show is still kept out", () => {
     shows: [{ ...scored.shows[0]!, rounds: [{ map: "m", type: "race", first: "Referee" }] }],
   };
   expect(namesByPoints(withAdmin, roster)).not.toContain("Referee");
+});
+
+test("the joined list is the roster alone: a guest a show named is no player to correct against", () => {
+  const withGuest: TournamentEvent = {
+    ...scored,
+    shows: [{ ...scored.shows[0]!, rounds: [{ map: "m", type: "race", first: "Zulu" }] }],
+  };
+  expect(joinedNames(withGuest, roster)).toEqual(["Alpha", "Bravo", "Charlie", "Delta"]);
+});
+
+test("somebody who did not turn up is offered by neither list", () => {
+  const away: Players = { players: [...roster.players, { fom: "E", ingame: "Echo", joined: false }] };
+  expect(joinedNames(scored, away)).not.toContain("Echo");
 });
 
 test("a name typed into a show but never registered is still offered", () => {

@@ -271,3 +271,36 @@ input.unmatched {
 }
 
 #capture-frame { max-width: 480px; width: 100%; border-radius: 0.3rem; }
+
+/* Replaces the browser's own datalist popup, which cannot be made to show a list the field's
+   current text does not match. */
+.picker {
+  position: absolute;
+  z-index: 50;
+  max-height: 16rem;
+  overflow-y: auto;
+  padding: 0.15rem;
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+  background: var(--field);
+  box-shadow: 0 0.5rem 1.5rem #0009;
+}
+
+.picker button {
+  display: block;
+  width: 100%;
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  border-radius: 0.25rem;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.picker button:hover,
+.picker button.active {
+  background: color-mix(in srgb, var(--accent) 22%, var(--field));
+}
