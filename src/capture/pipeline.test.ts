@@ -120,18 +120,22 @@ test("a frame is pulled from the run folder its segment came from", async () => 
   }
 });
 
-test("a clip is cut with the streams copied, and named after the show", async () => {
+test("a clip is cut with the streams copied, into the folder of the show it is", async () => {
   const { dir, deps, ran } = await harness();
   const clip = { showIndex: 2, date: "2026-09-05", from: AT - 10_000, to: AT + 5_000 };
   const ledger = new Ledger();
   try {
-    const cut = await cutShowClip(clip, SEGMENTS, "show-03-slime-climb", ledger, {
+    const cut = await cutShowClip(clip, SEGMENTS, "2026-09-05-show-03-slime-climb", ledger, {
       ffmpeg: deps.ffmpeg,
       scratchDir: deps.scratchDir,
-      showsDir: `${dir}/shows`,
+      showsDir: deps.showsDir,
+      showDir: "show-2026-09-05T20h00-slime-climb-1",
       run: deps.run,
     });
-    expect(cut).toEqual({ out: `${dir}/shows/show-03-slime-climb.mp4`, gapped: false });
+    expect(cut).toEqual({
+      out: `${dir}/shows/show-2026-09-05T20h00-slime-climb-1/2026-09-05-show-03-slime-climb.mp4`,
+      gapped: false,
+    });
     expect(ran[0]).toContain("copy");
     expect(await Bun.file(`${dir}/scratch/clip-2.txt`).text()).toBe(
       "file 'C:\\temp\\FallGuysCapture\\segments\\2026-09-05T20h00m00\\seg-00003.mkv'\n",
@@ -155,7 +159,13 @@ test("a clip whose recording died inside it is cut anyway, and says so", async (
       split,
       "show-02-x",
       new Ledger(),
-      { ffmpeg: deps.ffmpeg, scratchDir: deps.scratchDir, showsDir: `${dir}/shows`, run: deps.run },
+      {
+        ffmpeg: deps.ffmpeg,
+        scratchDir: deps.scratchDir,
+        showsDir: deps.showsDir,
+        showDir: "show-2026-09-05T20h00-x-1",
+        run: deps.run,
+      },
     );
     expect(cut?.gapped).toBe(true);
   } finally {
@@ -175,7 +185,8 @@ test("a clip the segments do not cover yet is left pending", async () => {
       {
         ffmpeg: deps.ffmpeg,
         scratchDir: deps.scratchDir,
-        showsDir: `${dir}/shows`,
+        showsDir: deps.showsDir,
+        showDir: "show-2026-09-05T20h00-x-1",
         run: deps.run,
       },
     );

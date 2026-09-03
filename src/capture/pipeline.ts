@@ -118,6 +118,8 @@ export interface ClipDeps {
   ffmpeg: string;
   scratchDir: string;
   showsDir: string;
+  /** The folder of the show this clip is, relative to `showsDir`. */
+  showDir: string;
   run: (argv: string[]) => Promise<RunResult>;
 }
 
@@ -151,9 +153,11 @@ export async function cutShowClip(
   const list = `${deps.scratchDir}/clip-${clip.showIndex}.txt`;
   await mkdir(deps.scratchDir, { recursive: true });
   await Bun.write(list, concatList(parts.map((part) => toWindows(`${part.dir}/${part.file}`))));
-  await mkdir(deps.showsDir, { recursive: true });
 
-  const out = `${deps.showsDir}/${name}.mp4`;
+  const folder = `${deps.showsDir}/${deps.showDir}`;
+  await mkdir(folder, { recursive: true });
+
+  const out = `${folder}/${name}.mp4`;
   const result = await deps.run(
     cutArgv({
       ffmpeg: deps.ffmpeg,
