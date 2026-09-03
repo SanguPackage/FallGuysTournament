@@ -32,6 +32,16 @@ function crownRank(row: LeaderboardRow): string {
   return ` · <span class="crown-rank"${title ? ` title="${title}"` : ""}>👑${row.crownRank}</span>`;
 }
 
+/**
+ * A player who never reported an in-game name is on no board, so their details would be one empty
+ * row per show. They get no opener rather than a button that explains nothing.
+ */
+function opener(row: LeaderboardRow): string {
+  if (!row.ingame) return `<span class="look"></span>`;
+  return `<button type="button" class="look open-player" data-player="${escapeHtml(row.fom)}"
+          aria-label="Details for ${escapeHtml(row.fom)}">🔍</button>`;
+}
+
 /** Second, first and third, so the tallest card sits in the middle. */
 const PODIUM_ORDER = [1, 0, 2];
 
@@ -99,6 +109,7 @@ export function renderStandings(rows: LeaderboardRow[], movers: Set<string> = ne
           <span class="stat"><b>${row.finalsWon}</b><span>Wins</span></span>
         </span>
         <span class="pts">${row.points}</span>
+        ${opener(row)}
       </div>`;
     })
     .join("");

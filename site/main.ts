@@ -3,6 +3,7 @@ import { score } from "../src/scoring";
 import type { LeaderboardRow, Players, TournamentEvent } from "../src/types";
 import { renderField, renderPodium, renderStandings, renderStatus } from "./render";
 import { renderResults } from "./results";
+import { attachPlayerDialog } from "./player-dialog";
 import { renderShowNow } from "./show-field";
 import type { ShowInOrder } from "./rules";
 import { renderShowOrder } from "./rules";
@@ -82,12 +83,15 @@ function main(): void {
   const badge = document.querySelector<HTMLElement>("#live");
   if (!page || !target) return;
 
+  const dialog = attachPlayerDialog();
+
   let signature = "";
   let points = new Map<string, number>();
   let moverTimer: ReturnType<typeof setTimeout> | undefined;
 
   const paint = (data: Data, rows: LeaderboardRow[], movers: Set<string>): void => {
     target.innerHTML = render(page, data, rows, movers);
+    dialog?.refresh(data.event, data.players);
   };
 
   const poll = async (): Promise<void> => {

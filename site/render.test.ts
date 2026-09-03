@@ -122,6 +122,17 @@ test("a player with no in-game name yet is marked as pending", () => {
   expect(renderStandings([row({ fom: "Ann", ingame: undefined })])).toContain("pending");
 });
 
+test("every row opens that player's details", () => {
+  const html = renderStandings([row({ fom: "Ann", ingame: "Alpha" })]);
+  expect(html).toContain(`data-player="Ann"`);
+  expect(html).toContain("open-player");
+});
+
+test("a player with no in-game name has nothing to open", () => {
+  const html = renderStandings([row({ fom: "Ann", ingame: undefined })]);
+  expect(html).not.toContain("open-player");
+});
+
 test("names are escaped", () => {
   const html = renderStandings([row({ fom: "<script>", ingame: "A&B" })]);
   expect(html).not.toContain("<script>");

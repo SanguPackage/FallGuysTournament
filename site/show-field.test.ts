@@ -21,11 +21,16 @@ const FINISHED: Show = {
 
 const SHARED: Show = { ...FINISHED, winners: ["Alpha", "Bravo"] };
 
+test("each badge names the player it opens the details of", () => {
+  const rounds = roundFieldsOf(FINISHED, ROSTER);
+  expect(renderRoundBeans(rounds[0]!)).toContain(`data-player="Alpha_FOM"`);
+});
+
 test("each badge carries its state as a class", () => {
   const rounds = roundFieldsOf(SHARED, ROSTER);
-  expect(renderRoundBeans(rounds[0]!)).toContain(`class="bn out"`);
-  expect(renderRoundBeans(rounds[0]!)).toContain(`class="bn through"`);
-  expect(renderRoundBeans(rounds[1]!)).toContain(`class="bn won"`);
+  expect(renderRoundBeans(rounds[0]!)).toContain(`class="bn open-player out"`);
+  expect(renderRoundBeans(rounds[0]!)).toContain(`class="bn open-player through"`);
+  expect(renderRoundBeans(rounds[1]!)).toContain(`class="bn open-player won"`);
 });
 
 test("a badge does not repeat the round it is sitting on", () => {
@@ -34,8 +39,8 @@ test("a badge does not repeat the round it is sitting on", () => {
 
 test("the bean who crossed first wears a winner badge", () => {
   const html = renderRoundBeans(roundFieldsOf(FINISHED, ROSTER)[0]!);
-  expect(html).toContain(`<span class="bn through first">⚡ <b>Alpha</b>`);
-  expect([...html.matchAll(/bn through first/g)]).toHaveLength(1);
+  expect(html).toContain(`class="bn open-player through first" data-player="Alpha_FOM">⚡ <b>Alpha</b>`);
+  expect([...html.matchAll(/bn open-player through first/g)]).toHaveLength(1);
 });
 
 test("a crown level rides along as a pill, and no pill without one", () => {
