@@ -1,4 +1,5 @@
 import { mkdir, readdir, rm, utimes } from "node:fs/promises";
+import { dirname } from "node:path";
 import { concatList, cutArgv, extractArgv } from "./command";
 import { captureFile } from "./layout";
 import { clipKey, momentKey, type Moment, type MomentKind, type ShowClip } from "./moments";
@@ -29,8 +30,6 @@ export interface CaptureDeps {
   ffmpeg: string;
   scratchDir: string;
   showsDir: string;
-  /** The folder of the show this moment belongs to, relative to `showsDir`. */
-  showDir: string;
   run: (argv: string[]) => Promise<RunResult>;
   frameOf: (path: string) => Promise<Frame>;
   screenOf: (frame: Frame) => Screen | undefined;
@@ -47,11 +46,14 @@ const SETTLE_MS = 90_000;
  * Pulls one moment's frames, keeps the few showing the screen it wanted, and files them under the
  * mtime of the instant each shows — which is what lets `placeShots` treat them as captures.
  *
- * Returns the paths kept, relative to the capture root. An empty return leaves the moment pending:
- * the segment holding it may simply not have closed yet.
+ * `showDir` is the show's folder name, relative to `showsDir`.
+ *
+ * Returns the paths kept, relative to `showsDir`. An empty return leaves the moment pending: the
+ * segment holding it may simply not have closed yet.
  */
 export async function captureMoment(
   moment: Moment,
+  showDir: string,
   segments: Segment[],
   ledger: Ledger,
   deps: CaptureDeps,
@@ -68,6 +70,7 @@ export async function captureMoment(
   const scratch = `${deps.scratchDir}/${key.replace(/:/g, "-")}`;
   await rm(scratch, { recursive: true, force: true });
   await mkdir(scratch, { recursive: true });
+  await mkdir(`${deps.showsDir}/${showDir}`, { recursive: true });
 
   try {
     const candidates: { path: string; at: number }[] = [];
@@ -98,8 +101,7 @@ export async function captureMoment(
     const chosen = await pick(candidates, WANTED[moment.kind], KEEP, deps.frameOf, deps.screenOf);
 
     for (const candidate of chosen) {
-      const relative = `${deps.showDir}/${captureFile(moment.kind, moment.roundNumber, kept.length + 1)}`;
-      await mkdir(`${deps.showsDir}/${deps.showDir}`, { recursive: true });
+      const relative = `${showDir}/${captureFile(moment.kind, moment.roundNumber, kept.length + 1)}`;
       await Bun.write(`${deps.showsDir}/${relative}`, Bun.file(candidate.path));
       const seconds = candidate.at / 1000;
       await utimes(`${deps.showsDir}/${relative}`, seconds, seconds);
@@ -118,8 +120,6 @@ export interface ClipDeps {
   ffmpeg: string;
   scratchDir: string;
   showsDir: string;
-  /** The folder of the show this clip is, relative to `showsDir`. */
-  showDir: string;
   run: (argv: string[]) => Promise<RunResult>;
 }
 
@@ -133,13 +133,15 @@ export interface ClipResult {
  * Cuts one show's mp4 out of the segments it spans. `-c copy`, so this is a file operation rather
  * than an encode; `-g` on the recording is what keeps the cut within about a second of `from`.
  *
+ * `file` is the clip's whole path relative to `showsDir`, without the `.mp4` extension.
+ *
  * A window with a hole in it is still cut. Refusing would spend the ledger's attempts and abandon
  * a show whose footage is on disk, and a clip that jumps is worth more than no clip.
  */
 export async function cutShowClip(
   clip: ShowClip,
+  file: string,
   segments: Segment[],
-  name: string,
   ledger: Ledger,
   deps: ClipDeps,
 ): Promise<ClipResult | undefined> {
@@ -154,10 +156,9 @@ export async function cutShowClip(
   await mkdir(deps.scratchDir, { recursive: true });
   await Bun.write(list, concatList(parts.map((part) => toWindows(`${part.dir}/${part.file}`))));
 
-  const folder = `${deps.showsDir}/${deps.showDir}`;
-  await mkdir(folder, { recursive: true });
+  const out = `${deps.showsDir}/${file}.mp4`;
+  await mkdir(dirname(out), { recursive: true });
 
-  const out = `${folder}/${name}.mp4`;
   const result = await deps.run(
     cutArgv({
       ffmpeg: deps.ffmpeg,
