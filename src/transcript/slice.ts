@@ -1,18 +1,11 @@
 import type { Entry } from "./transcript";
 
-/**
- * The lines of one show: `from` inclusive, `to` exclusive. A note carries no clock — it is the
- * server talking about itself, which belongs to the evening rather than to any show.
- */
+/** A line that belongs to a show. A note carries no clock, so it belongs to the evening instead. */
 export type ShowLine = Exclude<Entry, { kind: "note" }>;
 
-export function linesBetween<T extends Entry>(
-  entries: T[],
-  from: number,
-  to: number,
-): Exclude<T, { kind: "note" }>[] {
+/** The lines of one show: `from` inclusive, `to` exclusive. */
+export function linesBetween(entries: Entry[], from: number, to: number): ShowLine[] {
   return entries.filter(
-    (entry): entry is Exclude<T, { kind: "note" }> =>
-      entry.kind !== "note" && entry.at >= from && entry.at < to,
+    (entry): entry is ShowLine => entry.kind !== "note" && entry.at >= from && entry.at < to,
   );
 }
