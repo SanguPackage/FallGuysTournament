@@ -21,3 +21,11 @@ test("pills are stacked at a fixed pitch", async () => {
   const frame = await frameFrom("src/ocr/samples/toast.jpg");
   expect(pillBox(frame, 1).y - pillBox(frame, 0).y).toBe(30);
 });
+
+/**
+ * A pill on its way out goes translucent before it goes: the level's own colour reaches the body,
+ * where an opaque pill keeps it out. The yellow coming through is what the trophy test reads as gold.
+ */
+test("a pill faded far enough to show the level through it is not a toast", async () => {
+  expect(trophyPill(await frameFrom("fixtures/playing/auto-7-first-012223-5.jpg"))).toBeUndefined();
+});

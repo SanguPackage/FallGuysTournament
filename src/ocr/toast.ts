@@ -29,6 +29,18 @@ const GOLD_PIXELS = 40;
 const PILL_WHITE = 100;
 const PILL_PALE = 500;
 
+/**
+ * A pill on its way out goes translucent, and the level behind it reaches the body. The lozenge is
+ * never gold of its own, so gold there is the level showing through — which means the gold under
+ * the trophy is that same level, and says nothing about who finished first.
+ */
+const BODY_GOLD_SHARE = 0.05;
+
+/** The trophy's gold, and the only colour the pill body is read for. */
+function isGold(r: number, g: number, b: number): boolean {
+  return r > 190 && g > 140 && b < 110;
+}
+
 export function pillBox(frame: Frame, index: number): Box {
   return {
     x: Math.round(NAME_X * frame.width),
@@ -54,8 +66,7 @@ function goldCount(frame: Frame, index: number): number {
   let gold = 0;
   for (let y = box.y; y < box.y + box.h; y++) {
     for (let x = x0; x < x1; x++) {
-      const [r, g, b] = frame.at(x, y);
-      if (r > 190 && g > 140 && b < 110) gold += 1;
+      if (isGold(...frame.at(x, y))) gold += 1;
     }
   }
   return gold;
@@ -65,13 +76,17 @@ export function hasPill(frame: Frame, index: number): boolean {
   const box = pillBox(frame, index);
   let white = 0;
   let pale = 0;
+  let gold = 0;
   for (let y = box.y; y < box.y + box.h; y++) {
     for (let x = box.x; x < box.x + box.w; x++) {
-      const min = Math.min(...frame.at(x, y));
+      const rgb = frame.at(x, y);
+      const min = Math.min(...rgb);
       if (min > 200) white += 1;
       else if (min > 150) pale += 1;
+      if (isGold(...rgb)) gold += 1;
     }
   }
+  if (gold > box.w * box.h * BODY_GOLD_SHARE) return false;
   return white >= PILL_WHITE && pale >= PILL_PALE;
 }
 
