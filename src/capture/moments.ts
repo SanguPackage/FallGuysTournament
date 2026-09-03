@@ -62,10 +62,11 @@ function moment(
   showIndex: number,
   date: string,
   at: number,
-  roundNumber: number,
-  roundIndex?: number,
+  round: { index: number } | { final: number },
 ): Moment {
   const window = WINDOW[kind];
+  const roundIndex = "index" in round ? round.index : undefined;
+  const roundNumber = "index" in round ? round.index + 1 : round.final;
   return {
     kind,
     showIndex,
@@ -89,7 +90,7 @@ export function momentsIn(shows: ParsedShow[], date: string): Moment[] {
 
     span.firsts.forEach((at, roundIndex) => {
       if (at !== undefined)
-        moments.push(moment("first", showIndex, date, at, roundIndex + 1, roundIndex));
+        moments.push(moment("first", showIndex, date, at, { index: roundIndex }));
     });
 
     // Round one is the only board that has the whole field on it, and only while it still reads
@@ -99,17 +100,17 @@ export function momentsIn(shows: ParsedShow[], date: string): Moment[] {
     // Held back until the round after it has loaded: `ends[0]` is the last result *so far*, so
     // while round one is still being played it walks forward with every qualifier.
     const opened = show.rounds.length > 1 ? span.ends[0] : undefined;
-    if (opened !== undefined) moments.push(moment("field", showIndex, date, opened, 1, 0));
+    if (opened !== undefined) moments.push(moment("field", showIndex, date, opened, { index: 0 }));
 
     // The board comes up after every round, so it only names finalists after the one before the
     // final. Same placement the capture panel uses.
     const before = show.rounds.length - 2;
     const boardAt = before >= 0 ? span.ends[before] : undefined;
     if (boardAt !== undefined)
-      moments.push(moment("finalists", showIndex, date, boardAt, before + 1, before));
+      moments.push(moment("finalists", showIndex, date, boardAt, { index: before }));
 
     if (span.wonAt !== undefined)
-      moments.push(moment("winner", showIndex, date, span.wonAt, show.rounds.length));
+      moments.push(moment("winner", showIndex, date, span.wonAt, { final: show.rounds.length }));
   });
 
   return moments.sort((a, b) => a.at - b.at);
