@@ -68,6 +68,13 @@ test("a player with no FOM name is caught, since it is their row on the board", 
   ]);
 });
 
+test("a crown rank typed as text is caught, since the board prints it as a number", () => {
+  expect(checkPlayers({ players: [{ fom: "Ann", crownRank: "45" }] })).toEqual([
+    "players[0].crownRank is not a number",
+  ]);
+  expect(checkPlayers({ players: [{ fom: "Ann", crownRank: 45 }] })).toEqual([]);
+});
+
 test("every problem in a file is reported at once, not just the first", () => {
   const broken = { name: 1, date: 2, shows: 3, penalties: 4 };
   expect(checkEvent(broken)).toHaveLength(4);

@@ -53,6 +53,8 @@ export interface Player {
   admin?: boolean;
   /** Absent or true for everyone playing. False keeps a registered no-show out of the tournament. */
   joined?: boolean;
+  /** The crown level beside their in-game name. Typed in by hand; nothing reads it off a capture. */
+  crownRank?: number;
 }
 
 export interface Players {

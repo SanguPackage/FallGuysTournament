@@ -233,6 +233,18 @@ function renderPlayers(): void {
       return input;
     };
 
+    const crown = () => {
+      const input = el("input", { type: "number", min: "0", step: "1", placeholder: "Crown" });
+      input.value = player.crownRank === undefined ? "" : String(player.crownRank);
+      input.addEventListener("input", () => {
+        const rank = Number(input.value);
+        if (input.value.trim() && Number.isFinite(rank)) player.crownRank = rank;
+        else delete player.crownRank;
+      });
+      input.dataset.focusKey = `player:${index}:crownRank`;
+      return input;
+    };
+
     /** Only the unusual answer is written, so the file stays quiet about everyone ordinary. */
     const flag = (key: "admin" | "joined", label: string, title: string, fallback: boolean) => {
       const box = el("input", { type: "checkbox", title });
@@ -256,6 +268,7 @@ function renderPlayers(): void {
       field("fom", "FOM name"),
       field("ingame", "Fall Guys name"),
       field("discord", "Discord"),
+      crown(),
       flag("joined", "joined", "Only players in the lobby are scored or offered as a name", true),
       flag("admin", "admin", "Admins are left off the leaderboard", false),
       remove,
@@ -267,6 +280,7 @@ function renderPlayers(): void {
       el("span", {}, ["FOM name"]),
       el("span", {}, ["Fall Guys name"]),
       el("span", {}, ["Discord"]),
+      el("span", {}, ["Crown"]),
       el("span", {}, ["Joined"]),
       el("span", {}, ["Admin"]),
       el("span", {}, []),

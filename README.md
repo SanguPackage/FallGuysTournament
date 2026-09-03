@@ -82,6 +82,13 @@ their FOM name; add `ingame` as people report theirs in the Discord channel.
 
 A player without an `ingame` shows on the leaderboard on zero and cannot be scored.
 
+`crownRank` is the crown level the game shows beside their in-game name, typed in by hand
+in the admin's Players tab:
+
+```json
+{ "fom": "Grumpy_Trout", "ingame": "GrumpyTrout294", "crownRank": 45 }
+```
+
 The admin runs the event instead of competing, and is marked so they stay off the
 leaderboard:
 
