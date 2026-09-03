@@ -5,17 +5,14 @@ import { readShot } from "../src/ocr/read";
 import { findScreenshotDir } from "../src/windows-path";
 
 /**
- * Scores the reader against boards read by eye, and the matcher against two rosters.
+ * Scores the reader against the boards `fixtures/manifest.json` names by eye, and the matcher
+ * against two rosters.
  *
  * `board` is the board's own names: the roster the matcher would face if exactly those players were
  * registered, and the number this script has always reported. `everyone` is
  * `data/ingame-names.txt`, every name the tournament has seen, which is the size of pool the event
  * really hands it — the same read now has strangers to be confused by.
  */
-
-interface Truth {
-  boards: Record<string, string[]>;
-}
 
 interface Manifest {
   files: Record<string, { names?: string[] }>;
@@ -41,18 +38,14 @@ function distance(a: string, b: string): number {
 
 const LATIN = /^[\x20-\x7E]+$/;
 
-const truth = (await Bun.file("data/ocr-truth.json").json()) as Truth;
 const manifest = (await Bun.file("fixtures/manifest.json").json()) as Manifest;
 const month = ((await Bun.file("data/event.json").json()) as { date: string }).date.slice(0, 7);
 
-// Boards named by eye in either place. `fixtures/manifest.json` carries the ones committed with the
-// picture, so they are scoreable on any machine; `data/ocr-truth.json` names captures that are not.
-const boards: [string, string[]][] = [
-  ...Object.entries(manifest.files).flatMap(([file, entry]): [string, string[]][] =>
-    entry.names ? [[`fixtures/${file}`, entry.names]] : [],
-  ),
-  ...Object.entries(truth.boards),
-];
+// Every board named by eye, each committed alongside the picture it names, so the score is the same
+// number on any machine.
+const boards = Object.entries(manifest.files).flatMap(([file, entry]): [string, string[]][] =>
+  entry.names ? [[`fixtures/${file}`, entry.names]] : [],
+);
 
 // A board cut out of the recording and one shot by hand are the same picture, so every root is
 // searched by the file's own name.
@@ -72,7 +65,7 @@ async function locate(file: string): Promise<string | undefined> {
 const everyone = mergeNames([], (await Bun.file("data/ingame-names.txt").text()).split("\n"));
 
 // Naming a board by eye is the slow part, so `--dump <file>` prints what the reader saw, in board
-// order, as a JSON array to correct and paste into data/ocr-truth.json.
+// order, as a JSON array to correct and paste into fixtures/manifest.json.
 const dump = process.argv.indexOf("--dump");
 if (dump !== -1) {
   const file = process.argv[dump + 1];

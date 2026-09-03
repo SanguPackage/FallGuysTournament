@@ -10,7 +10,9 @@ const OUT = "data/ingame-names.txt";
 
 const event = (await Bun.file("data/event.json").json()) as TournamentEvent;
 const players = (await Bun.file("data/players.json").json()) as Players;
-const truth = (await Bun.file("data/ocr-truth.json").json()) as { boards: Record<string, string[]> };
+const boards = (await Bun.file("fixtures/manifest.json").json()) as {
+  files: Record<string, { names?: string[] }>;
+};
 
 const existing = (await Bun.file(OUT).text().catch(() => "")).split("\n");
 // Names read off a screen by eye come in on stdin, which is where a show nobody typed into the
@@ -20,7 +22,7 @@ const found = [
   ...typed.split("\n"),
   ...namesIn(event),
   ...players.players.flatMap((player) => (player.ingame ? [player.ingame] : [])),
-  ...Object.values(truth.boards).flat(),
+  ...Object.values(boards.files).flatMap((entry) => entry.names ?? []),
 ];
 
 const names = mergeNames(existing, found);

@@ -1,5 +1,5 @@
 {
-  "note": "Screens from the FOM 2026 event and the 2026-09-02 test show, sorted by eye. `trophy` is the pill index trophyPill must return; `first` is who that pill names. `names` is the board read by eye, in board order. The 3840x2160 captures are there because every 1920x1080 measurement in the reader has to hold at both. `field-board` is the same board while its plate still reads REMAIN, before the eliminated cards flip to an X and lose their nameplates.",
+  "note": "Screens from the FOM 2026 event and the 2026-09-02 test show, sorted by eye. `trophy` is the pill index trophyPill must return; `first` is who that pill names. `names` is the board read by eye, in board order, and is the answer key scripts/ocr-score.ts scores the reading against. The 3840x2160 captures are there because every 1920x1080 measurement in the reader has to hold at both. `field-board` is the same board while its plate still reads REMAIN, before the eliminated cards flip to an X and lose their nameplates.",
   "folders": {
     "race-first": {
       "screen": "toast"
@@ -21,78 +21,65 @@
     }
   },
   "files": {
-    "race-first/FallGuys_client_game_we7SgVnzVx.jpg": {
-      "trophy": 1,
-      "first": "unknowen_11",
-      "qualified": "2/24"
-    },
-    "race-first/FallGuys_client_game_ybZWg3CkaX.jpg": {
-      "trophy": 0,
-      "first": "Sono_seas",
-      "qualified": "1/24"
-    },
-    "race-first/FallGuys_client_game_zP671UNFBg.png": {
-      "trophy": 0,
-      "first": "Farukayaz2609",
-      "qualified": "1/9",
-      "banner": true
-    },
-    "race-first/FallGuys_client_game_NU6RSpz3YV.jpg": {
-      "trophy": 4,
-      "first": "mil00000h",
-      "qualified": "5/11",
-      "banner": true
-    },
-    "race-first/FallGuys_client_game_EkwUNtGCAI.jpg": {
-      "trophy": 1,
-      "first": "mil00000h",
-      "qualified": "2/11",
-      "banner": true
-    },
-    "race-first/FallGuys_client_game_PjjZRjn3sc.png": {
-      "trophy": 1,
-      "first": "Serxav_9",
-      "qualified": "2/23",
-      "pauseMenu": true
-    },
-    "race-first/FallGuys_client_game_QW4uC83fZ1.jpg": {
-      "trophy": 0,
-      "first": "GHL_R4ffy",
-      "qualified": null,
-      "banner": true
-    },
-    "race-first/FallGuys_client_game_lZr34pKyKO.jpg": {
-      "trophy": 0,
-      "first": "S0rr0wsPray3rs15",
-      "qualified": "1/16",
-      "banner": true
-    },
-    "race-first/FallGuys_client_game_7MhRb2vy4Z.png": {
-      "trophy": 0,
-      "first": "unknowen_11",
-      "qualified": "1/15",
-      "banner": true
-    },
-    "race-first/NOT-a-race-wanner.png": {
-      "trophy": null,
-      "qualified": "0/9",
-      "banner": true
-    },
     "death/FallGuys_client_game_gYKiCBTUFe.jpg": {
       "died": "Farukayaz2609",
       "eliminatedCount": "1/8"
     },
-    "victory/FallGuys_client_game_ekmlxMYdRM.jpg": {
-      "winner": "GHL_R4ffy"
+    "qualified-board/auto-7-finalists-005302-2.jpg": {
+      "names": [
+        "TTVWockyslush",
+        "i clip you baby",
+        "BigEj_2014",
+        "raaidshabbir1234",
+        "DCNJ1234",
+        "not_the_mama102",
+        "Died Farting",
+        "i_worrior_king",
+        "FatMan_Plays",
+        "LPSMarcus YT",
+        "HCurt223",
+        "Army1246",
+        "icon-copycat101",
+        "bodunde11",
+        "intenseTax24520",
+        "MuipanPC"
+      ]
     },
-    "victory/FallGuys_client_game_2B0hQQAAxV.jpg": {
-      "winner": "Diego_9942"
+    "qualified-board/FallGuys_client_game_2G6hW8ePEd.jpg": {
+      "names": [
+        "vaulted-rustle98",
+        "DustyCanidae7385",
+        "Axkiiin",
+        "MZ6_LM10",
+        "hishh95",
+        "TNT_ForsTFire",
+        "Aluuussaa",
+        "Farukayaz2609",
+        "Astra boxed you",
+        "ii-FoRcE-AiM-i",
+        "maz1320",
+        "ANASmj-345",
+        "shalaby_nino"
+      ]
     },
-    "race-first/FallGuys_client_game_xkXZBlBkFf.jpg": {
-      "trophy": 0,
-      "first": "McNugget Buddy",
-      "qualified": "1/21",
-      "size": "3840x2160"
+    "qualified-board/FallGuys_client_game_3ztjsDJfdF.jpg": {
+      "names": [
+        "The__Skibidi_Mon",
+        "boncuk_cat",
+        "alexdriv__10",
+        "pdalhome",
+        "Crissti__14",
+        "Falso_Brasileiro",
+        "Darkwin067",
+        "DarkRazou",
+        "T800_is_back",
+        "BigMooseLips",
+        "ΥΨΗΛΑΝΤΗΣ ΠΙΠΑΣ",
+        "BeatrizGamer_100",
+        "ΔΙΟΝΥΣΟΣ ΠΙΠΑΣ",
+        "rayvi5ion",
+        "Kotsovolis3250"
+      ]
     },
     "qualified-board/FallGuys_client_game_fxbNfcffFv.jpg": {
       "size": "3840x2160",
@@ -119,19 +106,6 @@
         "RapidHive505",
         "BEELEEx54"
       ]
-    },
-    "qualified-board/FallGuys_client_game_pEeZsVNRnk.jpg": {
-      "size": "3840x2160",
-      "names": [
-        "GiganticFlea4049",
-        "TyGraumann81",
-        "spibblej",
-        "YaminDavid"
-      ]
-    },
-    "victory/FallGuys_client_game_fztlHOmQ8v.jpg": {
-      "winner": "YaminDavid",
-      "size": "3840x2160"
     },
     "qualified-board/FallGuys_client_game_NZVl4PC1mk.png": {
       "size": "3840x2160",
@@ -162,25 +136,96 @@
         "mykyel972"
       ]
     },
-    "qualified-board/auto-7-finalists-005302-2.jpg": {
+    "qualified-board/FallGuys_client_game_pEeZsVNRnk.jpg": {
+      "size": "3840x2160",
       "names": [
-        "TTVWockyslush",
-        "i clip you baby",
-        "BigEj_2014",
-        "raaidshabbir1234",
-        "DCNJ1234",
-        "not_the_mama102",
-        "Died Farting",
-        "i_worrior_king",
-        "FatMan_Plays",
-        "LPSMarcus YT",
-        "HCurt223",
-        "Army1246",
-        "icon-copycat101",
-        "bodunde11",
-        "intenseTax24520",
-        "MuipanPC"
+        "GiganticFlea4049",
+        "TyGraumann81",
+        "spibblej",
+        "YaminDavid"
       ]
+    },
+    "qualified-board/FallGuys_client_game_UahxTntwJo.jpg": {
+      "names": [
+        "BigMooseLips",
+        "Darkwin067",
+        "ΥΨΗΛΑΝΤΗΣ ΠΙΠΑΣ",
+        "ΔΙΟΝΥΣΙΟΣ ΠΙΠΑΣ",
+        "Falso_Brasileiro"
+      ]
+    },
+    "race-first/FallGuys_client_game_7MhRb2vy4Z.png": {
+      "trophy": 0,
+      "first": "unknowen_11",
+      "qualified": "1/15",
+      "banner": true
+    },
+    "race-first/FallGuys_client_game_EkwUNtGCAI.jpg": {
+      "trophy": 1,
+      "first": "mil00000h",
+      "qualified": "2/11",
+      "banner": true
+    },
+    "race-first/FallGuys_client_game_lZr34pKyKO.jpg": {
+      "trophy": 0,
+      "first": "S0rr0wsPray3rs15",
+      "qualified": "1/16",
+      "banner": true
+    },
+    "race-first/FallGuys_client_game_NU6RSpz3YV.jpg": {
+      "trophy": 4,
+      "first": "mil00000h",
+      "qualified": "5/11",
+      "banner": true
+    },
+    "race-first/FallGuys_client_game_PjjZRjn3sc.png": {
+      "trophy": 1,
+      "first": "Serxav_9",
+      "qualified": "2/23",
+      "pauseMenu": true
+    },
+    "race-first/FallGuys_client_game_QW4uC83fZ1.jpg": {
+      "trophy": 0,
+      "first": "GHL_R4ffy",
+      "qualified": null,
+      "banner": true
+    },
+    "race-first/FallGuys_client_game_we7SgVnzVx.jpg": {
+      "trophy": 1,
+      "first": "unknowen_11",
+      "qualified": "2/24"
+    },
+    "race-first/FallGuys_client_game_xkXZBlBkFf.jpg": {
+      "trophy": 0,
+      "first": "McNugget Buddy",
+      "qualified": "1/21",
+      "size": "3840x2160"
+    },
+    "race-first/FallGuys_client_game_ybZWg3CkaX.jpg": {
+      "trophy": 0,
+      "first": "Sono_seas",
+      "qualified": "1/24"
+    },
+    "race-first/FallGuys_client_game_zP671UNFBg.png": {
+      "trophy": 0,
+      "first": "Farukayaz2609",
+      "qualified": "1/9",
+      "banner": true
+    },
+    "race-first/NOT-a-race-wanner.png": {
+      "trophy": null,
+      "qualified": "0/9",
+      "banner": true
+    },
+    "victory/FallGuys_client_game_2B0hQQAAxV.jpg": {
+      "winner": "Diego_9942"
+    },
+    "victory/FallGuys_client_game_ekmlxMYdRM.jpg": {
+      "winner": "GHL_R4ffy"
+    },
+    "victory/FallGuys_client_game_fztlHOmQ8v.jpg": {
+      "winner": "YaminDavid",
+      "size": "3840x2160"
     }
   }
 }

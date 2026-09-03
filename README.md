@@ -245,7 +245,7 @@ does not bring the name back.
 the reading is scored against, and it only ever grows.
 
 ```bash
-bun run scripts/collect-names.ts              # from event.json, players.json and ocr-truth.json
+bun run scripts/collect-names.ts              # from event.json, players.json and the fixtures
 pbpaste | bun run scripts/collect-names.ts    # and whatever you read off a screen by eye
 ```
 
@@ -259,12 +259,26 @@ of testing outside the tournament.
 bun run scripts/ocr-score.ts
 ```
 
-Reads the boards listed in [data/ocr-truth.json](data/ocr-truth.json) — named by eye, in board
-order — and reports how many names come back exactly, the character error rate, and how many reach
-the right roster entry. That last number is the one to move: a board's own names stand in for the
-roster, so matching is measurable without a capture of the tournament.
+Reads the boards [fixtures/manifest.json](fixtures/manifest.json) gives `names` — read by eye, in
+board order — and reports how many names come back exactly, the character error rate, and how many
+reach the right roster entry against two rosters. That last pair is what to move:
 
-Captures are never committed, so a board the file names that is not on this machine is skipped.
+| Roster     | What it stands for                                                          |
+|------------|-----------------------------------------------------------------------------|
+| `board`    | The board's own names — a lobby where exactly those players were registered  |
+| `everyone` | `data/ingame-names.txt` — the size of pool the event really hands it         |
+
+Each board is committed next to the names it is scored against, so the numbers are the same on
+every machine. To name a new one, put the capture under `fixtures/` and let the reader do the
+typing:
+
+```bash
+bun run scripts/ocr-score.ts --dump auto-7-finalists-005302-2.jpg
+```
+
+It prints what the reader saw, in board order, ready to correct and paste into `manifest.json`. It
+looks under `fixtures/`, the auto-capture folder and ShareX, so a board still only on this machine
+can be dumped before it is committed.
 
 Not read: the lobby's **View Names** screen, whose nametags follow the beans around in 3D and
 overlap into pileups in a full lobby, any name not written in the Latin alphabet, and the board
