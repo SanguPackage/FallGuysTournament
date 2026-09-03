@@ -427,12 +427,22 @@ function renderShots(): void {
   applyScroll();
 }
 
+/** The server does the transcript; the browser is the only one who knows this happened. */
+function note(text: string): void {
+  void fetch("/api/note", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ text }),
+  }).catch(() => {});
+}
+
 /** Forgets what was read here, so the next render fills it again from the roster as it stands. */
-function resyncButton(forget: () => void): HTMLButtonElement {
+function resyncButton(what: string, forget: () => void): HTMLButtonElement {
   const button = el("button", { type: "button", class: "resync" }, ["Resync"]);
   button.title = "Drop the names read here and match them again, after a roster change";
   button.addEventListener("click", () => {
     forget();
+    note(`resync · ${what}`);
     render();
   });
   return button;
@@ -579,7 +589,13 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
       entry.qualified.some((_, slot) => fillMemo.sources.has(`${roundKey}:qualified:${slot}`));
 
     // `renderShowForm` applies the fills again, now against the roster as it stands.
-    if (read) cells.push(resyncButton(() => resyncRound(draft, index, roundIndex, fillMemo)));
+    if (read) {
+      cells.push(
+        resyncButton(`show ${index + 1} · round ${roundIndex + 1}`, () =>
+          resyncRound(draft, index, roundIndex, fillMemo),
+        ),
+      );
+    }
 
     // The final has no board of its own — the winner screen stands in — so it gets no block.
     if (entry.type !== "final") {
@@ -698,7 +714,7 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
         el("label", {}, [
           `Winners (${winners.length})`,
           ...(canResyncWinners(draft, index, fillMemo, winnerShots)
-            ? [resyncButton(() => resyncWinners(draft, index, fillMemo))]
+            ? [resyncButton(`show ${index + 1} · winners`, () => resyncWinners(draft, index, fillMemo))]
             : []),
         ]),
         el("div", { class: "names" }, [...winners, addWinner]),

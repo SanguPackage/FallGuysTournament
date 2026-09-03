@@ -33,8 +33,11 @@ function scaleFor(screen: Screen, box: Box): number {
 let worker: Worker | undefined;
 
 async function ocrWorker(): Promise<Worker> {
+  if (worker) return worker;
   // The model is ~15MB and fetched once. Kept outside node_modules so a reinstall does not bin it.
-  worker ??= await createWorker("eng", 1, { cachePath: ".ocr-cache" });
+  worker = await createWorker("eng", 1, { cachePath: ".ocr-cache" });
+  // Tesseract narrates its own guesswork on stderr, in red, at a volume that buries the transcript.
+  await worker.setParameters({ debug_file: "/dev/null" });
   return worker;
 }
 
