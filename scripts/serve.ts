@@ -95,22 +95,21 @@ async function rootFor(source: ShotSource): Promise<string | undefined> {
   return findScreenshotDir();
 }
 
-/** Screenshots are a reading aid: a missing or unreadable folder must not stop the admin loading. */
+/**
+ * Screenshots are a reading aid: a missing or unreadable folder must not stop the admin loading,
+ * and one unreadable root must not cost the other.
+ */
 async function placed(dir: string | undefined, shows: ParsedShow[], date: string) {
   const shots: Shot[] = [];
   if (dir) {
     try {
       shots.push(...(await listShots(dir, date.slice(0, 7))));
-    } catch {
-      // One unreadable root must not cost the other.
-    }
+    } catch {}
   }
   if (RECORD) {
     try {
       shots.push(...(await listShowShots(folders.shows, date)));
-    } catch {
-      // One unreadable root must not cost the other.
-    }
+    } catch {}
   }
   try {
     return placeShots(shots, shows, date);
@@ -160,15 +159,15 @@ async function openTranscript(date: string): Promise<void> {
   for (const line of waitingForFile.splice(0)) transcriptFile(line);
 }
 
-/** The evening's lines, which the per-show transcripts are cut from on every sweep. */
-const entries: Entry[] = [];
+/** The per-show transcripts are cut from these on every sweep. */
+const eveningLines: Entry[] = [];
 
 const transcript = new Transcript({
   level: LEVEL,
   colour: process.stdout.isTTY === true,
   out: (text) => console.log(text),
   file: (text) => (transcriptFile ? transcriptFile(text) : waitingForFile.push(text)),
-  tap: (line) => entries.push(line),
+  tap: (line) => eveningLines.push(line),
 });
 
 const reporter = new Reporter();
@@ -335,8 +334,12 @@ async function recordingFrame(): Promise<string | undefined> {
   return out;
 }
 
-/** Lines each show's transcript was last written with, so an unchanged one is not rewritten. */
-const transcriptLines = new Map<string, number>();
+/**
+ * What each show's transcript was last written with. Comparing the whole text rather than a count:
+ * a show's window closes when the next one starts, so a sweep can drop lines off the end while a
+ * late arrival adds one inside, and a count that lands back where it was would skip the rewrite.
+ */
+const transcriptWritten = new Map<string, string>();
 
 /**
  * Rewritten rather than appended: a line can land long after the show it belongs to — an OCR read,
@@ -344,13 +347,14 @@ const transcriptLines = new Map<string, number>();
  */
 async function writeShowTranscripts(onDisk: ShowFolder[]): Promise<void> {
   for (const show of onDisk) {
-    const lines = linesBetween(entries, show.from, show.to);
-    if (lines.length === 0 || transcriptLines.get(show.dir) === lines.length) continue;
+    const lines = linesBetween(eveningLines, show.from, show.to);
+    if (lines.length === 0) continue;
+    const text = `${lines.map((line) => formatLine(line)).join("\n")}\n`;
+    if (transcriptWritten.get(show.dir) === text) continue;
     const folder = `${folders.shows}/${show.dir}`;
     await mkdir(folder, { recursive: true });
-    const text = lines.map((line) => formatLine(line)).join("\n");
-    await Bun.write(`${folder}/transcript.txt`, `${text}\n`);
-    transcriptLines.set(show.dir, lines.length);
+    await Bun.write(`${folder}/transcript.txt`, text);
+    transcriptWritten.set(show.dir, text);
   }
 }
 
