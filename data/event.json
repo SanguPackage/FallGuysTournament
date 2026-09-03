@@ -325,5 +325,6 @@
       "checked": true
     }
   ],
-  "penalties": []
+  "penalties": [],
+  "lobbyCode": "abc123"
 }
