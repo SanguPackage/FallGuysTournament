@@ -1,14 +1,19 @@
 /**
  * Fall Guys reference data published at https://sangu.be/fallguys/: the crowns each crown level
- * costs, and which levels have a clip page there to link a round's map to.
+ * costs, which levels have a clip page there to link a round's map to, and the game's own icon
+ * for each of them. Icons are copied into the repo rather than hotlinked, so the board still
+ * draws on a LAN with no way out.
  */
 const REPO = "https://github.com/SanguPackage/fallguys";
 const CROWNS_URL = "https://raw.githubusercontent.com/SanguPackage/fallguys/main/_data/crownlevels.yml";
 const LEVELS_URL = "https://api.github.com/repos/SanguPackage/fallguys/contents/_levels?per_page=200";
+const ICONS_URL = "https://api.github.com/repos/SanguPackage/fallguys/contents/img/levels?per_page=300";
 const OUT = "data/sangu.json";
+const ICON_DIR = "site/img/levels";
 
 const LEAST_LEVELS = 80;
 const LEAST_PAGES = 60;
+const LEAST_ICONS = 70;
 
 async function get(url: string): Promise<Response> {
   const response = await fetch(url, { headers: { accept: "application/vnd.github+json" } });
@@ -65,13 +70,38 @@ async function levelPages(): Promise<string[]> {
   return pages;
 }
 
+/** One icon per level, named for it, so `levelIcon` can go straight from a map name to a file. */
+async function levelIcons(): Promise<string[]> {
+  const entries = (await (await get(ICONS_URL)).json()) as { name: string; download_url: string }[];
+  const icons = entries.filter((entry) => entry.name.endsWith("-icon.png")).sort((a, b) => a.name.localeCompare(b.name));
+
+  if (icons.length < LEAST_ICONS) {
+    console.error(`Only ${icons.length} level icons found; img/levels moved or was renamed.`);
+    process.exit(1);
+  }
+
+  let drawn = 0;
+  for (const icon of icons) {
+    const path = `${ICON_DIR}/${icon.name}`;
+    if (await Bun.file(path).exists()) continue;
+    await Bun.write(path, await (await get(icon.download_url)).arrayBuffer());
+    drawn += 1;
+  }
+  if (drawn > 0) console.log(`Downloaded ${drawn} level icons to ${ICON_DIR}`);
+
+  return icons.map((icon) => icon.name.slice(0, -"-icon.png".length));
+}
+
 const body = {
   source: REPO,
   fetched: new Date().toISOString().slice(0, 10),
   crownLevels: await crownLevels(),
   levelPages: await levelPages(),
+  levelIcons: await levelIcons(),
 };
 await Bun.write(OUT, `${JSON.stringify(body, null, 2)}\n`);
-console.log(`Wrote ${body.crownLevels.length} crown levels and ${body.levelPages.length} level pages to ${OUT}`);
+console.log(
+  `Wrote ${body.crownLevels.length} crown levels, ${body.levelPages.length} level pages and ${body.levelIcons.length} icons to ${OUT}`,
+);
 
 export {};
