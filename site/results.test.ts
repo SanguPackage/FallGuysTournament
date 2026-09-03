@@ -37,7 +37,9 @@ test("a show numbers its rounds and names each map", () => {
 
 test("a race names who crossed first on the badge, not in the round line", () => {
   const html = renderResults([SOLOS], ROSTER);
-  expect(html).toMatch(/Dizzy Heights[\s\S]*?<span class="bn playing first">⚡ <b>Alpha<\/b>/);
+  expect(html).toMatch(
+    /Dizzy Heights[\s\S]*?<button type="button" class="bn open-player playing first" data-player="Alpha_FOM">⚡ <b>Alpha<\/b>/,
+  );
   expect(html).toMatch(/Dizzy Heights[\s\S]*?<span class="winner none"><\/span>/);
 });
 
@@ -53,10 +55,10 @@ test("a race still waiting for its winner is not mistaken for a round nobody can
 
 test("a show panel colours each round's badges", () => {
   const html = renderResults([{ ...SOLOS, winners: ["Alpha", "Bravo"] }], ROSTER);
-  expect(html).toContain(`class="bn playing"`);
-  expect(html).toContain(`class="bn through"`);
-  expect(html).toContain(`class="bn out"`);
-  expect(html).toContain(`class="bn won"`);
+  expect(html).toContain(`class="bn open-player playing"`);
+  expect(html).toContain(`class="bn open-player through"`);
+  expect(html).toContain(`class="bn open-player out"`);
+  expect(html).toContain(`class="bn open-player won"`);
 });
 
 test("a decided final counts winners rather than survivors", () => {
@@ -181,7 +183,7 @@ test("the log alone is enough to list the show being played", () => {
 test("nothing has been read for the show being played, so its field is still grey", () => {
   const html = renderResults([], ROSTER, NOW);
   // Three rounds, each greying the whole roster, because no board has been read for any of them.
-  expect([...html.matchAll(/class="bn playing"/g)]).toHaveLength(ROSTER.length * NOW.rounds.length);
+  expect([...html.matchAll(/class="bn open-player playing"/g)]).toHaveLength(ROSTER.length * NOW.rounds.length);
 });
 
 test("between rounds the rounds already loaded are still listed", () => {
@@ -226,7 +228,7 @@ test("the live show is drawn once, not once per source", () => {
 test("a round reds the players it knocked out", () => {
   const html = renderResults([SOLOS], ROSTER);
   // Charlie is on nobody's board, so Roll Out is where the roster lost them.
-  expect(html).toMatch(/Roll Out[\s\S]*?bn out[\s\S]*?Charlie/);
+  expect(html).toMatch(/Roll Out[\s\S]*?bn open-player out[\s\S]*?Charlie/);
 });
 
 test("the final badges nobody when one player won it", () => {
@@ -237,8 +239,8 @@ test("the final badges nobody when one player won it", () => {
 
 test("a shared win badges both winners, so the tie is visible", () => {
   const html = renderResults([{ ...SOLOS, winners: ["Alpha", "Bravo"] }], ROSTER);
-  expect(html).toMatch(/Fall Mountain[\s\S]*?bn won[\s\S]*?Alpha/);
-  expect(html).toMatch(/Fall Mountain[\s\S]*?bn won[\s\S]*?Bravo/);
+  expect(html).toMatch(/Fall Mountain[\s\S]*?bn open-player won[\s\S]*?Alpha/);
+  expect(html).toMatch(/Fall Mountain[\s\S]*?bn open-player won[\s\S]*?Bravo/);
 });
 
 test("a show no longer carries one field under all its rounds", () => {

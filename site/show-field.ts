@@ -12,9 +12,11 @@ function chip(player: FieldPlayer, detail = ""): string {
   const rank =
     player.crownRank === undefined ? "" : `<span class="rank">👑${player.crownRank}</span>`;
   const first = player.wasFirst ? " first" : "";
-  return `<span class="bn ${player.state}${first}">${mark}<b>${escapeHtml(player.ingame)}</b>${rank}${
+  return `<button type="button" class="bn open-player ${player.state}${first}" data-player="${escapeHtml(
+    player.fom,
+  )}">${mark}<b>${escapeHtml(player.ingame)}</b>${rank}${
     detail ? `<small>${detail}</small>` : ""
-  }</span>`;
+  }</button>`;
 }
 
 /** Badges for one round. The row already says which round it is, so the chips do not repeat it. */
