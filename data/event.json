@@ -101,6 +101,172 @@
       ],
       "winners": [],
       "checked": true
+    },
+    {
+      "name": "Solos 4",
+      "rounds": [
+        {
+          "map": "Tundra Run",
+          "type": "race",
+          "first": "mrsnrub999",
+          "qualified": [
+            "Alpha2000_54",
+            "dobackandhuff",
+            "Baked Bagels",
+            "BejoCed",
+            "Kopljage 8541",
+            "EvilEmma176475",
+            "Ayo_Mushu",
+            "astroflyer20",
+            "GrumpyTrout294",
+            "MasterKiller64X",
+            "mrsnrub999",
+            "SeparateEye7180",
+            "Ikay_babyb6",
+            "HuN1ErBeAr02z4",
+            "FAlexonyGames",
+            "Made _teon",
+            "FLACO_XR",
+            "MUPPERTHEPUPPET",
+            "BeckitoBurrito",
+            "JessDeuxit",
+            "princely-scalar2",
+            "Justicel0324",
+            "Sylbel81"
+          ],
+          "survivors": 23
+        },
+        {
+          "map": "Hoopsie Legends",
+          "type": "hunt",
+          "first": "SeparateEye7180",
+          "qualified": [
+            "PRopfjager 3511",
+            "SeparateEye7180",
+            "ay _Yhbys6",
+            "FLACO_XR",
+            "BeckitoBurrito",
+            "dobackandhuff",
+            "BejoCed",
+            "GrumpyTrout294",
+            "BKopliager_8541",
+            "Ayo_Mushu",
+            "kK y_babybs",
+            "Baked Bagels",
+            "Sylbel81",
+            "EvilEmma176475",
+            "MasterKiller64X",
+            "JessDeuxit"
+          ],
+          "survivors": 16
+        },
+        {
+          "map": "Stompin' Ground",
+          "type": "survival",
+          "qualified": [
+            "GrumpyTrout294",
+            "SeparateEye7180",
+            "Sylbel81",
+            "FLACO_XR",
+            "astroflyer20",
+            "EvilEmma176475",
+            "Ayo_Mushu",
+            "MUPPERTHEPUPPET",
+            "Baked Bagels",
+            "MasterKiller64X",
+            "BejoCed",
+            "BeckitoBurrito",
+            "I kay_baby s",
+            "dobackandhuff",
+            "JessDeuxit"
+          ],
+          "survivors": 15
+        },
+        {
+          "map": "Thin Ice",
+          "type": "final"
+        }
+      ],
+      "winners": [
+        "BeckitoBurrito"
+      ],
+      "checked": true
+    },
+    {
+      "name": "Solos 5",
+      "rounds": [
+        {
+          "map": "Stompin' Ground",
+          "type": "survival",
+          "survivors": 13
+        },
+        {
+          "map": "Big Shots",
+          "type": "survival",
+          "survivors": 10
+        },
+        {
+          "map": "Jump Club",
+          "type": "survival",
+          "survivors": 7
+        },
+        {
+          "map": "Roll Off",
+          "type": "final"
+        }
+      ],
+      "winners": [],
+      "checked": true
+    },
+    {
+      "name": "Solos 6",
+      "rounds": [
+        {
+          "map": "Big Fans",
+          "type": "race",
+          "survivors": 24
+        },
+        {
+          "map": "Big Shots",
+          "type": "survival",
+          "survivors": 17
+        },
+        {
+          "map": "Roll Out",
+          "type": "final"
+        }
+      ],
+      "winners": [],
+      "checked": true
+    },
+    {
+      "name": "Solos 7",
+      "rounds": [
+        {
+          "map": "Track Attack",
+          "type": "race",
+          "first": "Died Farting",
+          "survivors": 22
+        },
+        {
+          "map": "Tail Tag",
+          "type": "hunt",
+          "survivors": 16
+        },
+        {
+          "map": "Blastlantis",
+          "type": "survival",
+          "survivors": 12
+        },
+        {
+          "map": "Hex-A-Gone",
+          "type": "final"
+        }
+      ],
+      "winners": [
+        "TTVWockyslush"
+      ],
+      "checked": true
     }
   ],
   "penalties": []
