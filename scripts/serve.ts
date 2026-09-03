@@ -348,8 +348,8 @@ async function sweepCaptures(): Promise<void> {
 
   for (const moment of momentsIn(shows, day)) {
     if (!ledger.pending(momentKey(moment))) continue;
-    captureJobs.add(async () => {
-      await captureMoment(moment, segments, ledger, {
+    captureJobs.add(momentKey(moment), async () => {
+      await captureMoment(moment, await segmentsNow(), ledger, {
         ffmpeg: capture.ffmpeg!,
         scratchDir: folders.scratch,
         captureDir: folders.captures,
@@ -364,8 +364,8 @@ async function sweepCaptures(): Promise<void> {
   for (const clip of showClips(shows, day)) {
     if (!ledger.pending(clipKey(clip))) continue;
     const name = clipName(shows, clip.showIndex, day);
-    captureJobs.add(async () => {
-      const cut = await cutShowClip(clip, segments, name, ledger, {
+    captureJobs.add(clipKey(clip), async () => {
+      const cut = await cutShowClip(clip, await segmentsNow(), name, ledger, {
         ffmpeg: capture.ffmpeg!,
         scratchDir: folders.scratch,
         showsDir: folders.shows,

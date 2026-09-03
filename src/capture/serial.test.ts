@@ -12,8 +12,8 @@ test("jobs run one at a time, in the order they were added", async () => {
     order.push(name);
     running -= 1;
   };
-  serial.add(job("a"));
-  serial.add(job("b"));
+  serial.add("a", job("a"));
+  serial.add("b", job("b"));
   await serial.drained();
   expect(order).toEqual(["a", "b"]);
 });
@@ -21,10 +21,10 @@ test("jobs run one at a time, in the order they were added", async () => {
 test("a job that throws does not stop the next", async () => {
   const done: string[] = [];
   const serial = new Serial();
-  serial.add(async () => {
+  serial.add("boom", async () => {
     throw new Error("nope");
   });
-  serial.add(async () => {
+  serial.add("after", async () => {
     done.push("after");
   });
   await serial.drained();
@@ -34,13 +34,53 @@ test("a job that throws does not stop the next", async () => {
 test("adding to an idle queue starts it again", async () => {
   const serial = new Serial();
   let ran = 0;
-  serial.add(async () => {
+  serial.add("a", async () => {
     ran += 1;
   });
   await serial.drained();
-  serial.add(async () => {
+  serial.add("a", async () => {
     ran += 1;
   });
+  await serial.drained();
+  expect(ran).toBe(2);
+});
+
+test("a key already waiting is not queued twice", async () => {
+  const serial = new Serial();
+  let ran = 0;
+  const job = async () => {
+    await Bun.sleep(1);
+    ran += 1;
+  };
+  serial.add("blocker", job);
+  serial.add("a", job);
+  serial.add("a", job);
+  await serial.drained();
+  expect(ran).toBe(2);
+});
+
+test("a key still running is not queued behind itself", async () => {
+  const serial = new Serial();
+  let ran = 0;
+  const job = async () => {
+    await Bun.sleep(1);
+    ran += 1;
+  };
+  serial.add("a", job);
+  serial.add("a", job);
+  await serial.drained();
+  expect(ran).toBe(1);
+});
+
+test("a key that has finished can be queued again", async () => {
+  const serial = new Serial();
+  let ran = 0;
+  const job = async () => {
+    ran += 1;
+  };
+  serial.add("a", job);
+  await serial.drained();
+  serial.add("a", job);
   await serial.drained();
   expect(ran).toBe(2);
 });
