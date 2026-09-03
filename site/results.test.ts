@@ -9,6 +9,11 @@ const ROSTER: Player[] = [
   { fom: "Charlie_FOM", ingame: "Charlie" },
 ];
 
+/** The badge in the panel's top right corner, crown or live marker. */
+function champ(html: string): string {
+  return html.match(/<span class="champ[\s\S]*?<\/span>/)?.[0] ?? "";
+}
+
 const SOLOS: Show = {
   name: "Solos",
   rounds: [
@@ -90,7 +95,27 @@ test("a final more than one player won says so in the plural", () => {
 });
 
 test("a finished show is crowned with its winners", () => {
-  expect(renderResults([{ ...SOLOS, winners: ["Alpha", "Bravo"] }], ROSTER)).toContain("Alpha &amp; Bravo");
+  const badge = champ(renderResults([{ ...SOLOS, winners: ["Alpha", "Bravo"] }], ROSTER));
+  expect(badge).toContain("Alpha");
+  expect(badge).toContain("&amp;");
+  expect(badge).toContain("Bravo");
+});
+
+test("the crown badge opens the winner's details", () => {
+  expect(champ(renderResults([SOLOS], ROSTER))).toBe(
+    `<span class="champ">\u{1F451} <button type="button" class="win open-player" data-player="Alpha">Alpha</button></span>`,
+  );
+});
+
+test("a shared win gives each name in the crown badge its own opener", () => {
+  const badge = champ(renderResults([{ ...SOLOS, winners: ["Alpha", "Bravo"] }], ROSTER));
+  expect([...badge.matchAll(/class="win open-player"/g)]).toHaveLength(2);
+  expect(badge).toContain(`data-player="Bravo"`);
+});
+
+test("the badge on a show still being played opens nothing", () => {
+  const show: Show = { name: "Roll Call", rounds: [{ map: "See Saw", type: "race" }] };
+  expect(champ(renderResults([show], ROSTER))).not.toContain("open-player");
 });
 
 test("the show still being played is marked as live rather than crowned", () => {

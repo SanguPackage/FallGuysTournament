@@ -395,6 +395,18 @@ button.row:hover .look, button.row:focus-visible .look { border-color: var(--yel
 }
 
 .show .champ.playing { background: var(--lime); }
+
+button.win {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+button.win:hover, button.win:focus-visible { color: var(--purple); }
+
 .show.live > .panel { border-color: var(--lime); box-shadow: 0 0 0 4px #6ee78726; }
 
 .rounds { display: flex; flex-direction: column; gap: 0.4rem; }

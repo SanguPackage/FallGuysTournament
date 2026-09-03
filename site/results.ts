@@ -33,6 +33,12 @@ function tallyCell(round: Round, show: Show): string {
   return `<span class="through">${round.survivors} through</span>`;
 }
 
+/** A name in the crown badge, opening the same details panel every badge on the page opens. */
+function opener(ingame: string): string {
+  const name = escapeHtml(ingame);
+  return `<button type="button" class="win open-player" data-player="${name}">${name}</button>`;
+}
+
 /**
  * `onScreen` is the 1-based round the log says is being played, which only the machine running
  * Fall Guys knows; `null` means nothing is loaded, or nothing is speaking for this show.
@@ -60,7 +66,7 @@ function renderShow(
     .join("");
 
   const badge = show.winners?.length
-    ? `<span class="champ">👑 ${show.winners.map(escapeHtml).join(" &amp; ")}</span>`
+    ? `<span class="champ">👑 ${show.winners.map(opener).join(" &amp; ")}</span>`
     : live
       ? `<span class="champ playing">● Playing now</span>`
       : "";
