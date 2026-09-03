@@ -131,3 +131,19 @@ test("a clip key names the event too", () => {
   const [clip] = showClips(parseLog(SHOW), DATE);
   expect(clipKey(clip!)).toBe(`${DATE}:0:clip`);
 });
+
+test("every moment carries the round number its file will be named for", () => {
+  const moments = momentsIn(parseLog(SHOW), DATE);
+  expect(moments.map((m) => [m.kind, m.roundNumber])).toEqual([
+    ["first", 1],
+    ["field", 1],
+    ["finalists", 1],
+    ["first", 2],
+    ["winner", 2],
+  ]);
+});
+
+test("the ledger's key does not change, so nothing already captured is pulled twice", () => {
+  const [first] = momentsIn(parseLog(SHOW), DATE);
+  expect(momentKey(first!)).toBe("2026-09-05:0:first:0");
+});

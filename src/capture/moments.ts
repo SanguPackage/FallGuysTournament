@@ -8,6 +8,8 @@ export interface Moment {
   showIndex: number;
   /** The round the moment belongs to. Absent on a winner, which belongs to the show. */
   roundIndex?: number;
+  /** The round the file is named for, from 1. A winner takes the final's. */
+  roundNumber: number;
   /** The event day. Without it a later event reads as already captured. */
   date: string;
   /** Epoch ms the log stamped the moment. */
@@ -60,6 +62,7 @@ function moment(
   showIndex: number,
   date: string,
   at: number,
+  roundNumber: number,
   roundIndex?: number,
 ): Moment {
   const window = WINDOW[kind];
@@ -67,6 +70,7 @@ function moment(
     kind,
     showIndex,
     ...(roundIndex === undefined ? {} : { roundIndex }),
+    roundNumber,
     date,
     at,
     from: at + window.from,
@@ -84,7 +88,8 @@ export function momentsIn(shows: ParsedShow[], date: string): Moment[] {
     const span = times[showIndex]!;
 
     span.firsts.forEach((at, roundIndex) => {
-      if (at !== undefined) moments.push(moment("first", showIndex, date, at, roundIndex));
+      if (at !== undefined)
+        moments.push(moment("first", showIndex, date, at, roundIndex + 1, roundIndex));
     });
 
     // Round one is the only board that has the whole field on it, and only while it still reads
@@ -94,15 +99,17 @@ export function momentsIn(shows: ParsedShow[], date: string): Moment[] {
     // Held back until the round after it has loaded: `ends[0]` is the last result *so far*, so
     // while round one is still being played it walks forward with every qualifier.
     const opened = show.rounds.length > 1 ? span.ends[0] : undefined;
-    if (opened !== undefined) moments.push(moment("field", showIndex, date, opened, 0));
+    if (opened !== undefined) moments.push(moment("field", showIndex, date, opened, 1, 0));
 
     // The board comes up after every round, so it only names finalists after the one before the
     // final. Same placement the capture panel uses.
     const before = show.rounds.length - 2;
     const boardAt = before >= 0 ? span.ends[before] : undefined;
-    if (boardAt !== undefined) moments.push(moment("finalists", showIndex, date, boardAt, before));
+    if (boardAt !== undefined)
+      moments.push(moment("finalists", showIndex, date, boardAt, before + 1, before));
 
-    if (span.wonAt !== undefined) moments.push(moment("winner", showIndex, date, span.wonAt));
+    if (span.wonAt !== undefined)
+      moments.push(moment("winner", showIndex, date, span.wonAt, show.rounds.length));
   });
 
   return moments.sort((a, b) => a.at - b.at);
