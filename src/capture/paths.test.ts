@@ -48,8 +48,13 @@ test("a CAPTURE_OUTPUT that is not a number falls back to the first monitor", as
   expect(settings.output).toBe(0);
 });
 
-test("the folders under the capture dir stay in WSL form", () => {
-  expect(captureFolders("/mnt/c/FallGuysCapture").segments).toBe("/mnt/c/FallGuysCapture/segments");
+test("the capture dir's folders are laid out under whatever root it has", () => {
+  const folders = captureFolders("/mnt/c/FallGuysCapture");
+  expect(folders).toEqual({
+    segments: "/mnt/c/FallGuysCapture/segments",
+    shows: "/mnt/c/FallGuysCapture/shows",
+    scratch: "/mnt/c/FallGuysCapture/scratch",
+  });
 });
 
 test("a run folder is named for the local clock, down to the second", () => {
