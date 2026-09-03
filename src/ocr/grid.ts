@@ -29,14 +29,12 @@ function bannerGreen(r: number, g: number, b: number): boolean {
   return g > 170 && g - r > 70 && g - b > 70;
 }
 
-/**
- * Whether the qualification board is on screen at all.
- *
- * The cells are fixed rectangles tested for green, which a green bean on pink slime satisfies just
- * as well as a qualified card does — so without this, ordinary gameplay reads as a board full of
- * qualifiers. The banner is the one part of the screen no level can imitate.
- */
-export function hasQualifiedBanner(frame: Frame): boolean {
+/** The same plate before the round settles, when it counts down instead of up. */
+function bannerPink(r: number, g: number, b: number): boolean {
+  return r > 170 && b > 170 && r - g > 70 && b - g > 70;
+}
+
+function bannerShare(frame: Frame, flat: (r: number, g: number, b: number) => boolean): number {
   const x0 = Math.round(BANNER.x * frame.width);
   const x1 = Math.round((BANNER.x + BANNER.w) * frame.width);
   const y0 = Math.round(BANNER.y * frame.height);
@@ -47,10 +45,30 @@ export function hasQualifiedBanner(frame: Frame): boolean {
   for (let y = y0; y < y1; y += 2) {
     for (let x = x0; x < x1; x += 2) {
       total += 1;
-      if (bannerGreen(...frame.at(x, y))) hit += 1;
+      if (flat(...frame.at(x, y))) hit += 1;
     }
   }
-  return total > 0 && hit / total >= BANNER_SHARE;
+  return total === 0 ? 0 : hit / total;
+}
+
+/**
+ * Whether the qualification board is on screen at all.
+ *
+ * The cells are fixed rectangles tested for green, which a green bean on pink slime satisfies just
+ * as well as a qualified card does — so without this, ordinary gameplay reads as a board full of
+ * qualifiers. The banner is the one part of the screen no level can imitate.
+ */
+export function hasQualifiedBanner(frame: Frame): boolean {
+  return bannerShare(frame, bannerGreen) >= BANNER_SHARE;
+}
+
+/**
+ * The board while its plate still reads "N REMAIN!". Every card is still a bean under its own
+ * nameplate; the eliminated only flip to a nameless X once the plate turns green. So this is the
+ * one screen in a show that names the whole field.
+ */
+export function hasRemainBanner(frame: Frame): boolean {
+  return bannerShare(frame, bannerPink) >= BANNER_SHARE;
 }
 
 export interface Card {

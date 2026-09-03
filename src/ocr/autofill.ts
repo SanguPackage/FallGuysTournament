@@ -36,6 +36,9 @@ export function fillsFor(
   for (const shot of shots) {
     const read = reads[shot.file];
     if (!read?.screen || shot.showIndex === undefined || read.tokens.length === 0) continue;
+    // Before the plate settles every card still wears a name, so this board would hand the whole
+    // lobby to `qualified`. It is kept to look at, never to fill from.
+    if (read.screen === "field") continue;
 
     // Only a show the admin has ticked off is read as complete: until then a board with half its
     // names typed in would drop the rest of the lobby out of the pool, answer key and all.

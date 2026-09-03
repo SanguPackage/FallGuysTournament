@@ -26,7 +26,7 @@ const CUTOFF = { grid: 190, winner: 190, toast: 195 } as const;
  */
 const TARGET_HEIGHT = { grid: 108, winner: 88, toast: 192 } as const;
 
-function scaleFor(screen: Screen, box: Box): number {
+function scaleFor(screen: keyof typeof TARGET_HEIGHT, box: Box): number {
   return Math.max(1, Math.round(TARGET_HEIGHT[screen] / box.h));
 }
 
@@ -70,6 +70,8 @@ export async function readShot(path: string): Promise<ShotRead> {
   const frame = await frameFrom(path);
   const screen = identify(frame);
   if (screen === undefined) return { tokens: [] };
+  // Worth filing and worth looking at, but never worth reading: see `Screen`.
+  if (screen === "field") return { screen, tokens: [] };
 
   if (screen === "grid") {
     const cards = qualifiedCards(frame);

@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { frameFrom } from "./frame";
-import { cardBox, hasQualifiedBanner, nameBand, qualifiedCards } from "./grid";
+import { cardBox, hasQualifiedBanner, hasRemainBanner, nameBand, qualifiedCards } from "./grid";
 
 test("the board counts exactly the cards the game says qualified", async () => {
   expect(qualifiedCards(await frameFrom("src/ocr/samples/grid-15.jpg")).length).toBe(15);
@@ -83,4 +83,20 @@ test("the name band is the same share of the capture at any size", async () => {
 
   expect(shares.map((s) => s.size)).toEqual(["3840x2160", "1920x1080"]);
   expect(shares[0]!.share).toBeCloseTo(shares[1]!.share, 3);
+});
+
+test("the plate reads REMAIN while the board still names everyone, and QUALIFIED once it does not", async () => {
+  const remaining = await frameFrom("fixtures/field-board/auto-4-field-232638-1.jpg");
+  expect(hasRemainBanner(remaining)).toBe(true);
+  expect(hasQualifiedBanner(remaining)).toBe(false);
+
+  const settled = await frameFrom("fixtures/qualified-board/FallGuys_client_game_fxbNfcffFv.jpg");
+  expect(hasRemainBanner(settled)).toBe(false);
+  expect(hasQualifiedBanner(settled)).toBe(true);
+});
+
+test("a level's own pinks are not a plate", async () => {
+  for (const file of ["lobby.jpg", "winner.jpg", "toast.jpg"]) {
+    expect(hasRemainBanner(await frameFrom(`src/ocr/samples/${file}`))).toBe(false);
+  }
 });

@@ -57,3 +57,13 @@ test(
   },
   120_000,
 );
+
+test(
+  "the unsettled board is named as one but not read",
+  async () => {
+    const read = await readShot("fixtures/field-board/auto-4-field-232638-1.jpg");
+    expect(read.screen).toBe("field");
+    expect(read.tokens).toEqual([]);
+  },
+  120_000,
+);
