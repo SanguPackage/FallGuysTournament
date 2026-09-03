@@ -113,6 +113,11 @@ test("a player who never reported a crown rank gets no crown at all", () => {
   expect(renderStandings([row({ fom: "Ann" })])).not.toContain("crown-rank");
 });
 
+test("a crown rank carries the crowns it stands for", () => {
+  const html = renderStandings([row({ fom: "Ann", ingame: "Alpha", crownRank: 45 })]);
+  expect(html).toContain(`title="Crown level 45 \u00b7 474\u2013503 crowns"`);
+});
+
 test("a player with no in-game name yet is marked as pending", () => {
   expect(renderStandings([row({ fom: "Ann", ingame: undefined })])).toContain("pending");
 });

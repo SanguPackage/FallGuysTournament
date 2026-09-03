@@ -8,6 +8,7 @@
     "cli": "bun run src/cli.ts",
     "build": "bun run scripts/build.ts",
     "rounds": "bun run scripts/fetch-rounds.ts",
+    "sangu": "bun run scripts/fetch-sangu.ts",
     "dev": "bun run scripts/serve.ts",
     "live": "bun run scripts/serve.ts --publish"
   },

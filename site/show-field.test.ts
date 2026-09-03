@@ -49,8 +49,14 @@ test("a crown level rides along as a pill, and no pill without one", () => {
     { fom: "Bravo_FOM", ingame: "Bravo" },
   ];
   const html = renderRoundBeans(roundFieldsOf(FINISHED, roster)[0]!);
-  expect(html).toContain(`<span class="rank">👑50</span>`);
+  expect(html).toContain(`👑50</span>`);
   expect([...html.matchAll(/class="rank"/g)]).toHaveLength(1);
+});
+
+test("a crown pill carries the crowns it stands for", () => {
+  const roster: Player[] = [{ fom: "Alpha_FOM", ingame: "Alpha", crownRank: 45 }];
+  const html = renderRoundBeans(roundFieldsOf(FINISHED, roster)[0]!);
+  expect(html).toContain(`title="Crown level 45 \u00b7 474\u2013503 crowns"`);
 });
 
 test("a round that took nobody renders nothing", () => {

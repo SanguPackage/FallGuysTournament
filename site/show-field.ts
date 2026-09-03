@@ -1,6 +1,7 @@
 import { fieldOf, type FieldPlayer } from "../src/field";
 import type { LiveStatus } from "../src/live";
 import type { Player, Show, TournamentEvent } from "../src/types";
+import { crownTitle } from "./crown";
 import { escapeHtml } from "./render";
 
 function outNote(player: FieldPlayer): string {
@@ -9,8 +10,11 @@ function outNote(player: FieldPlayer): string {
 
 function chip(player: FieldPlayer, detail = ""): string {
   const mark = player.state === "won" ? "👑 " : player.wasFirst ? "⚡ " : "";
+  const title = player.crownRank === undefined ? undefined : crownTitle(player.crownRank);
   const rank =
-    player.crownRank === undefined ? "" : `<span class="rank">👑${player.crownRank}</span>`;
+    player.crownRank === undefined
+      ? ""
+      : `<span class="rank"${title ? ` title="${title}"` : ""}>👑${player.crownRank}</span>`;
   const first = player.wasFirst ? " first" : "";
   return `<button type="button" class="bn open-player ${player.state}${first}" data-player="${escapeHtml(
     player.fom,
