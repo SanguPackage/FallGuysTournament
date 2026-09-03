@@ -79,19 +79,17 @@ function pointsOf(show: Show, ingame: string, finalist: boolean, won: boolean): 
 export function playerDetail(
   event: TournamentEvent,
   players: Players,
-  fom: string,
+  ingame: string,
 ): PlayerDetail | undefined {
-  const row = score(event, players).find((candidate) => candidate.fom === fom);
+  const row = score(event, players).find((candidate) => candidate.ingame === ingame);
   if (!row) return undefined;
 
-  const ingame = row.ingame;
   const shows = event.shows.map((show, index) => {
-    const won = ingame !== undefined && (show.winners ?? []).includes(ingame);
-    const finalist = ingame !== undefined && finalistsOf(show).includes(ingame);
-    const mine =
-      ingame === undefined
-        ? undefined
-        : fieldOf(show, players.players).find((player) => player.ingame === ingame);
+    const won = (show.winners ?? []).includes(ingame);
+    const finalist = finalistsOf(show).includes(ingame);
+    const mine = !ingame
+      ? undefined
+      : fieldOf(show, players.players).find((player) => player.ingame === ingame);
 
     // A show typed in short leaves its last round unresolved, which `fieldOf` reads as open. Only
     // the show on the wall can still be holding anyone; every earlier one is simply over.
@@ -108,8 +106,8 @@ export function playerDetail(
       number: index + 1,
       name: show.name,
       placing,
-      cells: ingame === undefined ? [] : cellsOf(show, players, ingame, finalist, won),
-      points: ingame === undefined ? 0 : pointsOf(show, ingame, finalist, won),
+      cells: ingame ? cellsOf(show, players, ingame, finalist, won) : [],
+      points: ingame ? pointsOf(show, ingame, finalist, won) : 0,
     };
   });
 

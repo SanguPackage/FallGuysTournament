@@ -55,7 +55,7 @@ test("a map sangu.be has no page for keeps its name and gains no link", () => {
 test("a race names who crossed first on the badge, not in the round line", () => {
   const html = renderResults([SOLOS], ROSTER);
   expect(html).toMatch(
-    /Dizzy Heights[\s\S]*?<button type="button" class="bn open-player playing first" data-player="Alpha_FOM">⚡ <b>Alpha<\/b>/,
+    /Dizzy Heights[\s\S]*?<button type="button" class="bn open-player playing first" data-player="Alpha">⚡ <b>Alpha<\/b>/,
   );
   expect(html).toMatch(/Dizzy Heights[\s\S]*?<span class="winner none"><\/span>/);
 });

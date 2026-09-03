@@ -226,7 +226,7 @@ function renderPlayers(): void {
       });
       input.addEventListener("input", () => {
         const value = input.value.trim();
-        if (key === "fom") player.fom = value;
+        if (key === "ingame") player.ingame = value;
         else if (value) player[key] = value;
         else delete player[key];
         if (key === "ingame") refreshDatalists();
@@ -267,8 +267,8 @@ function renderPlayers(): void {
     });
 
     return el("div", { class: "player-row" }, [
-      field("fom", "FOM name"),
       field("ingame", "Fall Guys name"),
+      field("fom", "FOM name"),
       field("discord", "Discord"),
       crown(),
       flag("joined", "joined", "Only players in the lobby are scored or offered as a name", true),
@@ -279,8 +279,8 @@ function renderPlayers(): void {
 
   target.replaceChildren(
     el("div", { class: "player-row head" }, [
-      el("span", {}, ["FOM name"]),
       el("span", {}, ["Fall Guys name"]),
+      el("span", {}, ["FOM name"]),
       el("span", {}, ["Discord"]),
       el("span", {}, ["Crown"]),
       el("span", {}, ["Joined"]),
@@ -1069,7 +1069,7 @@ async function main(): Promise<void> {
   );
 
   document.querySelector("#add-player")!.addEventListener("click", () => {
-    state.players.players.push({ fom: "" });
+    state.players.players.push({ ingame: "" });
     renderPlayers();
   });
 

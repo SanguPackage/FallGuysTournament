@@ -47,11 +47,11 @@ async function commit(message: string, noCommit: boolean): Promise<void> {
 }
 
 function printBoard(rows: LeaderboardRow[]): void {
-  const header = ["#", "FOM", "In-game", "Pts", "Races", "Finals", "Wins"];
+  const header = ["#", "In-game", "FOM", "Pts", "Races", "Finals", "Wins"];
   const body = rows.map((row, index) => [
     String(index + 1),
-    row.fom,
-    row.ingame ?? "—",
+    row.ingame || "—",
+    row.fom ?? "—",
     String(row.points),
     String(row.raceWins),
     String(row.finalsReached),

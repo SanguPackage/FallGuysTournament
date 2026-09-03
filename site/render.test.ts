@@ -35,7 +35,7 @@ const ORDER: ShowInOrder[] = [
 test("the podium shows second, first and third in that order", () => {
   const html = renderPodium(FIELD);
   const names = [...html.matchAll(/class="nm">([^<]+)</g)].map((m) => m[1]);
-  expect(names).toEqual(["Bob", "Ann", "Cid"]);
+  expect(names).toEqual(["Bravo", "Alpha", "Charlie"]);
 });
 
 test("only the podium winner is crowned", () => {
@@ -77,10 +77,10 @@ test("a field of three or fewer renders nothing", () => {
 });
 
 test("players who just scored are marked as movers", () => {
-  const cards = renderField(FIELD, new Set(["Dee"])).split(`<div class="card`).slice(1);
-  expect(cards[0]).toContain("Dee");
+  const cards = renderField(FIELD, new Set(["Delta"])).split(`<div class="card`).slice(1);
+  expect(cards[0]).toContain("Delta");
   expect(cards[0]).toContain("up");
-  expect(cards[1]).toContain("Eve");
+  expect(cards[1]).toContain("Echo");
   expect(cards[1]).not.toContain("up");
 });
 
@@ -104,7 +104,7 @@ test("a penalty is spelled out under the name", () => {
   expect(html).toContain("-2");
 });
 
-test("a crown rank is shown beside the in-game name", () => {
+test("a crown rank is shown beside the FOM name", () => {
   const html = renderStandings([row({ fom: "Ann", ingame: "Alpha", crownRank: 50 })]);
   expect(html).toContain("\u{1F451}50");
 });
@@ -119,17 +119,17 @@ test("a crown rank carries the crowns it stands for", () => {
 });
 
 test("a player with no in-game name yet is marked as pending", () => {
-  expect(renderStandings([row({ fom: "Ann", ingame: undefined })])).toContain("pending");
+  expect(renderStandings([row({ fom: "Ann", ingame: "" })])).toContain("pending");
 });
 
 test("every row opens that player's details", () => {
   const html = renderStandings([row({ fom: "Ann", ingame: "Alpha" })]);
-  expect(html).toContain(`data-player="Ann"`);
+  expect(html).toContain(`data-player="Alpha"`);
   expect(html).toContain("open-player");
 });
 
 test("a player with no in-game name has nothing to open", () => {
-  const html = renderStandings([row({ fom: "Ann", ingame: undefined })]);
+  const html = renderStandings([row({ fom: "Ann", ingame: "" })]);
   expect(html).not.toContain("open-player");
 });
 
@@ -140,13 +140,36 @@ test("the row itself is the button, so nothing is tacked onto its end", () => {
 });
 
 test("a row that opens nothing is no button at all", () => {
-  expect(renderStandings([row({ fom: "Ann", ingame: undefined })])).not.toContain("<button");
+  expect(renderStandings([row({ fom: "Ann", ingame: "" })])).not.toContain("<button");
 });
 
 test("the mark that says a row opens is left to the row to name", () => {
   const html = renderStandings([row({ fom: "Ann", ingame: "Alpha" })]);
-  expect(html).toContain(`aria-label="Details for Ann"`);
+  expect(html).toContain(`aria-label="Details for Alpha"`);
   expect(html).toContain(`<span class="look" aria-hidden="true">`);
+});
+
+test("the in-game name is the name on the row, with the FOM name under it", () => {
+  const html = renderStandings([row({ fom: "Ann", ingame: "Alpha" })]);
+  expect(html).toContain("<b>Alpha</b>");
+  expect(html).toContain("<small>Ann");
+});
+
+test("a player with no FOM name shows their in-game name and nothing under it", () => {
+  const html = renderStandings([row({ fom: undefined, ingame: "Alpha" })]);
+  expect(html).toContain("<b>Alpha</b>");
+  expect(html).toContain("<small></small>");
+});
+
+test("what sits under the name is dot-separated, so a missing FOM name leaves no stray dot", () => {
+  const html = renderStandings([row({ fom: undefined, ingame: "Alpha", crownRank: 50 })]);
+  expect(html).toContain(`<small><span class="crown-rank"`);
+});
+
+test("a player still waiting on an in-game name is named by their FOM name", () => {
+  const html = renderStandings([row({ fom: "Ann", ingame: "" })]);
+  expect(html).toContain("<b>Ann</b>");
+  expect(html).toContain("no in-game name yet");
 });
 
 test("names are escaped", () => {

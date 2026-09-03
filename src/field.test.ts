@@ -9,7 +9,7 @@ const ROSTER: Player[] = [
   { fom: "Delta_FOM", ingame: "Delta" },
   { fom: "Ref_FOM", ingame: "Ref", admin: true },
   { fom: "NoShow_FOM", ingame: "NoShow", joined: false },
-  { fom: "Unreported_FOM" },
+  { ingame: "", fom: "Unreported_FOM" },
 ];
 
 function states(show: Show): Record<string, string> {

@@ -19,7 +19,7 @@ function chip(player: FieldPlayer, detail = ""): string {
     player.firsts === undefined ? "" : `<span class="firsts">⚡${player.firsts}</span>`;
   const first = player.wasFirst ? " first" : "";
   return `<button type="button" class="bn open-player ${player.state}${first}" data-player="${escapeHtml(
-    player.fom,
+    player.ingame,
   )}">${mark}<b>${escapeHtml(player.ingame)}</b>${rank}${firsts}${
     detail ? `<small>${detail}</small>` : ""
   }</button>`;

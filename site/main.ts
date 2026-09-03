@@ -71,8 +71,8 @@ function render(page: string, data: Data, rows: LeaderboardRow[], movers: Set<st
 function moversSince(previous: Map<string, number>, rows: LeaderboardRow[]): Set<string> {
   const movers = new Set<string>();
   for (const row of rows) {
-    const before = previous.get(row.fom);
-    if (before !== undefined && row.points > before) movers.add(row.fom);
+    const before = previous.get(row.ingame);
+    if (before !== undefined && row.points > before) movers.add(row.ingame);
   }
   return movers;
 }
@@ -110,7 +110,7 @@ function main(): void {
     const rows = score(data.event, data.players);
     const movers = signature === "" ? new Set<string>() : moversSince(points, rows);
     signature = next;
-    points = new Map(rows.map((row) => [row.fom, row.points]));
+    points = new Map(rows.map((row) => [row.ingame, row.points]));
 
     paint(data, rows, movers);
     clearTimeout(moverTimer);

@@ -47,9 +47,10 @@ export interface TournamentEvent {
 }
 
 export interface Player {
-  /** Absent until the player reports their in-game name on Discord. */
-  ingame?: string;
-  fom: string;
+  /** The name everybody is known by. Empty only for a row still being typed in. */
+  ingame: string;
+  /** The FOM community name. Plenty of players never had one. */
+  fom?: string;
   discord?: string;
   /** Admins run the event rather than competing, so they are left off the leaderboard. */
   admin?: boolean;
@@ -64,8 +65,8 @@ export interface Players {
 }
 
 export interface LeaderboardRow {
-  ingame?: string;
-  fom: string;
+  ingame: string;
+  fom?: string;
   crownRank?: number;
   points: number;
   raceWins: number;

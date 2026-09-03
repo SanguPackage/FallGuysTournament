@@ -7,13 +7,13 @@ export const FINAL_WIN = 5;
 
 
 export function score(event: TournamentEvent, players: Players): LeaderboardRow[] {
-  const rows = new Map<string, LeaderboardRow>();
+  const rows: LeaderboardRow[] = [];
   const byIngame = new Map<string, LeaderboardRow>();
   for (const player of players.players) {
     if (player.admin || player.joined === false) continue;
     const row: LeaderboardRow = {
       ingame: player.ingame,
-      fom: player.fom,
+      ...(player.fom ? { fom: player.fom } : {}),
       ...(player.crownRank === undefined ? {} : { crownRank: player.crownRank }),
       points: 0,
       raceWins: 0,
@@ -21,7 +21,7 @@ export function score(event: TournamentEvent, players: Players): LeaderboardRow[
       finalsWon: 0,
       penaltyPoints: 0,
     };
-    rows.set(player.fom, row);
+    rows.push(row);
     if (player.ingame) byIngame.set(player.ingame, row);
   }
 
@@ -60,7 +60,7 @@ export function score(event: TournamentEvent, players: Players): LeaderboardRow[
     row.points += penalty.points;
   }
 
-  return [...rows.values()].sort(compareRows);
+  return rows.sort(compareRows);
 }
 
 function compareRows(a: LeaderboardRow, b: LeaderboardRow): number {
@@ -69,6 +69,6 @@ function compareRows(a: LeaderboardRow, b: LeaderboardRow): number {
     b.finalsWon - a.finalsWon ||
     b.finalsReached - a.finalsReached ||
     b.raceWins - a.raceWins ||
-    a.fom.localeCompare(b.fom)
+    a.ingame.localeCompare(b.ingame)
   );
 }

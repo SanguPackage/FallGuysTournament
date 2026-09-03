@@ -23,7 +23,7 @@ const SHARED: Show = { ...FINISHED, winners: ["Alpha", "Bravo"] };
 
 test("each badge names the player it opens the details of", () => {
   const rounds = roundFieldsOf(FINISHED, ROSTER);
-  expect(renderRoundBeans(rounds[0]!)).toContain(`data-player="Alpha_FOM"`);
+  expect(renderRoundBeans(rounds[0]!)).toContain(`data-player="Alpha"`);
 });
 
 test("each badge carries its state as a class", () => {
@@ -39,7 +39,7 @@ test("a badge does not repeat the round it is sitting on", () => {
 
 test("the bean who crossed first wears a winner badge", () => {
   const html = renderRoundBeans(roundFieldsOf(FINISHED, ROSTER)[0]!);
-  expect(html).toContain(`class="bn open-player through first" data-player="Alpha_FOM">⚡ <b>Alpha</b>`);
+  expect(html).toContain(`class="bn open-player through first" data-player="Alpha">⚡ <b>Alpha</b>`);
   expect([...html.matchAll(/bn open-player through first/g)]).toHaveLength(1);
 });
 

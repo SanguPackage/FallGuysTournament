@@ -18,7 +18,7 @@ const event = {
   penalties: [{ ingame: "Alpha", points: -2, reason: "Left early" }],
 };
 
-const players = { players: [{ fom: "Ann", ingame: "Alpha" }, { fom: "Bob", admin: true }] };
+const players = { players: [{ fom: "Ann", ingame: "Alpha" }, { ingame: "Ref", admin: true }] };
 
 test("a well-formed event and roster report nothing", () => {
   expect(checkEvent(event)).toEqual([]);
@@ -62,17 +62,17 @@ test("a penalty missing its points is caught, since it is added to a total", () 
   expect(checkEvent({ ...event, penalties })).toEqual(["penalties[0].points is not a number"]);
 });
 
-test("a player with no FOM name is caught, since it is their row on the board", () => {
-  expect(checkPlayers({ players: [{ ingame: "Alpha" }] })).toEqual([
-    "players[0].fom is not a string",
+test("a player with no Fall Guys name is caught, since it is their row on the board", () => {
+  expect(checkPlayers({ players: [{ fom: "Ann" }] })).toEqual([
+    "players[0].ingame is not a string",
   ]);
 });
 
 test("a crown rank typed as text is caught, since the board prints it as a number", () => {
-  expect(checkPlayers({ players: [{ fom: "Ann", crownRank: "45" }] })).toEqual([
+  expect(checkPlayers({ players: [{ ingame: "Alpha", crownRank: "45" }] })).toEqual([
     "players[0].crownRank is not a number",
   ]);
-  expect(checkPlayers({ players: [{ fom: "Ann", crownRank: 45 }] })).toEqual([]);
+  expect(checkPlayers({ players: [{ ingame: "Alpha", crownRank: 45 }] })).toEqual([]);
 });
 
 test("every problem in a file is reported at once, not just the first", () => {
@@ -114,7 +114,7 @@ test("problems are named by the file they came from", async () => {
   });
   expect(await checkData(path)).toEqual([
     { file: "event.json", problem: "shows is not an array" },
-    { file: "players.json", problem: "players[0].fom is not a string" },
+    { file: "players.json", problem: "players[0].ingame is not a string" },
   ]);
 });
 
@@ -131,7 +131,7 @@ test("a survivor count that is not a number is caught", () => {
 });
 
 test("a joined flag that is not true or false is caught", () => {
-  const broken = { players: [{ fom: "Ann", joined: "yes" }] };
+  const broken = { players: [{ ingame: "Alpha", joined: "yes" }] };
   expect(checkPlayers(broken)).toEqual(["players[0].joined is not true or false"]);
 });
 

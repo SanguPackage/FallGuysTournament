@@ -8,6 +8,10 @@ Rules handed to the FOM board: [docs/rules.md](docs/rules.md)
 
 ## Tournament day
 
+- Check server is `Europe`
+- Your crown rank on the website? Send me a screenshot!
+- Your FOM Name on the website? Send me a PM!
+
 I am: `AnotherAccount58`
 
 Fall Guys is on a different monitor at every venue, and recording the wrong one is silent
@@ -73,20 +77,21 @@ Each command commits `data/event.json`, and pushes when a remote is configured. 
 
 ## Players
 
-`data/players.json` maps FOM names to in-game names. Every participant is listed with
-their FOM name; add `ingame` as people report theirs in the Discord channel.
+`data/players.json` maps in-game names to FOM names. The in-game name is what the board
+calls a player; `fom` is optional and shown under it, for the players who have one.
 
 ```json
-{ "fom": "Optinux_Prime", "ingame": "OptiBean", "discord": "optinux" }
+{ "ingame": "OptiBean", "fom": "Optinux_Prime", "discord": "optinux" }
 ```
 
-A player without an `ingame` shows on the leaderboard on zero and cannot be scored.
+A player without an `ingame` shows on the leaderboard under their FOM name, on zero, and
+cannot be scored.
 
 `crownRank` is the crown level the game shows beside their in-game name, typed in by hand
 in the admin's Players tab:
 
 ```json
-{ "fom": "Grumpy_Trout", "ingame": "GrumpyTrout294", "crownRank": 45 }
+{ "ingame": "GrumpyTrout294", "fom": "Grumpy_Trout", "crownRank": 45 }
 ```
 
 The admin runs the event instead of competing, and is marked so they stay off the

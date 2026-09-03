@@ -799,10 +799,15 @@ test("a name the roster did not claim is marked, so it is not read as confirmed"
   expect(memo.unmatched.size).toBe(0);
 });
 
-test("a roster with a blank FOM name is a row still being typed, not one to save", () => {
-  expect(everyPlayerNamed({ players: [{ fom: "A" }, { fom: "  " }] })).toBe(false);
-  expect(everyPlayerNamed({ players: [{ fom: "A" }, { fom: "B" }] })).toBe(true);
+test("a roster row with neither name is one still being typed, not one to save", () => {
+  expect(everyPlayerNamed({ players: [{ ingame: "A" }, { ingame: "  " }] })).toBe(false);
+  expect(everyPlayerNamed({ players: [{ ingame: "A" }, { ingame: "B" }] })).toBe(true);
   expect(everyPlayerNamed({ players: [] })).toBe(true);
+});
+
+test("either name on its own is enough to save the row", () => {
+  expect(everyPlayerNamed({ players: [{ ingame: "A" }] })).toBe(true);
+  expect(everyPlayerNamed({ players: [{ ingame: "", fom: "Ann" }] })).toBe(true);
 });
 
 const FIELD = ["Alpha", "Bravo", "Charlie", "Delta"];

@@ -87,8 +87,8 @@ export function checkPlayers(value: unknown): string[] {
   value.players.forEach((player, index) => {
     const at = `players[${index}]`;
     if (!isObject(player)) return void problems.push(`${at} is not an object`);
-    if (typeof player.fom !== "string") problems.push(`${at}.fom is not a string`);
-    for (const key of ["ingame", "discord"] as const) {
+    if (typeof player.ingame !== "string") problems.push(`${at}.ingame is not a string`);
+    for (const key of ["fom", "discord"] as const) {
       if (player[key] !== undefined && typeof player[key] !== "string") {
         problems.push(`${at}.${key} is not a string`);
       }

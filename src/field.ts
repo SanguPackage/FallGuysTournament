@@ -5,7 +5,7 @@ export type FieldState = "won" | "through" | "playing" | "out";
 
 export interface FieldPlayer {
   ingame: string;
-  fom: string;
+  fom?: string;
   state: FieldState;
   crownRank?: number;
   /** Set only on the round this player crossed first. Race rounds only. */
@@ -22,11 +22,9 @@ export interface FieldPlayer {
 
 const ORDER: Record<FieldState, number> = { won: 0, through: 1, playing: 1, out: 2 };
 
-type Rostered = Player & { ingame: string };
-
-function rosterOf(players: Player[]): Rostered[] {
+function rosterOf(players: Player[]): Player[] {
   return players.filter(
-    (player): player is Rostered => !player.admin && player.joined !== false && !!player.ingame,
+    (player) => !player.admin && player.joined !== false && !!player.ingame,
   );
 }
 
@@ -91,7 +89,7 @@ export function fieldOf(show: Show, players: Player[]): FieldPlayer[] {
           : "through";
     return {
       ingame: player.ingame,
-      fom: player.fom,
+      ...(player.fom ? { fom: player.fom } : {}),
       state,
       ...(player.crownRank === undefined ? {} : { crownRank: player.crownRank }),
       ...(firsts.has(player.ingame) ? { firsts: firsts.get(player.ingame) } : {}),
@@ -112,9 +110,9 @@ export function roundFieldsOf(show: Show, players: Player[]): FieldPlayer[][] {
 
   let alive = rosterOf(players);
   return show.rounds.map((round) => {
-    const bean = (player: Rostered, state: FieldState): FieldPlayer => ({
+    const bean = (player: Player, state: FieldState): FieldPlayer => ({
       ingame: player.ingame,
-      fom: player.fom,
+      ...(player.fom ? { fom: player.fom } : {}),
       state,
       ...(player.crownRank === undefined ? {} : { crownRank: player.crownRank }),
       ...(round.first === player.ingame ? { wasFirst: true } : {}),

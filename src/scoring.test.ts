@@ -235,7 +235,7 @@ test("equal points are broken by finals won, then finals reached, then race wins
   expect(rows.map((r) => r.ingame)).toEqual(["Charlie", "Bravo", "Alpha"]);
 });
 
-test("players level on every criterion are ordered by FOM name", () => {
+test("players level on every criterion are ordered by in-game name", () => {
   const rows = score(emptyEvent(), players);
   expect(rows.map((r) => r.ingame)).toEqual(["Alpha", "Bravo", "Charlie"]);
 });
@@ -243,30 +243,40 @@ test("players level on every criterion are ordered by FOM name", () => {
 const roster: Players = {
   players: [
     { ingame: "Alpha", fom: "Ann" },
-    { fom: "Bob" },
-    { fom: "Cas" },
+    { ingame: "Bravo" },
+    { ingame: "Charlie" },
   ],
 };
 
-test("players with no in-game name yet still appear, on zero", () => {
+test("players with no FOM name still appear, on zero", () => {
   const rows = score(emptyEvent(), roster);
-  expect(rows.map((r) => r.fom)).toEqual(["Ann", "Bob", "Cas"]);
+  expect(rows.map((r) => r.ingame)).toEqual(["Alpha", "Bravo", "Charlie"]);
   expect(rows.every((r) => r.points === 0)).toBe(true);
 });
 
-test("two players with no in-game name do not collapse into one row", () => {
-  const rows = score(emptyEvent(), roster);
-  expect(rows.filter((r) => r.ingame === undefined)).toHaveLength(2);
+test("a blank FOM name is left off the row rather than carried as empty", () => {
+  const rows = score(emptyEvent(), { players: [{ ingame: "Alpha", fom: "" }] });
+  expect(rows[0]!.fom).toBeUndefined();
 });
 
-test("scoring still reaches a player through their in-game name", () => {
+test("two players with no in-game name yet do not collapse into one row", () => {
+  const rows = score(emptyEvent(), {
+    players: [
+      { ingame: "", fom: "Ann" },
+      { ingame: "", fom: "Bob" },
+    ],
+  });
+  expect(rows.map((r) => r.fom)).toEqual(["Ann", "Bob"]);
+});
+
+test("scoring reaches a player through their in-game name", () => {
   const event = emptyEvent();
   event.shows.push({
     name: "Solos",
     rounds: [{ map: "Dizzy Heights", type: "race", first: "Alpha" }],
   });
   const rows = score(event, roster);
-  expect(rows.find((r) => r.fom === "Ann")!.points).toBe(3);
+  expect(rows.find((r) => r.ingame === "Alpha")!.points).toBe(3);
 });
 
 const withAdmin: Players = {

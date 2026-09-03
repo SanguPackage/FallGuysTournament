@@ -3,8 +3,8 @@
 ## 1. Registration
 
 Post your in-game Fall Guys name in the tournament Discord channel before the event
-starts, so it can be linked to your FOM name. Players whose in-game name has not been
-registered cannot be scored.
+starts. It is the name the leaderboard calls you by, and players whose in-game name has
+not been registered cannot be scored. A FOM name is optional and shown under it.
 
 ## 2. Format
 

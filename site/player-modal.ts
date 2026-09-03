@@ -26,16 +26,17 @@ function header(row: LeaderboardRow): string {
   const rank =
     row.crownRank === undefined
       ? ""
-      : ` <span class="crown-rank">👑${row.crownRank}</span>`;
-  const ingame = row.ingame
-    ? `${escapeHtml(row.ingame)}${rank}`
+      : `<span class="crown-rank">👑${row.crownRank}</span>`;
+  const name = row.ingame
+    ? escapeHtml(row.ingame)
     : `<span class="pending">no in-game name yet</span>`;
+  const under = [row.fom ? escapeHtml(row.fom) : "", rank].filter(Boolean).join(" ");
 
   return `
     <header class="detail-head">
       <div class="who">
-        <h2>${escapeHtml(row.fom)}</h2>
-        <p>${ingame}</p>
+        <h2>${name}</h2>
+        <p>${under}</p>
       </div>
       <div class="stats">
         ${stat(row.points, "Points", "pts")}

@@ -258,7 +258,8 @@ h2 {
 .crown { position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 40px; filter: drop-shadow(0 4px 0 #0003); }
 
 .p .nm { font-size: 20px; font-weight: 800; line-height: 1.1; }
-.p .ig { font-size: 13px; opacity: 0.7; font-weight: 600; }
+/* Reserves its line so a player with no FOM name does not sit a row shorter than the rest. */
+.p .ig { font-size: 13px; opacity: 0.7; font-weight: 600; min-height: 1.3em; }
 .p .pts { font-family: "Titan One", cursive; font-size: 40px; line-height: 1; margin-top: 0.35rem; }
 
 .p .rk {
@@ -302,7 +303,7 @@ h2 {
 .card .n { width: 26px; font-family: "Titan One", cursive; font-size: 15px; color: #ffffff8c; }
 .card .who { flex: 1; min-width: 0; }
 .card .who b { display: block; font-size: 16px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.card .who small { color: #ffffff8c; font-size: 12px; }
+.card .who small { display: block; color: #ffffff8c; font-size: 12px; min-height: 1.3em; }
 .card .v { font-family: "Titan One", cursive; font-size: 22px; color: var(--yellow); }
 
 .card.up, .row.up { border-color: var(--lime); box-shadow: 0 0 0 3px #6ee78733; }
@@ -324,7 +325,7 @@ h2 {
 
 .row .rk { font-family: "Titan One", cursive; font-size: 20px; color: #ffffff85; text-align: center; }
 .row .who b { display: block; font-size: 17px; font-weight: 800; }
-.row .who small { color: #ffffff8c; font-size: 12.5px; }
+.row .who small { display: block; color: #ffffff8c; font-size: 12.5px; min-height: 1.3em; }
 .row .stats { display: flex; gap: 0.4rem; }
 
 .stat {
