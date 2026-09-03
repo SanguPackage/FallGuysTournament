@@ -35,18 +35,20 @@ test("a show numbers its rounds and names each map", () => {
   expect(html).toContain("Fall Mountain");
 });
 
-test("a race names who crossed first", () => {
-  expect(renderResults([SOLOS], ROSTER)).toMatch(/Dizzy Heights[\s\S]*?Alpha/);
+test("a race names who crossed first on the badge, not in the round line", () => {
+  const html = renderResults([SOLOS], ROSTER);
+  expect(html).toMatch(/Dizzy Heights[\s\S]*?<span class="bn playing first">⚡ <b>Alpha<\/b>/);
+  expect(html).toMatch(/Dizzy Heights[\s\S]*?<span class="winner none"><\/span>/);
 });
 
-test("a round that scores nothing says so", () => {
-  expect(renderResults([SOLOS], ROSTER)).toMatch(/Roll Out[\s\S]*?no points/);
+test("a round nobody can win says nothing about a winner", () => {
+  expect(renderResults([SOLOS], ROSTER)).toMatch(/Roll Out[\s\S]*?<span class="winner none"><\/span>/);
 });
 
-test("a race still waiting for its winner is not mistaken for a round that scores nothing", () => {
+test("a race still waiting for its winner is not mistaken for a round nobody can win", () => {
   const html = renderResults([{ name: "S", rounds: [{ map: "Whirlygig", type: "race" }] }], ROSTER);
   expect(html).toContain("not recorded");
-  expect(html).not.toContain("no points");
+  expect(html).not.toContain(`<span class="winner none"></span>`);
 });
 
 test("a show panel colours each round's badges", () => {

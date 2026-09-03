@@ -13,11 +13,13 @@ function winnerCell(round: Round, show: Show, onScreen: boolean): string {
       ? `<span class="winner none">on screen</span>`
       : `<span class="winner none">—</span>`;
   }
-  if (round.first) return `<span class="winner">${escapeHtml(round.first)}</span>`;
+  // Whoever crossed first wears it on their badge, so the line does not say it twice.
+  if (round.first) return `<span class="winner none"></span>`;
   if (onScreen) return `<span class="winner none">on screen</span>`;
+  // A round nobody wins still holds its column, so the tally stays under the tally heading.
   return round.type === "race"
     ? `<span class="winner missing">first not recorded</span>`
-    : `<span class="winner none">no points</span>`;
+    : `<span class="winner none"></span>`;
 }
 
 /** A decided final counts crowns, not survivors: one name through a final is the show's winner. */
