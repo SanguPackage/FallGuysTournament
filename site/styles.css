@@ -382,7 +382,9 @@ h2 {
 }
 
 .rnd .i { color: #ffffff70; font-weight: 800; font-size: 13px; }
-.rnd .map { font-weight: 700; }
+.rnd .map { font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; }
+.rnd .map .sangu { color: #ffffff59; line-height: 0; transition: color 0.15s; }
+.rnd .map .sangu:hover { color: var(--cyan); }
 .rnd .winner { color: var(--lime); font-weight: 800; }
 .rnd .winner.none { color: #ffffff5c; font-weight: 600; }
 .rnd .winner.missing { color: #ffb4b4; font-weight: 600; }

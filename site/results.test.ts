@@ -35,6 +35,18 @@ test("a show numbers its rounds and names each map", () => {
   expect(html).toContain("Fall Mountain");
 });
 
+test("a map with clips on sangu.be links out to them beside its name", () => {
+  const html = renderResults([SOLOS], ROSTER);
+  expect(html).toContain(`Dizzy Heights<a class="sangu" href="https://sangu.be/fallguys/levels/dizzy-heights"`);
+});
+
+test("a map sangu.be has no page for keeps its name and gains no link", () => {
+  const show: Show = { name: "Solos", rounds: [{ map: "Starchart", type: "race" }] };
+  const html = renderResults([show], ROSTER);
+  expect(html).toContain("Starchart");
+  expect(html).not.toContain("sangu");
+});
+
 test("a race names who crossed first on the badge, not in the round line", () => {
   const html = renderResults([SOLOS], ROSTER);
   expect(html).toMatch(/Dizzy Heights[\s\S]*?<span class="bn playing first">⚡ <b>Alpha<\/b>/);
