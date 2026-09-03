@@ -246,7 +246,8 @@ roster, so matching is measurable without a capture of the tournament.
 Captures are never committed, so a board the file names that is not on this machine is skipped.
 
 Not read: the lobby's **View Names** screen, whose nametags follow the beans around in 3D and
-overlap into pileups in a full lobby, and any name not written in the Latin alphabet.
+overlap into pileups in a full lobby, any name not written in the Latin alphabet, and the board
+while its plate still reads **N REMAIN!** — see below.
 
 The first run downloads Tesseract's English model, about 5MB, into `.ocr-cache/`. **Do that once
 before the event** — nothing afterwards needs the network. Read names are cached in the same
@@ -261,6 +262,12 @@ event can catch it.
 
 Frames are found by the clock stamp **inside** the log line, never by when the line arrived, so a
 log that flushed late still names the right frame. The same recording is cut into one mp4 per show.
+
+One frame per show is kept for the picture rather than for the names: the board after round one
+while its plate still reads **N REMAIN!**. Every card is a bean under its own nameplate then — the
+eliminated only turn into a nameless pink X once the plate goes green — so it is the one screen
+that shows the whole field. It is filed with the other captures and never read, because before the
+plate settles every card looks qualified.
 
 ```bash
 CAPTURE_OUTPUT=1 bun run live      # records

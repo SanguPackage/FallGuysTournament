@@ -37,6 +37,20 @@ test("the finalists moment follows the round before the final, not the final", (
   ]);
 });
 
+test("the field moment follows round one, wherever the final happens to be", () => {
+  const fields = momentsIn(parseLog(SHOW), DATE).filter((m) => m.kind === "field");
+  expect(fields.map((m) => [m.roundIndex, m.at, m.from, m.to, m.fps])).toEqual([
+    [0, at("20:00:44"), at("20:00:44") + 2000, at("20:00:44") + 20_000, 5],
+  ]);
+});
+
+test("no field moment until the round after it loads, so its stamp has stopped moving", () => {
+  // `ends[0]` is the last result so far: mid-round it walks forward with every qualifier, and a
+  // moment captured off it would be aimed at the level rather than the board.
+  const midRound = SHOW.split("\n").slice(0, 5).join("\n");
+  expect(momentsIn(parseLog(midRound), DATE).filter((m) => m.kind === "field")).toEqual([]);
+});
+
 test("the winner moment comes off the victory scene", () => {
   const [winner] = momentsIn(parseLog(SHOW), DATE).filter((m) => m.kind === "winner");
   expect(winner!.roundIndex).toBeUndefined();

@@ -149,3 +149,11 @@ test("the winner screen is matched against whoever the last board left standing"
   const reads: Record<string, ShotRead> = { "w.jpg": { screen: "winner", tokens: ["R- Diego_9942"] } };
   expect(fillsFor(shots, reads, ROSTER, [], [KNOCKED_OUT])[0]!.matched).toEqual([false]);
 });
+
+test("the unsettled board fills nothing: it names the field, not who got through", () => {
+  const shots = [shot("f.jpg", { slot: "round", roundIndex: 0 })];
+  const reads: Record<string, ShotRead> = {
+    "f.jpg": { screen: "field", tokens: ["Diego_9942", "Serxav_9", "BigMooseLips"] },
+  };
+  expect(fillsFor(shots, reads, ROSTER)).toEqual([]);
+});

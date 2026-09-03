@@ -1,5 +1,5 @@
 {
-  "note": "Screens from the FOM 2026 event and the 2026-09-02 test show, sorted by eye. `trophy` is the pill index trophyPill must return; `first` is who that pill names. `names` is the board read by eye, in board order. The 3840x2160 captures are there because every 1920x1080 measurement in the reader has to hold at both.",
+  "note": "Screens from the FOM 2026 event and the 2026-09-02 test show, sorted by eye. `trophy` is the pill index trophyPill must return; `first` is who that pill names. `names` is the board read by eye, in board order. The 3840x2160 captures are there because every 1920x1080 measurement in the reader has to hold at both. `field-board` is the same board while its plate still reads REMAIN, before the eliminated cards flip to an X and lose their nameplates.",
   "folders": {
     "race-first": {
       "screen": "toast"
@@ -15,6 +15,9 @@
     },
     "playing": {
       "screen": null
+    },
+    "field-board": {
+      "screen": "field"
     }
   },
   "files": {

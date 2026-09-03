@@ -13,6 +13,7 @@ const WANTED: Record<MomentKind, Screen> = {
   first: "toast",
   finalists: "grid",
   winner: "winner",
+  field: "field",
 };
 
 /** More than this and the capture panel is a wall of near-identical frames. */

@@ -1,9 +1,14 @@
 import type { Frame } from "./frame";
-import { hasQualifiedBanner, qualifiedCards } from "./grid";
+import { hasQualifiedBanner, hasRemainBanner, qualifiedCards } from "./grid";
 import { onRoundHud } from "./hud";
 import { trophyPill } from "./toast";
 
-export type Screen = "grid" | "winner" | "toast";
+/**
+ * `field` is the board before it settles, which names everyone still standing rather than everyone
+ * who got through. It is never read for results — pre-settle every card looks qualified — so it is
+ * kept as a picture of the field and nothing else.
+ */
+export type Screen = "grid" | "winner" | "toast" | "field";
 
 /** Hue as a coarse band, so a colour survives JPEG without being counted twice. */
 function hueBand(r: number, g: number, b: number): number | undefined {
@@ -45,6 +50,8 @@ function isWinner(frame: Frame): boolean {
 
 export function identify(frame: Frame): Screen | undefined {
   if (hasQualifiedBanner(frame) && qualifiedCards(frame).length > 0) return "grid";
+  // No card test: before the plate settles nothing on the board is green yet.
+  if (hasRemainBanner(frame)) return "field";
   // A round still being played and the screen that ends it cannot both be on screen, and the
   // level's own colours fool `isWinner` far more often than the plate goes missing.
   if (onRoundHud(frame)) return trophyPill(frame) !== undefined ? "toast" : undefined;
