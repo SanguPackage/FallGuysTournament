@@ -56,16 +56,17 @@ test("the title is escaped", () => {
   expect(page({ ...RULES, title: "<script>" })).not.toContain("<title><script>");
 });
 
-test("a lobby code is shown as a badge beside the event name, upper case", () => {
+test("a lobby code is shown as a badge beside the heading, upper case", () => {
   const html = page({ ...RULES, lobbyCode: "abc123" });
-  expect(html).toContain("Lobby code:");
+  expect(html).toContain("Lobby code");
   expect(html).toContain(">ABC123<");
   expect(html).not.toContain(`class="lobby" hidden`);
 });
 
-test("the badge sits in the topbar, not in the nav", () => {
+test("the badge sits in the masthead, after the nav and outside it", () => {
   const html = page({ ...RULES, lobbyCode: "abc123" });
-  expect(html.indexOf(`class="lobby"`)).toBeLessThan(html.indexOf("<nav>"));
+  expect(html.indexOf("<nav>")).toBeLessThan(html.indexOf(`class="lobby"`));
+  expect(html.indexOf(`class="lobby"`)).toBeLessThan(html.indexOf("</div>\n<p>Hi</p>"));
   expect(nav("rules.html")).not.toContain("lobby");
 });
 

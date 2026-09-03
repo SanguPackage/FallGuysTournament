@@ -31,7 +31,7 @@ export interface PageOptions {
  */
 function lobbyBadge(code?: string): string {
   const shown = code ? escapeHtml(code.toUpperCase()) : "";
-  return `<span class="lobby"${code ? "" : " hidden"} id="lobby"><small>Lobby code:</small><b>${shown}</b></span>`;
+  return `<span class="lobby"${code ? "" : " hidden"} id="lobby"><small>Lobby code</small><b>${shown}</b></span>`;
 }
 
 export function nav(current: string): string {
@@ -94,11 +94,15 @@ export function page({ event, title, heading, current, body, live, lobbyCode }: 
     <div class="wrap">
       <div class="topbar">
         <span class="fom">${escapeHtml(event)}</span>
-        ${lobbyBadge(lobbyCode)}
         ${live ? `<span class="live" id="live"><i class="dot"></i> Live</span>` : ""}
       </div>
-      <h1>${escapeHtml(heading)}</h1>
-      ${nav(current)}
+      <div class="masthead">
+        <div>
+          <h1>${escapeHtml(heading)}</h1>
+          ${nav(current)}
+        </div>
+        ${lobbyBadge(lobbyCode)}
+      </div>
 ${body}
       ${footer()}
     </div>
