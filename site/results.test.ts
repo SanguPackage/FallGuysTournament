@@ -35,6 +35,11 @@ test("a show numbers its rounds and names each map", () => {
   expect(html).toContain("Fall Mountain");
 });
 
+test("a round leads with the game's icon for its map", () => {
+  const html = renderResults([SOLOS], ROSTER);
+  expect(html).toContain(`<span class="map"><img class="mapicon" src="./img/levels/dizzy-heights-icon.png"`);
+});
+
 test("a map with clips on sangu.be links out to them beside its name", () => {
   const html = renderResults([SOLOS], ROSTER);
   expect(html).toContain(`Dizzy Heights<a class="sangu" href="https://sangu.be/fallguys/levels/dizzy-heights"`);

@@ -1,4 +1,4 @@
-import { rm } from "node:fs/promises";
+import { cp, rm } from "node:fs/promises";
 import { liveStatus } from "../src/live";
 import { score } from "../src/scoring";
 import type { Players, TournamentEvent } from "../src/types";
@@ -34,6 +34,8 @@ for (const [from, to] of [
 ] as const) {
   await Bun.write(to, Bun.file(from));
 }
+
+await cp("site/img", `${OUT}/img`, { recursive: true });
 
 const rules = await Bun.file("docs/rules.md").text();
 const order = parseShowOrder(rules);

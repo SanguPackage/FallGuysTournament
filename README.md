@@ -112,15 +112,17 @@ the headcount cannot support is skipped. Refresh it if the game changes the numb
 ## Crown levels and level clips
 
 `data/sangu.json` is read off [Fall Guys @ Sangu](https://sangu.be/fallguys/): the crowns each
-crown level costs, and which levels have a clip page there. The board turns the first into the
-tooltip behind a crown badge and the second into the link beside a round's map. Refresh it when a
-season adds levels or moves the crown track:
+crown level costs, which levels have a clip page there, and which have an icon. A crown badge
+carries the first as a tooltip; a round on the results page draws its map with the icon and links
+the name out to the clips. Refresh it when a season adds levels or moves the crown track:
 
 ```bash
 bun run sangu
 ```
 
-A quarter of the maps played have no page yet, and those simply go unlinked.
+The icons themselves land in `site/img/levels/` and are committed, so the board still draws on a
+LAN with no way out; `bun run sangu` only downloads the ones missing. Every map played has an
+icon, but a quarter have no clip page yet and those go unlinked.
 
 ## Admin UI
 

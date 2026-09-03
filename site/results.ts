@@ -2,7 +2,7 @@ import { roundFieldsOf } from "../src/field";
 import { mergeLive, type LiveNow } from "../src/live";
 import type { Player, Round, Show } from "../src/types";
 import { escapeHtml } from "./render";
-import { levelLink } from "./sangu";
+import { levelIcon, levelLink } from "./sangu";
 import { renderRoundBeans } from "./show-field";
 
 function winnerCell(round: Round, show: Show, onScreen: boolean): string {
@@ -50,7 +50,7 @@ function renderShow(
       (round, index) => `
       <div class="rnd ${round.type === "final" ? "final" : ""}">
         <span class="i">${index + 1}</span>
-        <span class="map">${escapeHtml(round.map)}${levelLink(round.map)}</span>
+        <span class="map">${levelIcon(round.map)}${escapeHtml(round.map)}${levelLink(round.map)}</span>
         <span class="type"><span class="tag ${round.type}">${round.type}</span></span>
         ${winnerCell(round, show, index + 1 === onScreen)}
         ${tallyCell(round, show)}
