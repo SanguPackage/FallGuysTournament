@@ -356,6 +356,11 @@ test("an admin name that found its way into a show is still kept out", () => {
   expect(namesByPoints(withAdmin, roster)).not.toContain("Referee");
 });
 
+test("a leader is not floated up the dropdown: the joined list is alphabetical", () => {
+  // Alpha 6 points, Bravo 4, Delta 1, Charlie 0.
+  expect(joinedNames(scored, roster)).toEqual(["Alpha", "Bravo", "Charlie", "Delta"]);
+});
+
 test("the joined list is the roster alone: a guest a show named is no player to correct against", () => {
   const withGuest: TournamentEvent = {
     ...scored,
@@ -817,6 +822,15 @@ function typing(): ShowDraft {
 test("a slot offers everyone the boards before it left in", () => {
   const at = candidatesFor(typing(), FIELD, { slot: "qualified", roundIndex: 1, at: 0 });
   expect(at).toEqual(["Alpha", "Bravo", "Charlie"]);
+});
+
+test("a slot lists alphabetically, whatever order the pool arrived in", () => {
+  const pool = ["Charlie", "Alpha", "Bravo"];
+  expect(candidatesFor(typing(), pool, { slot: "qualified", roundIndex: 1, at: 0 })).toEqual([
+    "Alpha",
+    "Bravo",
+    "Charlie",
+  ]);
 });
 
 test("a name typed into the board beside it is not offered twice", () => {
