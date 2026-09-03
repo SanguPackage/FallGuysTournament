@@ -40,6 +40,8 @@ export interface Penalty {
 export interface TournamentEvent {
   name: string;
   date: string;
+  /** The custom lobby's join code, so the board can hand it to everyone still outside. */
+  lobbyCode?: string;
   shows: Show[];
   penalties: Penalty[];
 }

@@ -93,7 +93,8 @@ ${data(renderShowOrder(order, status.orderIndex))}`,
 ];
 
 for (const { file, heading, title, live, body } of PAGES) {
-  await Bun.write(`${OUT}/${file}`, page({ event: event.name, title, heading, current: file, body, live }));
+  const options = { event: event.name, title, heading, current: file, body, live, lobbyCode: event.lobbyCode };
+  await Bun.write(`${OUT}/${file}`, page(options));
 }
 
 console.log(`Built ${OUT}/`);

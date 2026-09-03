@@ -55,3 +55,18 @@ test("the badge carries the event's own name", () => {
 test("the title is escaped", () => {
   expect(page({ ...RULES, title: "<script>" })).not.toContain("<title><script>");
 });
+
+test("a lobby code is shown as a badge beside the nav, upper case", () => {
+  const html = page({ ...RULES, lobbyCode: "abc123" });
+  expect(html).toContain(`class="lobby"`);
+  expect(html).toContain("Lobby code");
+  expect(html).toContain(">ABC123<");
+});
+
+test("no badge is drawn when there is no lobby code", () => {
+  expect(page(RULES)).not.toContain(`class="lobby"`);
+});
+
+test("a lobby code is escaped", () => {
+  expect(page({ ...RULES, lobbyCode: "<b>" })).not.toContain("<B>");
+});

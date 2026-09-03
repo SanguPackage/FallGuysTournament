@@ -142,6 +142,10 @@ typed out once and picked from the list after that.
 **Commit & push** commits `data/` and pushes, which rebuilds the public site. Only
 `data/` is committed, so anything else staged is left alone.
 
+**Custom lobby code** is published beside it and shown as a badge on every page of the
+board. It is filled in from what is already published, so clearing the box is what takes
+the badge down.
+
 It finds `Player.log` under `AppData/LocalLow/Mediatonic/FallGuys_client` for any user
 on the C: drive. Set `FALLGUYS_LOG` to override.
 

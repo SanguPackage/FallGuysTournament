@@ -4,7 +4,8 @@ import { listShots, listShowShots, resolveShot } from "../src/shot-folder";
 import { findLog, findScreenshotDir } from "../src/windows-path";
 import { checkData } from "../src/data-check";
 import { publish } from "../src/publish";
-import { EVENT_PATH, PLAYERS_PATH } from "../src/storage";
+import { EVENT_PATH, PLAYERS_PATH, loadEvent, saveEvent } from "../src/storage";
+import { setLobbyCode } from "../src/event";
 import { parseShowOrder } from "../site/rules";
 import { defaultMessage, suggestShowName } from "../site/admin-model";
 import { ReadQueue } from "../src/ocr/queue";
@@ -558,8 +559,17 @@ const server = Bun.serve({
     }
 
     if (request.method === "POST" && pathname === "/api/publish") {
-      const { message } = (await request.json()) as { message?: string };
+      const { message, lobbyCode } = (await request.json()) as {
+        message?: string;
+        lobbyCode?: string;
+      };
       try {
+        // Written before the commit, so the code the board shows is the one this push carries.
+        if (lobbyCode !== undefined) {
+          const event = await loadEvent();
+          setLobbyCode(event, lobbyCode);
+          await saveEvent(event);
+        }
         return json(await publish(message ?? ""));
       } catch (error) {
         return json({ committed: false, pushed: false, message: String(error) }, 400);

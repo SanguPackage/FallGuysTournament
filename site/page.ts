@@ -21,15 +21,22 @@ export interface PageOptions {
   current: string;
   body: string;
   live?: LivePage;
+  /** The custom lobby's join code. Absent whenever the lobby is not a custom one. */
+  lobbyCode?: string;
 }
 
-export function nav(current: string): string {
+/** Read off a phone across the room, so it is set in the largest thing on the bar. */
+function lobbyBadge(code: string): string {
+  return `<span class="lobby"><small>Lobby code</small><b>${escapeHtml(code.toUpperCase())}</b></span>`;
+}
+
+export function nav(current: string, lobbyCode?: string): string {
   const links = NAV.map(({ href, label }) =>
     href.endsWith(`/${current}`)
       ? `<span aria-current="page">${label}</span>`
       : `<a href="${href}">${label}</a>`,
   ).join("");
-  return `<nav>${links}</nav>`;
+  return `<nav>${links}${lobbyCode ? lobbyBadge(lobbyCode) : ""}</nav>`;
 }
 
 function footer(): string {
@@ -60,7 +67,7 @@ function playerDialog(): string {
     </dialog>`;
 }
 
-export function page({ event, title, heading, current, body, live }: PageOptions): string {
+export function page({ event, title, heading, current, body, live, lobbyCode }: PageOptions): string {
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -86,7 +93,7 @@ export function page({ event, title, heading, current, body, live }: PageOptions
         ${live ? `<span class="live" id="live"><i class="dot"></i> Live</span>` : ""}
       </div>
       <h1>${escapeHtml(heading)}</h1>
-      ${nav(current)}
+      ${nav(current, lobbyCode)}
 ${body}
       ${footer()}
     </div>

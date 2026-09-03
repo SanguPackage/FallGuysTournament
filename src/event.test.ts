@@ -6,6 +6,7 @@ import {
   closeShow,
   currentShow,
   resolvePlayer,
+  setLobbyCode,
   ValidationError,
 } from "./event";
 import type { Players, TournamentEvent } from "./types";
@@ -119,4 +120,16 @@ test("addPenalty appends to the event", () => {
   expect(event.penalties).toEqual([
     { ingame: "Alpha", points: -2, reason: "collaboration" },
   ]);
+});
+
+test("setLobbyCode stores a trimmed code", () => {
+  const event = emptyEvent();
+  setLobbyCode(event, "  abc123 ");
+  expect(event.lobbyCode).toBe("abc123");
+});
+
+test("setLobbyCode clears the code when nothing is typed", () => {
+  const event = { ...emptyEvent(), lobbyCode: "ABC123" };
+  setLobbyCode(event, "   ");
+  expect("lobbyCode" in event).toBe(false);
 });

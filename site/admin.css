@@ -245,6 +245,7 @@ button.danger { color: var(--bad); }
 
 .publish { margin-top: 0; }
 .publish input { width: 100%; }
+.publish .code input { width: 12rem; text-transform: uppercase; }
 
 /* Filled from a capture rather than typed, so it is worth a glance before saving. */
 input.read { border-color: var(--read); background: color-mix(in srgb, var(--read) 12%, var(--field)); }

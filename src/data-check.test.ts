@@ -134,3 +134,8 @@ test("a joined flag that is not true or false is caught", () => {
   const broken = { players: [{ fom: "Ann", joined: "yes" }] };
   expect(checkPlayers(broken)).toEqual(["players[0].joined is not true or false"]);
 });
+
+test("a lobby code that is not a string is caught", () => {
+  expect(checkEvent({ ...event, lobbyCode: 1234 })).toContain("lobbyCode is not a string");
+  expect(checkEvent({ ...event, lobbyCode: "ABC123" })).toEqual([]);
+});

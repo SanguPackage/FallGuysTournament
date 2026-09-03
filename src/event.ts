@@ -18,6 +18,13 @@ export function resolvePlayer(players: Players, name: string): string {
   );
 }
 
+/** An empty box is how the code is taken down once the lobby is gone, so it deletes rather than blanks. */
+export function setLobbyCode(event: TournamentEvent, code: string): void {
+  const trimmed = code.trim();
+  if (trimmed) event.lobbyCode = trimmed;
+  else delete event.lobbyCode;
+}
+
 export function currentShow(event: TournamentEvent): Show {
   const show = event.shows.at(-1);
   if (!show) throw new ValidationError("No show started yet. Run `bun run cli show` first.");
