@@ -60,10 +60,12 @@ let state: State;
 let showLinked = false;
 let selection: Selection = { slot: "all" };
 let selectedShow = 0;
-/** The saved show reopened for editing, if any. Otherwise the next unrecorded show is the form. */
+/**
+ * The one show open as a form, or none. Nothing opens itself: a form appearing under the admin's
+ * hands mid-round is a form they did not ask for, and the poll would spring it on them again the
+ * moment a show is saved.
+ */
 let editing: number | null = null;
-/** Forms folded away with Close. The next show to record opens on its own, until it is closed. */
-const closed = new Set<number>();
 /** How large each capture is being shown, and which are collapsed, so a rebuild keeps them that way. */
 type ShotSize = "thumb" | "fit" | "full";
 
@@ -762,7 +764,6 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
   stopEditing.addEventListener("click", () => {
     drafts.delete(index);
     editing = null;
-    closed.add(index);
     render();
   });
 
@@ -834,11 +835,8 @@ function renderShows(): void {
     return;
   }
 
-  const next = state.event.shows.length;
-  const open = editing ?? (closed.has(next) ? -1 : next);
-
   const rows = state.shows.map((parsed, index) => {
-    if (index === open) return renderShowForm(parsed, index);
+    if (index === editing) return renderShowForm(parsed, index);
 
     const show = state.event.shows[index];
     const cells: (Node | string)[] = [
