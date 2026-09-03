@@ -8,6 +8,8 @@ Rules handed to the FOM board: [docs/rules.md](docs/rules.md)
 
 ## Tournament day
 
+I am: `AnotherAccount58`
+
 Fall Guys is on a different monitor at every venue, and recording the wrong one is silent
 until the shows are over.
 
