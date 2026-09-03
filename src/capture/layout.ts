@@ -71,3 +71,20 @@ export function showsOnDisk(shows: ParsedShow[], date: string): ShowFolder[] {
 
   return folders;
 }
+
+const FOLDER = /^show-(\d{4}-\d{2}-\d{2})T\d{2}h\d{2}(?:-.*)?$/;
+
+const DAY_MS = 86_400_000;
+
+/**
+ * The folders of one evening. Two days, never one: a session that runs past midnight names its
+ * later shows for the day after the event's.
+ */
+export function showDirsFor(names: string[], date: string): string[] {
+  const day = Date.parse(`${date}T00:00:00Z`);
+  const nights = new Set([date, new Date(day + DAY_MS).toISOString().slice(0, 10)]);
+  return names.filter((name) => {
+    const stamped = FOLDER.exec(name);
+    return stamped !== null && nights.has(stamped[1]!);
+  });
+}

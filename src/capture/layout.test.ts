@@ -82,3 +82,29 @@ test("a show that has loaded no round yet has nothing to name a folder after", (
 `;
   expect(showsOnDisk(parseLog(selected), DATE)).toEqual([]);
 });
+
+import { showDirsFor } from "./layout";
+
+test("an evening is the event day and the one it runs into, and nothing else", () => {
+  const names = [
+    "show-2026-09-01T22h10-solos-1",
+    "show-2026-09-02T23h25-solos-4",
+    "show-2026-09-03T00h29-solos-5",
+    "show-2026-09-04T21h00-solos-6",
+  ];
+  expect(showDirsFor(names, "2026-09-02")).toEqual([
+    "show-2026-09-02T23h25-solos-4",
+    "show-2026-09-03T00h29-solos-5",
+  ]);
+});
+
+test("an evening that ends a month still runs into the next one", () => {
+  expect(showDirsFor(["show-2026-10-01T00h15-solos-2"], "2026-09-30")).toEqual([
+    "show-2026-10-01T00h15-solos-2",
+  ]);
+});
+
+test("anything that is not a show folder is skipped", () => {
+  const names = ["segments", "2026-09-02.transcript.txt", "show-nonsense", "show-2026-09-02T23h25"];
+  expect(showDirsFor(names, "2026-09-02")).toEqual(["show-2026-09-02T23h25"]);
+});
