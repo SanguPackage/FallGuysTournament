@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { ReadQueue } from "./queue";
+import { ReadQueue, type QueueEvent } from "./queue";
 
 test("each capture is read once, however often it is offered", async () => {
   let calls = 0;
@@ -56,4 +56,55 @@ test("a forgotten capture is read again when it is next offered", async () => {
   await queue.drained();
   expect(reads).toBe(2);
   expect(queue.cache()["a"]).toEqual({ tokens: ["read 2"] });
+});
+
+test("the queue says how much work it just took on", async () => {
+  const events: QueueEvent[] = [];
+  const queue = new ReadQueue(
+    async () => ({ tokens: [] }),
+    (event) => events.push(event),
+  );
+  queue.offer([
+    { key: "a@1", path: "a.jpg" },
+    { key: "b@1", path: "b.jpg" },
+  ]);
+  await queue.drained();
+  expect(events.filter((event) => event.kind === "queued")).toEqual([{ kind: "queued", waiting: 2 }]);
+});
+
+test("each capture reports its place in the queue, so a long wait is legible", async () => {
+  const events: QueueEvent[] = [];
+  const queue = new ReadQueue(
+    async () => ({ tokens: [] }),
+    (event) => events.push(event),
+  );
+  queue.offer([
+    { key: "a@1", path: "a.jpg" },
+    { key: "b@1", path: "b.jpg" },
+  ]);
+  await queue.drained();
+  expect(events.flatMap((event) => (event.kind === "reading" ? [`${event.at}/${event.of}`] : []))).toEqual([
+    "1/2",
+    "2/2",
+  ]);
+});
+
+test("draining is reported once, with what it cost", async () => {
+  const events: QueueEvent[] = [];
+  const queue = new ReadQueue(
+    async () => ({ tokens: [] }),
+    (event) => events.push(event),
+  );
+  queue.offer([{ key: "a@1", path: "a.jpg" }]);
+  await queue.drained();
+  const drained = events.filter((event) => event.kind === "drained");
+  expect(drained).toHaveLength(1);
+  expect(drained[0]).toMatchObject({ read: 1 });
+});
+
+test("a queue nobody is watching still reads", async () => {
+  const queue = new ReadQueue(async () => ({ tokens: ["ok"] }));
+  queue.offer([{ key: "a@1", path: "a.jpg" }]);
+  await queue.drained();
+  expect(queue.cache()["a@1"]).toEqual({ tokens: ["ok"] });
 });

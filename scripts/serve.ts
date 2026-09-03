@@ -28,10 +28,27 @@ import { showNameNow, type LiveNow } from "../src/live";
 import type { ParsedShow } from "../src/log";
 import type { Players, TournamentEvent } from "../src/types";
 import type { Shot, ShotSource } from "../src/screenshots";
+import { Reporter } from "../src/transcript/report";
+import { clock, column, duration } from "../src/transcript/format";
+import {
+  Transcript,
+  openTranscriptFile,
+  transcriptPath,
+  type Level,
+  type TranscriptFile,
+} from "../src/transcript/transcript";
+import type { QueueEvent } from "../src/ocr/queue";
 
 const SHOWS_PATH = "data/shows.json";
 const CACHE_PATH = ".ocr-cache/reads.json";
 const LEDGER_PATH = ".ocr-cache/captured.json";
+
+/** What the terminal shows. The transcript file always gets everything. */
+const LEVEL: Level = Bun.argv.includes("--trace")
+  ? "trace"
+  : Bun.argv.includes("--quiet")
+    ? "quiet"
+    : "normal";
 
 /**
  * Off by default: development saves the same files the event does, and every save would otherwise
@@ -123,7 +140,66 @@ async function writeJson(
   return json({ saved: path, published });
 }
 
-const reader = new ReadQueue(readShot);
+/**
+ * The transcript's file is named for the event day, which the log only tells us once it has been
+ * parsed. Lines written before then wait here rather than being dropped — the startup banner and
+ * the first queue burst are the two most worth keeping.
+ */
+let transcriptFile: TranscriptFile | undefined;
+const waitingForFile: string[] = [];
+
+async function openTranscript(date: string): Promise<void> {
+  if (transcriptFile) return;
+  transcriptFile = await openTranscriptFile(transcriptPath(folders.captures, date));
+  transcript.write({ kind: "note", text: `server started · ${date}` });
+  for (const line of waitingForFile.splice(0)) transcriptFile(line);
+}
+
+const transcript = new Transcript({
+  level: LEVEL,
+  colour: process.stdout.isTTY === true,
+  out: (text) => console.log(text),
+  file: (text) => (transcriptFile ? transcriptFile(text) : waitingForFile.push(text)),
+});
+
+const reporter = new Reporter();
+
+/** Seconds a read takes, measured rather than guessed, so the queue's ETA is worth reading. */
+let perRead = 7;
+
+function reportQueue(event: QueueEvent): void {
+  const at = Date.now();
+  if (event.kind === "queued") {
+    const done = clock(at + event.waiting * perRead * 1000);
+    transcript.write({
+      kind: "entry",
+      at,
+      lane: "queue",
+      level: "normal",
+      text: `${event.waiting} waiting · ~${perRead}s each · done by ~${done}`,
+    });
+    return;
+  }
+  if (event.kind === "reading") {
+    transcript.write({
+      kind: "entry",
+      at,
+      lane: "queue",
+      text: `${column(`${event.at}/${event.of}`, 8)}${event.path.split("/").pop()}`,
+    });
+    return;
+  }
+  if (event.read > 0) perRead = Math.max(1, Math.round(event.took / event.read / 1000));
+  transcript.write({
+    kind: "entry",
+    at,
+    lane: "queue",
+    level: "normal",
+    text: `drained · ${event.read} read in ${duration(event.took)}`,
+  });
+}
+
+const reader = new ReadQueue(readShot, reportQueue);
 Object.assign(reader.cache(), await loadCache(CACHE_PATH));
 setInterval(() => void saveCache(CACHE_PATH, reader.cache()), 10_000);
 
@@ -328,6 +404,13 @@ const server = Bun.serve({
       const roster = players.players.flatMap((player) =>
         player.ingame && player.joined !== false ? [player.ingame] : [],
       );
+      const fills = fillsFor(shots, readsFor(shots), roster, times, event.shows);
+
+      await openTranscript(day);
+      const reads = readsFor(shots);
+      for (const line of reporter.observe({ shows, date: day, shots, reads, fills })) {
+        transcript.write(line);
+      }
 
       return json({
         players,
@@ -342,7 +425,7 @@ const server = Bun.serve({
         shotDir: shotDir ?? null,
         captureDir: capture.dir,
         shots,
-        fills: fillsFor(shots, readsFor(shots), roster, times, event.shows),
+        fills,
         autoPublish: AUTO_PUBLISH,
         capture: RECORD ? recorder.status() : null,
         problems: await checkData(),
@@ -380,8 +463,21 @@ const server = Bun.serve({
         (shot) => shot.showIndex === showIndex,
       );
       reader.forget(shots.map((shot) => cacheKey(shot.file, shot.takenAt)));
+      transcript.write({
+        kind: "entry",
+        at: Date.now(),
+        lane: "admin",
+        text: `re-read · show ${showIndex + 1} · ${shots.length} captures requeued`,
+      });
       queueReads(shotDir, shots);
       return json({ rereading: shots.length });
+    }
+
+    /** The admin does its own filling in the browser; this is how the transcript hears about it. */
+    if (request.method === "POST" && pathname === "/api/note") {
+      const { text } = (await request.json()) as { text: string };
+      transcript.write({ kind: "entry", at: Date.now(), lane: "admin", text: text.slice(0, 200) });
+      return json({ noted: true });
     }
 
     if (request.method === "PUT" && pathname === "/api/players") {
