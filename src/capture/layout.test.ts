@@ -2,7 +2,8 @@
 process.env.TZ = "Europe/Brussels";
 
 import { expect, test } from "bun:test";
-import { captureFile } from "./layout";
+import { captureFile, clipFile, showDirsFor, showFolder, showsOnDisk, slugOf } from "./layout";
+import { parseLog } from "../log";
 
 test("a capture is named for its round and what it shows", () => {
   expect(captureFile("first", 1, 1)).toBe("round-01-first-race-finisher-01.jpg");
@@ -17,9 +18,6 @@ test("the winner screen is filed under the final's number, like everything else"
 test("a show long enough to run past nine rounds still sorts", () => {
   expect(captureFile("first", 12, 1)).toBe("round-12-first-race-finisher-01.jpg");
 });
-
-import { showFolder, slugOf } from "./layout";
-import { parseLog } from "../log";
 
 const LOG = `
 23:25:00.000: [HandleSuccessfulLogin] Selected show is playlist_a IsUltimatePartyEpisode: False
@@ -44,24 +42,22 @@ test("a slug is the suggested show name, lowercased and hyphenated", () => {
   expect(slugOf(parseLog(LOG), 0)).toBe("playlist-a-1");
 });
 
-import { showsOnDisk } from "./layout";
-
 const DATE = "2026-09-02";
 const utc = (clock: string) => Date.parse(`${DATE}T${clock}Z`);
 
 const TWO_SHOWS = `
 21:00:00.000: [HandleSuccessfulLogin] Selected show is playlist_a IsUltimatePartyEpisode: False
-21:00:05.000: [StateGameLoading] Finished loading game level, assumed to be first_round_normal. Duration: 1s
-21:00:40.000: ClientGameManager::HandleServerPlayerProgress PlayerId=1 is succeeded=True
+21:01:05.000: [StateGameLoading] Finished loading game level, assumed to be first_round_normal. Duration: 1s
+21:01:40.000: ClientGameManager::HandleServerPlayerProgress PlayerId=1 is succeeded=True
 21:05:00.000: [HandleSuccessfulLogin] Selected show is playlist_b IsUltimatePartyEpisode: False
-21:05:05.000: [StateGameLoading] Finished loading game level, assumed to be first_round_normal. Duration: 1s
+21:06:05.000: [StateGameLoading] Finished loading game level, assumed to be first_round_normal. Duration: 1s
 `;
 
 test("each show that has loaded a round owns a folder, named for that round's clock", () => {
   const folders = showsOnDisk(parseLog(TWO_SHOWS), DATE);
   expect(folders.map((show) => [show.showIndex, show.dir])).toEqual([
-    [0, showFolder(utc("21:00:05"), "playlist-a-1")],
-    [1, showFolder(utc("21:05:05"), "playlist-b-1")],
+    [0, "show-2026-09-02T23h01-playlist-a-1"],
+    [1, "show-2026-09-02T23h06-playlist-b-1"],
   ]);
 });
 
@@ -82,8 +78,6 @@ test("a show that has loaded no round yet has nothing to name a folder after", (
 `;
   expect(showsOnDisk(parseLog(selected), DATE)).toEqual([]);
 });
-
-import { showDirsFor } from "./layout";
 
 test("an evening is the event day and the one it runs into, and nothing else", () => {
   const names = [
@@ -108,8 +102,6 @@ test("anything that is not a show folder is skipped", () => {
   const names = ["segments", "2026-09-02.transcript.txt", "show-nonsense", "show-2026-09-02T23h25"];
   expect(showDirsFor(names, "2026-09-02")).toEqual(["show-2026-09-02T23h25"]);
 });
-
-import { clipFile } from "./layout";
 
 test("a clip keeps the name that says what it is once dragged out of its folder", () => {
   expect(clipFile("2026-09-02", 3, "solos-4")).toBe("2026-09-02-show-04-solos-4");

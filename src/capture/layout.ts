@@ -26,7 +26,7 @@ export function showFolder(startedAt: number, slug: string): string {
   const date = new Date(startedAt);
   const day = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   const clock = `${pad(date.getHours())}h${pad(date.getMinutes())}`;
-  return `show-${day}T${clock}${slug ? `-${slug}` : ""}`;
+  return `show-${day}T${clock}-${slug}`;
 }
 
 export function slugOf(shows: ParsedShow[], showIndex: number): string {
