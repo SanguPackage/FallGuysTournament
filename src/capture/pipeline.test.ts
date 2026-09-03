@@ -10,6 +10,7 @@ const MOMENT: Moment = {
   kind: "first",
   showIndex: 0,
   roundIndex: 2,
+  roundNumber: 3,
   date: "2026-09-05",
   at: AT,
   from: AT - 500,
@@ -30,7 +31,8 @@ async function harness() {
     deps: {
       ffmpeg: "ff",
       scratchDir,
-      captureDir: `${dir}/captures`,
+      showsDir: `${dir}/shows`,
+      showDir: "show-2026-09-05T20h00-solos-1",
       // Stands in for ffmpeg. The argv carries Windows paths, which this process cannot write to,
       // so the frames go where the pipeline will look for them instead.
       run: async (argv: string[]) => {
@@ -61,17 +63,18 @@ test("a moment nothing covers is left pending rather than half captured", async 
   }
 });
 
-test("kept frames land in the capture root with the mtime of the instant they show", async () => {
+test("kept frames land in the show's own folder with the mtime of the instant they show", async () => {
   const { dir, deps, ran } = await harness();
   const ledger = new Ledger();
   try {
     const kept = await captureMoment(MOMENT, SEGMENTS, ledger, deps);
     expect(ran.length).toBe(1);
     expect(ran[0]![0]).toBe("ff");
-    expect(kept.length).toBe(2);
-    const first = kept[0]!;
-    expect(first).toContain("2026-09/auto-1-first-");
-    const info = await stat(`${dir}/captures/${first}`);
+    expect(kept).toEqual([
+      "show-2026-09-05T20h00-solos-1/round-03-first-race-finisher-01.jpg",
+      "show-2026-09-05T20h00-solos-1/round-03-first-race-finisher-02.jpg",
+    ]);
+    const info = await stat(`${dir}/shows/${kept[0]!}`);
     // Frame 1 of a 30fps pull that began at `from`.
     expect(Math.round(info.mtimeMs)).toBe(MOMENT.from);
     expect(ledger.pending("2026-09-05:0:first:2")).toBe(false);

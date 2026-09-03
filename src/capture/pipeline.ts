@@ -1,5 +1,6 @@
 import { mkdir, readdir, rm, utimes } from "node:fs/promises";
 import { concatList, cutArgv, extractArgv } from "./command";
+import { captureFile } from "./layout";
 import { clipKey, momentKey, type Moment, type MomentKind, type ShowClip } from "./moments";
 import { pick } from "./pick";
 import { coverage, offsetIn, type Segment } from "./segments";
@@ -27,7 +28,9 @@ export interface RunResult {
 export interface CaptureDeps {
   ffmpeg: string;
   scratchDir: string;
-  captureDir: string;
+  showsDir: string;
+  /** The folder of the show this moment belongs to, relative to `showsDir`. */
+  showDir: string;
   run: (argv: string[]) => Promise<RunResult>;
   frameOf: (path: string) => Promise<Frame>;
   screenOf: (frame: Frame) => Screen | undefined;
@@ -39,20 +42,6 @@ export interface CaptureDeps {
  * listed once it closes, which is up to its own length after the frames went into it.
  */
 const SETTLE_MS = 90_000;
-
-const pad = (n: number, width: number) => String(n).padStart(width, "0");
-
-/** `YYYY-MM`, the month folder both shots roots are laid out by. */
-function monthOf(at: number): string {
-  const date = new Date(at);
-  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1, 2)}`;
-}
-
-/** `HHMMSS` of the instant, so a frame's name says when it is from. */
-function clockOf(at: number): string {
-  const date = new Date(at);
-  return `${pad(date.getUTCHours(), 2)}${pad(date.getUTCMinutes(), 2)}${pad(date.getUTCSeconds(), 2)}`;
-}
 
 /**
  * Pulls one moment's frames, keeps the few showing the screen it wanted, and files them under the
@@ -109,13 +98,11 @@ export async function captureMoment(
     const chosen = await pick(candidates, WANTED[moment.kind], KEEP, deps.frameOf, deps.screenOf);
 
     for (const candidate of chosen) {
-      const month = monthOf(candidate.at);
-      const name = `auto-${moment.showIndex + 1}-${moment.kind}-${clockOf(candidate.at)}-${kept.length + 1}.jpg`;
-      const relative = `${month}/${name}`;
-      await mkdir(`${deps.captureDir}/${month}`, { recursive: true });
-      await Bun.write(`${deps.captureDir}/${relative}`, Bun.file(candidate.path));
+      const relative = `${deps.showDir}/${captureFile(moment.kind, moment.roundNumber, kept.length + 1)}`;
+      await mkdir(`${deps.showsDir}/${deps.showDir}`, { recursive: true });
+      await Bun.write(`${deps.showsDir}/${relative}`, Bun.file(candidate.path));
       const seconds = candidate.at / 1000;
-      await utimes(`${deps.captureDir}/${relative}`, seconds, seconds);
+      await utimes(`${deps.showsDir}/${relative}`, seconds, seconds);
       kept.push(relative);
     }
 
