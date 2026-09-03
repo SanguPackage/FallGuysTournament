@@ -405,7 +405,10 @@ button.win {
   cursor: pointer;
 }
 
-button.win:hover, button.win:focus-visible { color: var(--purple); }
+/* The pill carries the border, so hovering the name inside it lights the whole badge. */
+.show .champ:has(button.win:hover), .show .champ:has(button.win:focus-visible) {
+  border-color: #fff;
+}
 
 .show.live > .panel { border-color: var(--lime); box-shadow: 0 0 0 4px #6ee78726; }
 
