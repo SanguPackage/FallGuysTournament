@@ -15,7 +15,7 @@ test("a map sangu.be has no page for is left unlinked", () => {
 });
 
 test("a link out carries the same mark as the one in the footer", () => {
-  expect(levelLink("Thin Ice")).toContain(sanguMark());
+  expect(levelLink("Thin Ice")).toContain(sanguMark(26));
 });
 
 test("a map is drawn with the game's own icon for it", () => {
