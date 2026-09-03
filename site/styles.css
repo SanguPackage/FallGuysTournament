@@ -52,20 +52,6 @@ body::before {
   to { background-position: 120px 104px; }
 }
 
-body::after {
-  content: "";
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(2px);
-  opacity: 0.3;
-  pointer-events: none;
-  width: 300px;
-  height: 300px;
-  background: var(--cyan);
-  bottom: 6%;
-  right: -120px;
-}
-
 .wrap { max-width: 64rem; margin: 0 auto; position: relative; z-index: 1; }
 
 /* header and navigation */
@@ -303,7 +289,7 @@ h2 {
 
 .p { text-align: center; position: relative; }
 
-.p .figure { position: relative; display: grid; place-items: end center; margin-bottom: -0.4rem; animation: bob 2.6s ease-in-out infinite; }
+.p .figure { position: relative; z-index: 2; display: grid; place-items: end center; margin-bottom: -0.4rem; animation: bob 2.6s ease-in-out infinite; }
 .p2 .figure { animation-delay: 0.35s; }
 .p3 .figure { animation-delay: 0.7s; }
 
@@ -332,22 +318,69 @@ h2 {
 .crown path { fill: var(--yellow); stroke: var(--ink); stroke-width: 5; stroke-linejoin: round; }
 .crown .jewel { fill: var(--pink); }
 
-/* Cut off at the top of the winner's block, so strips do not rain over the standings below. */
-.confetti { position: absolute; inset: -2rem 0 0; overflow: hidden; pointer-events: none; }
-.confetti i { position: absolute; width: 10px; height: 6px; border-radius: 2px; animation: fall 3.2s linear infinite; }
-.confetti i:nth-child(5n + 1) { background: var(--yellow); }
-.confetti i:nth-child(5n + 2) { background: var(--cyan); }
-.confetti i:nth-child(5n + 3) { background: var(--pink); }
-.confetti i:nth-child(5n + 4) { background: var(--lime); }
-.confetti i:nth-child(5n + 5) { background: var(--purple); }
-
-@keyframes fall {
-  0% { transform: translateY(-10px) rotate(0); opacity: 0; }
-  10% { opacity: 1; }
-  100% { transform: translateY(230px) rotate(420deg); opacity: 0; }
+/*
+ * Clipped to the winner's column so paper never rains over the standings below, and stacked
+ * between the block and the bean: it passes in front of the podium but behind the champion.
+ */
+.confetti {
+  position: absolute;
+  inset: -2.5rem 0 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  perspective: 500px;
+  --drop: 420px;
 }
 
-.p .nm { font-size: 19px; font-weight: 800; line-height: 1.1; }
+.confetti i {
+  position: absolute;
+  top: 0;
+  left: var(--x);
+  width: var(--w);
+  height: var(--h);
+  transform-style: preserve-3d;
+  animation: fall var(--d) linear var(--delay) infinite;
+}
+
+/* The paper turns on its own clock inside the falling box, so a piece can go edge-on mid-drop. */
+.confetti i::before {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--c);
+  border-radius: var(--r);
+  animation: flutter var(--f) linear var(--delay) infinite;
+}
+
+@keyframes fall {
+  0% { transform: translate(0, -2rem); opacity: 0; }
+  6% { opacity: 1; }
+  25% { transform: translate(var(--sway), calc(var(--drop) * 0.25)); }
+  50% { transform: translate(0, calc(var(--drop) * 0.5)); }
+  75% { transform: translate(calc(var(--sway) * -1), calc(var(--drop) * 0.75)); }
+  92% { opacity: 1; }
+  100% { transform: translate(0, var(--drop)); opacity: 0; }
+}
+
+@keyframes flutter {
+  to { transform: rotateY(1080deg) rotateX(540deg) rotateZ(var(--spin)); }
+}
+
+.p .nm { display: block; width: 100%; font-size: 19px; font-weight: 800; line-height: 1.1; }
+
+button.nm {
+  font-family: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0.1rem 0.3rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+button.nm:hover, button.nm:focus-visible { color: var(--yellow); background: #ffffff1f; }
 /* Reserves its line so a player with no FOM name does not sit a row shorter than the rest. */
 .p .ig { font-size: 13px; opacity: 0.7; font-weight: 600; min-height: 1.3em; }
 
