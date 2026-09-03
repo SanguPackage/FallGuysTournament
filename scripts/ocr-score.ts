@@ -1,3 +1,4 @@
+import { readdir } from "node:fs/promises";
 import { CAPTURE_DIR_DEFAULT, captureFolders } from "../src/capture/paths";
 import { mergeNames } from "../src/names";
 import { assign, cleanToken } from "../src/ocr/match";
@@ -48,16 +49,18 @@ const boards = Object.entries(manifest.files).flatMap(([file, entry]): [string, 
 );
 
 // A board cut out of the recording and one shot by hand are the same picture, so every root is
-// searched by the file's own name.
-const roots = [
-  await findScreenshotDir(),
-  captureFolders(process.env.CAPTURE_DIR ?? CAPTURE_DIR_DEFAULT).captures,
-].filter((dir): dir is string => dir !== undefined);
+// searched by the file's own name. ShareX files by month; ours are filed per show.
+const months = [await findScreenshotDir()].filter((dir): dir is string => dir !== undefined);
+const showsDir = captureFolders(process.env.CAPTURE_DIR ?? CAPTURE_DIR_DEFAULT).shows;
 
 async function locate(file: string): Promise<string | undefined> {
   if (await Bun.file(file).exists()) return file;
-  for (const root of roots) {
+  for (const root of months) {
     const path = `${root}/${month}/${file}`;
+    if (await Bun.file(path).exists()) return path;
+  }
+  for (const show of await readdir(showsDir).catch(() => [])) {
+    const path = `${showsDir}/${show}/${file}`;
     if (await Bun.file(path).exists()) return path;
   }
   return undefined;
@@ -75,7 +78,7 @@ if (dump !== -1) {
   }
   const path = await locate(file);
   if (path === undefined) {
-    console.error(`${file} — not under ${roots.join(" or ")}`);
+    console.error(`${file} — not under ${[...months, showsDir].join(" or ")}`);
     process.exit(1);
   }
   const tokens = ((await readShot(path))?.tokens ?? []).map(cleanToken);
