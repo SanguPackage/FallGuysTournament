@@ -109,6 +109,19 @@ taken from the
 [Fall Guys wiki](https://fallguysultimateknockout.fandom.com/wiki/Custom_Games). A show
 the headcount cannot support is skipped. Refresh it if the game changes the numbers.
 
+## Crown levels and level clips
+
+`data/sangu.json` is read off [Fall Guys @ Sangu](https://sangu.be/fallguys/): the crowns each
+crown level costs, and which levels have a clip page there. The board turns the first into the
+tooltip behind a crown badge and the second into the link beside a round's map. Refresh it when a
+season adds levels or moves the crown track:
+
+```bash
+bun run sangu
+```
+
+A quarter of the maps played have no page yet, and those simply go unlinked.
+
 ## Admin UI
 
 ```bash
