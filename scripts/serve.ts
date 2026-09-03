@@ -1,6 +1,6 @@
 import { logDate, parseLog } from "../src/log";
 import { absoluteTimes, placeShots } from "../src/screenshots";
-import { listShots, resolveShot } from "../src/shot-folder";
+import { listShots, listShowShots, resolveShot } from "../src/shot-folder";
 import { findLog, findScreenshotDir } from "../src/windows-path";
 import { checkData } from "../src/data-check";
 import { publish } from "../src/publish";
@@ -17,6 +17,7 @@ import { clipKey, momentKey, momentsIn, showClips } from "../src/capture/moments
 import { parseSegments, type Segment } from "../src/capture/segments";
 import { recordArgv, thumbArgv } from "../src/capture/command";
 import { captureFolders, captureSettings, runFolder, runsIn } from "../src/capture/paths";
+import { clipFile, showsOnDisk, slugOf, type ShowFolder } from "../src/capture/layout";
 import { toWindows } from "../src/capture/win-path";
 import { Recorder } from "../src/capture/recorder";
 import { Ledger, type LedgerState } from "../src/capture/ledger";
@@ -29,11 +30,13 @@ import type { ParsedShow } from "../src/log";
 import type { Players, TournamentEvent } from "../src/types";
 import type { Shot, ShotSource } from "../src/screenshots";
 import { Reporter } from "../src/transcript/report";
-import { clock, column, duration } from "../src/transcript/format";
+import { clock, column, duration, formatLine } from "../src/transcript/format";
+import { linesBetween } from "../src/transcript/slice";
 import {
   Transcript,
   openTranscriptFile,
   transcriptPath,
+  type Entry,
   type Level,
   type TranscriptFile,
 } from "../src/transcript/transcript";
@@ -88,21 +91,23 @@ const folders = captureFolders(capture.dir);
 
 /** Which folder a capture lives in. ShareX's is only ever read; the frames are ours to write. */
 async function rootFor(source: ShotSource): Promise<string | undefined> {
-  if (source === "auto") return RECORD ? folders.captures : undefined;
+  if (source === "auto") return RECORD ? folders.shows : undefined;
   return findScreenshotDir();
 }
 
 /** Screenshots are a reading aid: a missing or unreadable folder must not stop the admin loading. */
 async function placed(dir: string | undefined, shows: ParsedShow[], date: string) {
-  const month = date.slice(0, 7);
   const shots: Shot[] = [];
-  for (const [root, source] of [
-    [dir, "sharex"],
-    [RECORD ? folders.captures : undefined, "auto"],
-  ] as const) {
-    if (!root) continue;
+  if (dir) {
     try {
-      shots.push(...(await listShots(root, month, source)));
+      shots.push(...(await listShots(dir, date.slice(0, 7))));
+    } catch {
+      // One unreadable root must not cost the other.
+    }
+  }
+  if (RECORD) {
+    try {
+      shots.push(...(await listShowShots(folders.shows, date)));
     } catch {
       // One unreadable root must not cost the other.
     }
@@ -150,16 +155,20 @@ const waitingForFile: string[] = [];
 
 async function openTranscript(date: string): Promise<void> {
   if (transcriptFile) return;
-  transcriptFile = await openTranscriptFile(transcriptPath(folders.captures, date));
+  transcriptFile = await openTranscriptFile(transcriptPath(capture.dir, date));
   transcript.write({ kind: "note", text: `server started · ${date}` });
   for (const line of waitingForFile.splice(0)) transcriptFile(line);
 }
+
+/** The evening's lines, which the per-show transcripts are cut from on every sweep. */
+const entries: Entry[] = [];
 
 const transcript = new Transcript({
   level: LEVEL,
   colour: process.stdout.isTTY === true,
   out: (text) => console.log(text),
   file: (text) => (transcriptFile ? transcriptFile(text) : waitingForFile.push(text)),
+  tap: (line) => entries.push(line),
 });
 
 const reporter = new Reporter();
@@ -207,7 +216,7 @@ setInterval(() => void saveCache(CACHE_PATH, reader.cache()), 10_000);
 function queueReads(dir: string | undefined, shots: Shot[]): void {
   const roots: Record<ShotSource, string | undefined> = {
     sharex: dir,
-    auto: RECORD ? folders.captures : undefined,
+    auto: RECORD ? folders.shows : undefined,
   };
   reader.offer(
     shots.flatMap((shot) => {
@@ -326,12 +335,23 @@ async function recordingFrame(): Promise<string | undefined> {
   return out;
 }
 
-function clipName(shows: ParsedShow[], showIndex: number, date: string): string {
-  const slug = suggestShowName(shows, showIndex)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-  return `${date}-show-${String(showIndex + 1).padStart(2, "0")}-${slug}`;
+/** Lines each show's transcript was last written with, so an unchanged one is not rewritten. */
+const transcriptLines = new Map<string, number>();
+
+/**
+ * Rewritten rather than appended: a line can land long after the show it belongs to — an OCR read,
+ * a fill, an admin edit — and rewriting is what gets it into the right folder.
+ */
+async function writeShowTranscripts(onDisk: ShowFolder[]): Promise<void> {
+  for (const show of onDisk) {
+    const lines = linesBetween(entries, show.from, show.to);
+    if (lines.length === 0 || transcriptLines.get(show.dir) === lines.length) continue;
+    const folder = `${folders.shows}/${show.dir}`;
+    await mkdir(folder, { recursive: true });
+    const text = lines.map((line) => formatLine(line)).join("\n");
+    await Bun.write(`${folder}/transcript.txt`, `${text}\n`);
+    transcriptLines.set(show.dir, lines.length);
+  }
 }
 
 /**
@@ -346,13 +366,19 @@ async function sweepCaptures(): Promise<void> {
   const segments = await segmentsNow();
   if (segments.length === 0) return;
 
+  const onDisk = showsOnDisk(shows, day);
+  const dirOf = new Map(onDisk.map((show) => [show.showIndex, show.dir]));
+  await writeShowTranscripts(onDisk);
+
   for (const moment of momentsIn(shows, day)) {
-    if (!ledger.pending(momentKey(moment))) continue;
+    const showDir = dirOf.get(moment.showIndex);
+    // A show whose first round has not loaded owns no folder yet, and its moments can wait.
+    if (showDir === undefined || !ledger.pending(momentKey(moment))) continue;
     captureJobs.add(momentKey(moment), async () => {
-      await captureMoment(moment, await segmentsNow(), ledger, {
+      await captureMoment(moment, showDir, await segmentsNow(), ledger, {
         ffmpeg: capture.ffmpeg!,
         scratchDir: folders.scratch,
-        captureDir: folders.captures,
+        showsDir: folders.shows,
         run: runFfmpeg,
         frameOf: frameFrom,
         screenOf: identify,
@@ -362,16 +388,17 @@ async function sweepCaptures(): Promise<void> {
   }
 
   for (const clip of showClips(shows, day)) {
-    if (!ledger.pending(clipKey(clip))) continue;
-    const name = clipName(shows, clip.showIndex, day);
+    const showDir = dirOf.get(clip.showIndex);
+    if (showDir === undefined || !ledger.pending(clipKey(clip))) continue;
+    const file = `${showDir}/${clipFile(day, clip.showIndex, slugOf(shows, clip.showIndex))}`;
     captureJobs.add(clipKey(clip), async () => {
-      const cut = await cutShowClip(clip, await segmentsNow(), name, ledger, {
+      const cut = await cutShowClip(clip, file, await segmentsNow(), ledger, {
         ffmpeg: capture.ffmpeg!,
         scratchDir: folders.scratch,
         showsDir: folders.shows,
         run: runFfmpeg,
       });
-      if (cut?.gapped) console.log(`${name}.mp4 — a recording died inside it, so the clip jumps`);
+      if (cut?.gapped) console.log(`${file}.mp4 — a recording died inside it, so the clip jumps`);
     });
   }
 }
