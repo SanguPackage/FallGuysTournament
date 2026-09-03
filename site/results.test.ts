@@ -115,6 +115,33 @@ test("a show already typed in is not shown twice", () => {
   expect(html).not.toContain("Playing now");
 });
 
+test("a log counting past the last show recorded folds into it rather than doubling it", () => {
+  const html = renderResults([SOLOS], ROSTER, {
+    ...NOW,
+    showNumber: 2,
+    rounds: [
+      { map: "Dizzy Heights", type: "race", qualified: 14 },
+      { map: "Roll Out", type: "survival", qualified: 2 },
+      { map: "Fall Mountain", type: "final" },
+    ],
+  });
+  expect([...html.matchAll(/Dizzy Heights/g)]).toHaveLength(1);
+  expect(html).not.toContain("Playing now");
+});
+
+test("a show whose maps diverge from the last one recorded is a new panel", () => {
+  const html = renderResults([SOLOS], ROSTER, {
+    ...NOW,
+    showNumber: 2,
+    rounds: [
+      { map: "Dizzy Heights", type: "race", qualified: 14 },
+      { map: "Hoverboard Heroes", type: "survival" },
+    ],
+  });
+  expect([...html.matchAll(/Dizzy Heights/g)]).toHaveLength(2);
+  expect(html).toContain("Playing now");
+});
+
 test("every round the log has loaded for the show being played is listed", () => {
   const html = renderResults([], ROSTER, NOW);
   expect(html).toContain("Wall Guys");

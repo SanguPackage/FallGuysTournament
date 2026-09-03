@@ -82,14 +82,29 @@ function renderShow(
     </div>`;
 }
 
+/**
+ * Which panel the log is speaking for. It counts shows nobody typed in, so its number can run past
+ * the end of the list; a run whose maps repeat the last show recorded is that show counted again,
+ * not a new one, and folding it back keeps a finished show from standing twice.
+ */
+function liveIndexOf(shows: Show[], now: LiveNow): number {
+  const index = Math.max(0, Math.min(now.showNumber - 1, shows.length));
+  if (index < shows.length) return index;
+
+  const last = shows[shows.length - 1];
+  const repeats =
+    last !== undefined &&
+    now.rounds.length > 0 &&
+    now.rounds.every((round, at) => last.rounds[at]?.map === round.map);
+  return repeats ? shows.length - 1 : index;
+}
+
 export function renderResults(
   shows: Show[],
   players: Player[],
   now: LiveNow | null = null,
 ): string {
-  // The log runs ahead of what has been typed in, so the show on screen may have no entry yet.
-  // Clamping keeps it on the end of the list rather than dropping it when a show went unrecorded.
-  const liveIndex = now === null ? -1 : Math.max(0, Math.min(now.showNumber - 1, shows.length));
+  const liveIndex = now === null ? -1 : liveIndexOf(shows, now);
   const panels = [...shows];
   if (now !== null) panels[liveIndex] = mergeLive(shows[liveIndex], now);
 
