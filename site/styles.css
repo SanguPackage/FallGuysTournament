@@ -134,6 +134,8 @@ nav [aria-current] {
   padding: 0.25rem 0.85rem 0.3rem;
 }
 
+.lobby[hidden] { display: none; }
+
 .lobby small {
   font: 600 11px/1.2 "Barlow Condensed", sans-serif;
   letter-spacing: 0.14em;

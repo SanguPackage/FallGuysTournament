@@ -58,13 +58,13 @@ test("the title is escaped", () => {
 
 test("a lobby code is shown as a badge beside the nav, upper case", () => {
   const html = page({ ...RULES, lobbyCode: "abc123" });
-  expect(html).toContain(`class="lobby"`);
   expect(html).toContain("Lobby code");
   expect(html).toContain(">ABC123<");
+  expect(html).not.toContain(`class="lobby" hidden`);
 });
 
-test("no badge is drawn when there is no lobby code", () => {
-  expect(page(RULES)).not.toContain(`class="lobby"`);
+test("the badge is in the page but hidden when there is no lobby code", () => {
+  expect(page(RULES)).toContain(`class="lobby" hidden`);
 });
 
 test("a lobby code is escaped", () => {

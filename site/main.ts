@@ -77,10 +77,18 @@ function moversSince(previous: Map<string, number>, rows: LeaderboardRow[]): Set
   return movers;
 }
 
+/** The badge sits outside `#data`, so the poll has to reach it on its own. */
+function paintLobby(lobby: HTMLElement | null, code?: string): void {
+  if (!lobby) return;
+  lobby.hidden = !code;
+  lobby.querySelector("b")!.textContent = (code ?? "").toUpperCase();
+}
+
 function main(): void {
   const page = document.body.dataset.page;
   const target = document.querySelector<HTMLElement>("#data");
   const badge = document.querySelector<HTMLElement>("#live");
+  const lobby = document.querySelector<HTMLElement>("#lobby");
   if (!page || !target) return;
 
   const dialog = attachPlayerDialog();
@@ -92,6 +100,7 @@ function main(): void {
   const paint = (data: Data, rows: LeaderboardRow[], movers: Set<string>): void => {
     target.innerHTML = render(page, data, rows, movers);
     dialog?.refresh(data.event, data.players);
+    paintLobby(lobby, data.event.lobbyCode);
   };
 
   const poll = async (): Promise<void> => {

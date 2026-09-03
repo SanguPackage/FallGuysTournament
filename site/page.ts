@@ -25,9 +25,13 @@ export interface PageOptions {
   lobbyCode?: string;
 }
 
-/** Read off a phone across the room, so it is set in the largest thing on the bar. */
-function lobbyBadge(code: string): string {
-  return `<span class="lobby"><small>Lobby code</small><b>${escapeHtml(code.toUpperCase())}</b></span>`;
+/**
+ * Read off a phone across the room, so it is set in the largest thing on the bar. Always in the
+ * markup: the poll fills it in, so a lobby opened after the build still reaches the board.
+ */
+function lobbyBadge(code?: string): string {
+  const shown = code ? escapeHtml(code.toUpperCase()) : "";
+  return `<span class="lobby"${code ? "" : " hidden"} id="lobby"><small>Lobby code</small><b>${shown}</b></span>`;
 }
 
 export function nav(current: string, lobbyCode?: string): string {
@@ -36,7 +40,7 @@ export function nav(current: string, lobbyCode?: string): string {
       ? `<span aria-current="page">${label}</span>`
       : `<a href="${href}">${label}</a>`,
   ).join("");
-  return `<nav>${links}${lobbyCode ? lobbyBadge(lobbyCode) : ""}</nav>`;
+  return `<nav>${links}${lobbyBadge(lobbyCode)}</nav>`;
 }
 
 function footer(): string {
