@@ -189,7 +189,9 @@ function reportQueue(event: QueueEvent): void {
     });
     return;
   }
-  if (event.read > 0) perRead = Math.max(1, Math.round(event.took / event.read / 1000));
+  // Every poll that offers nothing new still drains, so a read of 0 is noise rather than news.
+  if (event.read === 0) return;
+  perRead = Math.max(1, Math.round(event.took / event.read / 1000));
   transcript.write({
     kind: "entry",
     at,
