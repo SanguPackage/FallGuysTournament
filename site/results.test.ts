@@ -50,10 +50,22 @@ test("a race still waiting for its winner is not mistaken for a round that score
 });
 
 test("a show panel colours each round's badges", () => {
-  const html = renderResults([SOLOS], ROSTER);
+  const html = renderResults([{ ...SOLOS, winners: ["Alpha", "Bravo"] }], ROSTER);
   expect(html).toContain(`class="bn playing"`);
+  expect(html).toContain(`class="bn through"`);
   expect(html).toContain(`class="bn out"`);
   expect(html).toContain(`class="bn won"`);
+});
+
+test("a decided final counts winners rather than survivors", () => {
+  const html = renderResults([SOLOS], ROSTER);
+  expect(html).toMatch(/Fall Mountain[\s\S]*?1 winner/);
+  expect(html).not.toMatch(/Fall Mountain[\s\S]*?\d+ through/);
+});
+
+test("a final more than one player won says so in the plural", () => {
+  const html = renderResults([{ ...SOLOS, winners: ["Alpha", "Bravo"] }], ROSTER);
+  expect(html).toMatch(/Fall Mountain[\s\S]*?2 winners/);
 });
 
 test("a finished show is crowned with its winners", () => {
@@ -188,13 +200,19 @@ test("a round reds the players it knocked out", () => {
   expect(html).toMatch(/Roll Out[\s\S]*?bn out[\s\S]*?Charlie/);
 });
 
-test("the final crowns its winner and reds the finalist it beat", () => {
+test("the final badges nobody when one player won it", () => {
   const html = renderResults([SOLOS], ROSTER);
+  expect(html).toMatch(/Fall Mountain[\s\S]*?👑 Alpha/);
+  expect(html).not.toMatch(/Fall Mountain[\s\S]*?bn /);
+});
+
+test("a shared win badges both winners, so the tie is visible", () => {
+  const html = renderResults([{ ...SOLOS, winners: ["Alpha", "Bravo"] }], ROSTER);
   expect(html).toMatch(/Fall Mountain[\s\S]*?bn won[\s\S]*?Alpha/);
-  expect(html).toMatch(/Fall Mountain[\s\S]*?bn out[\s\S]*?Bravo/);
+  expect(html).toMatch(/Fall Mountain[\s\S]*?bn won[\s\S]*?Bravo/);
 });
 
 test("a show no longer carries one field under all its rounds", () => {
-  const html = renderResults([SOLOS], ROSTER);
+  const html = renderResults([{ ...SOLOS, winners: ["Alpha", "Bravo"] }], ROSTER);
   expect([...html.matchAll(/class="beans"/g)]).toHaveLength(SOLOS.rounds.length);
 });

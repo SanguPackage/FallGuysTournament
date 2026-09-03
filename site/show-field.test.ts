@@ -19,9 +19,12 @@ const FINISHED: Show = {
   winners: ["Alpha"],
 };
 
+const SHARED: Show = { ...FINISHED, winners: ["Alpha", "Bravo"] };
+
 test("each badge carries its state as a class", () => {
-  const rounds = roundFieldsOf(FINISHED, ROSTER);
+  const rounds = roundFieldsOf(SHARED, ROSTER);
   expect(renderRoundBeans(rounds[0]!)).toContain(`class="bn out"`);
+  expect(renderRoundBeans(rounds[0]!)).toContain(`class="bn through"`);
   expect(renderRoundBeans(rounds[1]!)).toContain(`class="bn won"`);
 });
 
@@ -30,7 +33,7 @@ test("a badge does not repeat the round it is sitting on", () => {
 });
 
 test("rounds crossed first are marked on the badge", () => {
-  expect(renderRoundBeans(roundFieldsOf(FINISHED, ROSTER)[1]!)).toContain("⚡1");
+  expect(renderRoundBeans(roundFieldsOf(SHARED, ROSTER)[1]!)).toContain("⚡1");
 });
 
 test("a round that took nobody renders nothing", () => {

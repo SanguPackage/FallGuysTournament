@@ -20,6 +20,16 @@ function winnerCell(round: Round, show: Show, onScreen: boolean): string {
     : `<span class="winner none">no points</span>`;
 }
 
+/** A decided final counts crowns, not survivors: one name through a final is the show's winner. */
+function tallyCell(round: Round, show: Show): string {
+  const winners = round.type === "final" ? (show.winners?.length ?? 0) : 0;
+  if (winners > 0) {
+    return `<span class="through">${winners} winner${winners === 1 ? "" : "s"}</span>`;
+  }
+  if (round.survivors === undefined) return "";
+  return `<span class="through">${round.survivors} through</span>`;
+}
+
 /**
  * `onScreen` is the 1-based round the log says is being played, which only the machine running
  * Fall Guys knows; `null` means nothing is loaded, or nothing is speaking for this show.
@@ -40,7 +50,7 @@ function renderShow(
         <span class="map">${escapeHtml(round.map)}</span>
         <span class="type"><span class="tag ${round.type}">${round.type}</span></span>
         ${winnerCell(round, show, index + 1 === onScreen)}
-        ${round.survivors === undefined ? "" : `<span class="through">${round.survivors} through</span>`}
+        ${tallyCell(round, show)}
         ${renderRoundBeans(beans[index] ?? [])}
       </div>`,
     )

@@ -94,9 +94,9 @@ export function fieldOf(show: Show, players: Player[]): FieldPlayer[] {
 }
 
 /**
- * One badge list per round: who that round took, rather than where everybody ended up. A round
- * whose board nobody read cannot name its dead, so it shows everyone still in and its casualties
- * surface on the next round that was read.
+ * One badge list per round: who that round put through and who it took, rather than where
+ * everybody ended up. A round whose board nobody read cannot name its dead, so it shows everyone
+ * still in and its casualties surface on the next round that was read.
  */
 export function roundFieldsOf(show: Show, players: Player[]): FieldPlayer[][] {
   const firsts = firstsIn(show);
@@ -112,14 +112,15 @@ export function roundFieldsOf(show: Show, players: Player[]): FieldPlayer[][] {
   let alive = rosterOf(players);
   return show.rounds.map((round) => {
     if (round.type === "final" && winners.size > 0) {
-      const beans = alive.map((p) => bean(p, winners.has(p.ingame) ? "won" : "out"));
+      // The finalists they beat are already placed on the round that sent them here, and a lone
+      // winner is named in the round's own cell. Only a shared win needs badges to show the tie.
       alive = alive.filter((p) => winners.has(p.ingame));
-      return beans.sort(byState);
+      return alive.length > 1 ? alive.map((p) => bean(p, "won")).sort(byState) : [];
     }
     if (!round.qualified) return alive.map((p) => bean(p, "playing")).sort(byState);
 
     const through = new Set(round.qualified);
-    const beans = alive.filter((p) => !through.has(p.ingame)).map((p) => bean(p, "out"));
+    const beans = alive.map((p) => bean(p, through.has(p.ingame) ? "through" : "out"));
     alive = alive.filter((p) => through.has(p.ingame));
     return beans.sort(byState);
   });

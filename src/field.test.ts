@@ -138,12 +138,14 @@ function beansOf(show: Show): string[][] {
   return roundFieldsOf(show, ROSTER).map((round) => round.map((p) => `${p.ingame}:${p.state}`));
 }
 
-test("round one reds everyone the roster lost, board or no board", () => {
+test("round one greens its board and reds everyone the roster lost, board or no board", () => {
   const show: Show = {
     name: "Solos",
     rounds: [{ map: "Dizzy Heights", type: "race", qualified: ["Alpha", "Bravo"] }],
   };
-  expect(beansOf(show)).toEqual([["Charlie:out", "Delta:out"]]);
+  expect(beansOf(show)).toEqual([
+    ["Alpha:through", "Bravo:through", "Charlie:out", "Delta:out"],
+  ]);
 });
 
 test("a round only reds the players it took, not the ones already gone", () => {
@@ -154,7 +156,10 @@ test("a round only reds the players it took, not the ones already gone", () => {
       { map: "Roll Out", type: "survival", qualified: ["Alpha"] },
     ],
   };
-  expect(beansOf(show)).toEqual([["Delta:out"], ["Bravo:out", "Charlie:out"]]);
+  expect(beansOf(show)).toEqual([
+    ["Alpha:through", "Bravo:through", "Charlie:through", "Delta:out"],
+    ["Alpha:through", "Bravo:out", "Charlie:out"],
+  ]);
 });
 
 test("a round nobody read a board for greys everyone still in", () => {
@@ -166,7 +171,7 @@ test("a round nobody read a board for greys everyone still in", () => {
     ],
   };
   expect(beansOf(show)).toEqual([
-    ["Delta:out"],
+    ["Alpha:through", "Bravo:through", "Charlie:through", "Delta:out"],
     ["Alpha:playing", "Bravo:playing", "Charlie:playing"],
   ]);
 });
@@ -181,11 +186,11 @@ test("deaths nobody read surface on the next round that was read", () => {
   };
   expect(beansOf(show)).toEqual([
     ["Alpha:playing", "Bravo:playing", "Charlie:playing", "Delta:playing"],
-    ["Bravo:out", "Charlie:out", "Delta:out"],
+    ["Alpha:through", "Bravo:out", "Charlie:out", "Delta:out"],
   ]);
 });
 
-test("the final crowns its winners and reds the finalists they beat", () => {
+test("a final one player won badges nobody, since the round already names the winner", () => {
   const show: Show = {
     name: "Solos",
     rounds: [
@@ -194,7 +199,22 @@ test("the final crowns its winners and reds the finalists they beat", () => {
     ],
     winners: ["Bravo"],
   };
-  expect(beansOf(show)).toEqual([["Delta:out"], ["Bravo:won", "Alpha:out", "Charlie:out"]]);
+  expect(beansOf(show)).toEqual([
+    ["Alpha:through", "Bravo:through", "Charlie:through", "Delta:out"],
+    [],
+  ]);
+});
+
+test("a final two players won crowns both and nobody else", () => {
+  const show: Show = {
+    name: "Solos",
+    rounds: [
+      { map: "Dizzy Heights", type: "race", qualified: ["Alpha", "Bravo", "Charlie"] },
+      { map: "Fall Mountain", type: "final" },
+    ],
+    winners: ["Charlie", "Alpha"],
+  };
+  expect(beansOf(show)[1]).toEqual(["Alpha:won", "Charlie:won"]);
 });
 
 test("a final still being played greys its finalists", () => {
@@ -206,19 +226,21 @@ test("a final still being played greys its finalists", () => {
     ],
   };
   expect(beansOf(show)).toEqual([
-    ["Charlie:out", "Delta:out"],
+    ["Alpha:through", "Bravo:through", "Charlie:out", "Delta:out"],
     ["Alpha:playing", "Bravo:playing"],
   ]);
 });
 
-test("a round that took nobody has no badges", () => {
+test("a round that took nobody greens the whole field", () => {
   const show: Show = {
     name: "Solos",
     rounds: [
       { map: "Dizzy Heights", type: "race", qualified: ["Alpha", "Bravo", "Charlie", "Delta"] },
     ],
   };
-  expect(beansOf(show)).toEqual([[]]);
+  expect(beansOf(show)).toEqual([
+    ["Alpha:through", "Bravo:through", "Charlie:through", "Delta:through"],
+  ]);
 });
 
 test("a show with no rounds has no badge rows", () => {
