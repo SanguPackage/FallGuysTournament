@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { page } from "./page";
+import { nav, page } from "./page";
 
 const RULES = { event: "FOM 2026", title: "Rules", heading: "Rules", current: "rules.html", body: "<p>Hi</p>" };
 
@@ -56,11 +56,17 @@ test("the title is escaped", () => {
   expect(page({ ...RULES, title: "<script>" })).not.toContain("<title><script>");
 });
 
-test("a lobby code is shown as a badge beside the nav, upper case", () => {
+test("a lobby code is shown as a badge beside the event name, upper case", () => {
   const html = page({ ...RULES, lobbyCode: "abc123" });
   expect(html).toContain("Lobby code");
   expect(html).toContain(">ABC123<");
   expect(html).not.toContain(`class="lobby" hidden`);
+});
+
+test("the badge sits in the topbar, not in the nav", () => {
+  const html = page({ ...RULES, lobbyCode: "abc123" });
+  expect(html.indexOf(`class="lobby"`)).toBeLessThan(html.indexOf("<nav>"));
+  expect(nav("rules.html")).not.toContain("lobby");
 });
 
 test("the badge is in the page but hidden when there is no lobby code", () => {

@@ -34,13 +34,13 @@ function lobbyBadge(code?: string): string {
   return `<span class="lobby"${code ? "" : " hidden"} id="lobby"><small>Lobby code</small><b>${shown}</b></span>`;
 }
 
-export function nav(current: string, lobbyCode?: string): string {
+export function nav(current: string): string {
   const links = NAV.map(({ href, label }) =>
     href.endsWith(`/${current}`)
       ? `<span aria-current="page">${label}</span>`
       : `<a href="${href}">${label}</a>`,
   ).join("");
-  return `<nav>${links}${lobbyBadge(lobbyCode)}</nav>`;
+  return `<nav>${links}</nav>`;
 }
 
 function footer(): string {
@@ -94,10 +94,11 @@ export function page({ event, title, heading, current, body, live, lobbyCode }: 
     <div class="wrap">
       <div class="topbar">
         <span class="fom">${escapeHtml(event)}</span>
+        ${lobbyBadge(lobbyCode)}
         ${live ? `<span class="live" id="live"><i class="dot"></i> Live</span>` : ""}
       </div>
       <h1>${escapeHtml(heading)}</h1>
-      ${nav(current, lobbyCode)}
+      ${nav(current)}
 ${body}
       ${footer()}
     </div>

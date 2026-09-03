@@ -122,16 +122,17 @@ nav [aria-current] {
   box-shadow: 0 4px 0 var(--ink);
 }
 
-/* `auto` pushes it to the far end of the nav row: it is a notice, not one of the links. */
+/* `auto` keeps the badge next to the event name and the Live pill at the far end of the bar. */
 .lobby {
-  margin-left: auto;
+  margin-right: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: var(--fom);
-  border: 3px solid #ffffff33;
+  background: linear-gradient(160deg, var(--pink), var(--purple));
+  border: 3px solid var(--ink);
   border-radius: 12px;
-  padding: 0.25rem 0.85rem 0.3rem;
+  box-shadow: 0 4px 0 var(--ink);
+  padding: 0.15rem 0.85rem 0.2rem;
 }
 
 .lobby[hidden] { display: none; }
@@ -140,12 +141,13 @@ nav [aria-current] {
   font: 600 11px/1.2 "Barlow Condensed", sans-serif;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #ffffffb8;
+  color: #ffffffd6;
 }
 
 .lobby b {
   font: 400 22px/1.1 "Bebas Neue", sans-serif;
   letter-spacing: 0.12em;
+  color: var(--yellow);
 }
 
 /* shared blocks */
