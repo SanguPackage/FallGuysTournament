@@ -1,5 +1,6 @@
 import type { LiveStatus } from "../src/live";
 import type { LeaderboardRow } from "../src/types";
+import { crownTitle } from "./crown";
 import type { ShowInOrder } from "./rules";
 
 export function escapeHtml(value: string): string {
@@ -27,7 +28,8 @@ const EMPTY = `<p class="empty">No players registered yet.</p>`;
 
 function crownRank(row: LeaderboardRow): string {
   if (row.crownRank === undefined) return "";
-  return ` · <span class="crown-rank">👑${row.crownRank}</span>`;
+  const title = crownTitle(row.crownRank);
+  return ` · <span class="crown-rank"${title ? ` title="${title}"` : ""}>👑${row.crownRank}</span>`;
 }
 
 /** Second, first and third, so the tallest card sits in the middle. */
