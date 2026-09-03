@@ -1,3 +1,4 @@
+import { basename } from "node:path";
 import type { ParsedShow } from "../log";
 import type { SlotFill } from "../ocr/autofill";
 import type { ShotRead } from "../ocr/read";
@@ -115,7 +116,8 @@ export class Reporter {
           kind: "entry",
           at: shot.takenAt,
           lane: shot.source === "auto" ? "shots" : "shot",
-          text: `${column(shot.source, NAME_COLUMN)}${shot.file} → ${where}`,
+          // Only the name: a capture's folder is its show, which the line already names.
+          text: `${column(shot.source, NAME_COLUMN)}${basename(shot.file)} → ${where}`,
         });
       }
 
@@ -151,7 +153,7 @@ export class Reporter {
       kind: "entry",
       at: shot.takenAt,
       lane: "ocr",
-      text: `${column(read.screen ?? "·", NAME_COLUMN)}${shot.file} → ${said}`,
+      text: `${column(read.screen ?? "·", NAME_COLUMN)}${basename(shot.file)} → ${said}`,
     };
 
     const from = fills.find((fill) => fill.from === shot.file);

@@ -18,6 +18,19 @@ const SHOW = `
 20:01:35.000: VictoryScene::winnerPlayerId:1 squadId:0 teamId:-1
 `;
 
+const THREE_ROUND_SHOW = `
+20:00:00.000: [HandleSuccessfulLogin] Selected show is playlist_a IsUltimatePartyEpisode: False
+20:00:05.000: [StateGameLoading] Finished loading game level, assumed to be first_round_normal. Duration: 1s
+20:00:40.000: ClientGameManager::HandleServerPlayerProgress PlayerId=1 is succeeded=True
+20:00:44.000: ClientGameManager::HandleServerPlayerProgress PlayerId=2 is succeeded=True
+20:01:00.000: [StateGameLoading] Finished loading game level, assumed to be round_two. Duration: 1s
+20:01:20.000: ClientGameManager::HandleServerPlayerProgress PlayerId=1 is succeeded=True
+20:01:24.000: ClientGameManager::HandleServerPlayerProgress PlayerId=2 is succeeded=True
+20:02:00.000: [StateGameLoading] Finished loading game level, assumed to be round_floor_fall_final. Duration: 1s
+20:02:30.000: ClientGameManager::HandleServerPlayerProgress PlayerId=1 is succeeded=True
+20:02:35.000: VictoryScene::winnerPlayerId:1 squadId:0 teamId:-1
+`;
+
 test("every round with a qualifier yields a first moment, windowed around it", () => {
   const firsts = momentsIn(parseLog(SHOW), DATE).filter((m) => m.kind === "first");
   expect(firsts.map((m) => [m.roundIndex, m.at, m.from, m.to, m.fps])).toEqual([
@@ -130,4 +143,32 @@ test("a ledger key names the event, so a later one does not read as already capt
 test("a clip key names the event too", () => {
   const [clip] = showClips(parseLog(SHOW), DATE);
   expect(clipKey(clip!)).toBe(`${DATE}:0:clip`);
+});
+
+test("every moment carries the round number its file will be named for", () => {
+  const moments = momentsIn(parseLog(SHOW), DATE);
+  expect(moments.map((m) => [m.kind, m.roundNumber])).toEqual([
+    ["first", 1],
+    ["field", 1],
+    ["finalists", 1],
+    ["first", 2],
+    ["winner", 2],
+  ]);
+});
+
+test("in a three-round show, finalists sits on the round before the final and winner on the final", () => {
+  const moments = momentsIn(parseLog(THREE_ROUND_SHOW), DATE);
+  expect(moments.map((m) => [m.kind, m.roundNumber])).toEqual([
+    ["first", 1],
+    ["field", 1],
+    ["first", 2],
+    ["finalists", 2],
+    ["first", 3],
+    ["winner", 3],
+  ]);
+});
+
+test("the ledger's key does not change, so nothing already captured is pulled twice", () => {
+  const [first] = momentsIn(parseLog(SHOW), DATE);
+  expect(momentKey(first!)).toBe(`${DATE}:0:first:0`);
 });

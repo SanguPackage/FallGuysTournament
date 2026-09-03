@@ -45,14 +45,13 @@ export async function captureSettings(
   };
 }
 
-/** The four folders under the capture dir, so nothing has to spell them out twice. */
+/** The folders under the capture dir, so nothing has to spell them out twice. */
 export function captureFolders(dir: string) {
   const at = (name: string) => `${dir.replace(/\/+$/, "")}/${name}`;
   return {
     segments: at("segments"),
     shows: at("shows"),
     scratch: at("scratch"),
-    captures: at("captures"),
   };
 }
 

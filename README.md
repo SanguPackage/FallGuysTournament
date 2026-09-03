@@ -323,13 +323,24 @@ Either way the console says `Recording  on` with the folder, or `off`, on every 
 The header carries a **recording** badge. If it reads `NOT RECORDING`, nothing is being captured
 and `Alt + Print Screen` is the only thing still working.
 
-One mp4 per show lands in `CAPTURE_DIR/shows`, named `2026-09-02-show-01-slime-climb.mp4`, cut from
-the first round to just past the victory screen without re-encoding. The raw recording sits under
-`CAPTURE_DIR/segments` in one folder per run, stamped `2026-09-02T21h41m03`: every start of the
-server, and every recovery from an ffmpeg that died mid-event, gets its own, so nothing ever writes
-over footage that is already there. A clip cut across such a recovery has a jump in it, and the
-console says which one. Nothing is cleaned up: `CAPTURE_DIR` is yours to empty. A static desktop
-runs about 1.7 Mbps, so budget a few gigabytes an hour and leave 30GB free.
+Everything one show produced lands in one folder, `CAPTURE_DIR/shows/show-2026-09-02T23h25-solos-4`,
+named for the clock its first round loaded on:
+
+| In the folder                         | What it is                                                                             |
+|---------------------------------------|----------------------------------------------------------------------------------------|
+| `2026-09-02-show-04-solos-4.mp4`      | the show, cut from the first round to just past the victory screen without re-encoding |
+| `transcript.txt`                      | that show's transcript lines, and no others                                            |
+| `round-01-first-race-finisher-01.jpg` | the frames, named for the round and what they show                                     |
+
+Rounds are numbered from 1; the winner screen is filed under the final's number. The whole evening's
+transcript stays at `CAPTURE_DIR/2026-09-02.transcript.txt`.
+
+The raw recording sits under `CAPTURE_DIR/segments` in one folder per run, stamped
+`2026-09-02T21h41m03`: every start of the server, and every recovery from an ffmpeg that died
+mid-event, gets its own, so nothing ever writes over footage that is already there. A clip cut
+across such a recovery has a jump in it, and the console says which one. Nothing is cleaned up:
+`CAPTURE_DIR` is yours to empty. A static desktop runs about 1.7 Mbps, so budget a few gigabytes an
+hour and leave 30GB free.
 
 ### Before the event
 

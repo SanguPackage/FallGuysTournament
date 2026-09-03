@@ -1066,6 +1066,13 @@ git commit -m "feat: list the captures back out of the show folders"
 **Files:**
 - Modify: `scripts/serve.ts` — imports (`:1-39`), `rootFor` (`:87-90`), `placed` (`:92-113`), `openTranscript` (`:151-156`), the `Transcript` (`:158-163`), `clipName` (`:328-335`), `sweepCaptures` (`:337-375`)
 
+Review of Tasks 7-8 changed both pipeline signatures after this task was written. They are now:
+
+```ts
+captureMoment(moment, showDir, segments, ledger, deps)   // deps has showsDir, no showDir
+cutShowClip(clip, file, segments, ledger, deps)          // `file` is the whole path under showsDir, no .mp4
+```
+
 There is no test for `scripts/serve.ts` — it is wiring. Verify it by typecheck and by running it.
 
 - [ ] **Step 1: Replace the imports that moved**
@@ -1182,11 +1189,10 @@ Replace the body of `sweepCaptures` after `if (segments.length === 0) return;`:
     // A show whose first round has not loaded owns no folder yet, and its moments can wait.
     if (showDir === undefined || !ledger.pending(momentKey(moment))) continue;
     captureJobs.add(momentKey(moment), async () => {
-      await captureMoment(moment, await segmentsNow(), ledger, {
+      await captureMoment(moment, showDir, await segmentsNow(), ledger, {
         ffmpeg: capture.ffmpeg!,
         scratchDir: folders.scratch,
         showsDir: folders.shows,
-        showDir,
         run: runFfmpeg,
         frameOf: frameFrom,
         screenOf: identify,
@@ -1198,16 +1204,15 @@ Replace the body of `sweepCaptures` after `if (segments.length === 0) return;`:
   for (const clip of showClips(shows, day)) {
     const showDir = dirOf.get(clip.showIndex);
     if (showDir === undefined || !ledger.pending(clipKey(clip))) continue;
-    const name = clipFile(day, clip.showIndex, slugOf(shows, clip.showIndex));
+    const file = `${showDir}/${clipFile(day, clip.showIndex, slugOf(shows, clip.showIndex))}`;
     captureJobs.add(clipKey(clip), async () => {
-      const cut = await cutShowClip(clip, await segmentsNow(), name, ledger, {
+      const cut = await cutShowClip(clip, file, await segmentsNow(), ledger, {
         ffmpeg: capture.ffmpeg!,
         scratchDir: folders.scratch,
         showsDir: folders.shows,
-        showDir,
         run: runFfmpeg,
       });
-      if (cut?.gapped) console.log(`${name}.mp4 — a recording died inside it, so the clip jumps`);
+      if (cut?.gapped) console.log(`${file}.mp4 — a recording died inside it, so the clip jumps`);
     });
   }
 ```

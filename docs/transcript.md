@@ -1,8 +1,8 @@
 # Live transcript
 
-One line per thing that happened, in the order it happened, on the terminal and in a file next to
-the captures. Replaces the Tesseract chatter (`Detected 17 diacritics`, `Estimating resolution as
-1725`) that is currently the only thing the console says — and says in red, as if it mattered.
+One line per thing that happened, in the order it happened, on the terminal and in a file on disk.
+Replaces the Tesseract chatter (`Detected 17 diacritics`, `Estimating resolution as 1725`) that is
+currently the only thing the console says — and says in red, as if it mattered.
 
 ## Shape
 
@@ -23,23 +23,23 @@ terminal are the same text.
 ──── ROUND 1 ── Tundra Run · race ───────────────────────────────────── 23:24:51 ──
 23:25:57  log     first across the line · bean 17
 23:25:57  clip    toast window 23:25:55 → 23:26:03 · 30fps · segment 7 @ 04:12
-23:26:04  shots   5 frames kept of 240 · auto-4-first-232557-{1..5}.jpg
-23:26:09  ocr     toast   auto-4-first-232557-2.jpg → "BeckitoBurrito"      ✓ roster
+23:26:04  shots   5 frames kept of 240 · round-01-first-race-finisher-{01..05}.jpg
+23:26:09  ocr     toast   round-01-first-race-finisher-02.jpg → "BeckitoBurrito"      ✓ roster
 23:26:09  fill    round 1 · first ← BeckitoBurrito
 23:27:04  log     round over · 23 qualified, 0 out
 
 ──── ROUND 2 ── Hoopsie Legends · hunt ──────────────────────────────── 23:27:10 ──
 23:28:17  log     first through · bean 4
-23:28:24  shots   5 frames kept of 240 · auto-4-first-232817-{1..5}.jpg
-23:28:31  ocr     ·       auto-4-first-232817-1.jpg → nothing worth reading
-23:28:38  ocr     toast   auto-4-first-232817-3.jpg → "FLAC0_XR"            ~ FLACO_XR
+23:28:24  shots   5 frames kept of 240 · round-02-first-race-finisher-{01..05}.jpg
+23:28:31  ocr     ·       round-02-first-race-finisher-01.jpg → nothing worth reading
+23:28:38  ocr     toast   round-02-first-race-finisher-03.jpg → "FLAC0_XR"            ~ FLACO_XR
 23:28:38  fill    round 2 · first ← FLACO_XR
 23:29:38  log     round over · 16 qualified, 0 out
 
 ──── ROUND 3 ── Stompin' Ground · survival ──────────────────────────── 23:29:43 ──
 23:31:15  log     first through · bean 9
-23:31:22  shots   3 frames kept of 90 · auto-4-finalists-233115-{1..3}.jpg
-23:31:29  ocr     grid    auto-4-finalists-233115-2.jpg → 15 names          ⚠ 2 unclaimed
+23:31:22  shots   3 frames kept of 90 · round-03-finalists-board-{01..03}.jpg
+23:31:29  ocr     grid    round-03-finalists-board-02.jpg → 15 names          ⚠ 2 unclaimed
 23:31:29  fill    round 3 · qualified ← 13 names                           ⚠ "LavishBoss3S30"
 23:31:30  log     round over · 15 qualified, 1 out
 
@@ -58,8 +58,8 @@ And what the admin does to it, which is the half that is invisible today:
 ```
 23:41:02  admin   re-read · show 4 · 11 captures requeued
 23:41:02  queue   11 waiting · ~7s each · done by ~23:42:19
-23:41:09  queue   1/11  auto-4-first-232557-1.jpg
-23:41:16  queue   2/11  auto-4-first-232557-2.jpg
+23:41:09  queue   1/11  round-01-first-race-finisher-01.jpg
+23:41:16  queue   2/11  round-01-first-race-finisher-02.jpg
 23:41:23  admin   resync · show 4 · winners · 1 field cleared, 1 fill unspent
 23:42:19  queue   drained · 11 read in 1m17s
 ```
@@ -113,11 +113,12 @@ noise, which is the current problem, not the fix.
 ## On disk
 
 ```
-<CAPTURE_DIR>/captures/2026-09/2026-09-02.transcript.txt
+<CAPTURE_DIR>/2026-09-02.transcript.txt
+<CAPTURE_DIR>/shows/show-2026-09-02T23h25-solos-4/transcript.txt
 ```
 
-Sits with the images it describes, so a show is one folder to zip and hand over. `listShots` only
-takes `.png/.jpg`, so it ignores the file.
+The evening's file is the record. Each show folder also holds its own lines, so a show is one
+folder to zip and hand over. `listShowShots` only takes `.png/.jpg`, so it ignores both.
 
 - Append-only, one file per event day, opened on first line and never truncated.
 - Plain text: the same bytes as the terminal minus the ANSI, so `diff` and `grep` work.
@@ -125,6 +126,10 @@ takes `.png/.jpg`, so it ignores the file.
 - Lines carry the clock of the thing they describe, not of the moment they were printed. A capture
   read ten minutes late lands under its own timestamp — out of order in the file, in the right
   place in the evening. The file is read back; the clock column is the truth.
+- A show's own `transcript.txt` is rewritten, not appended: a line can land long after the show it
+  belongs to. A restart replays the log, the placed captures and the cached reads, so earlier shows
+  are rebuilt too — but `admin` notes and `queue` lines cannot be replayed, and from before a
+  restart those survive only in the evening file.
 
 ## Levels
 

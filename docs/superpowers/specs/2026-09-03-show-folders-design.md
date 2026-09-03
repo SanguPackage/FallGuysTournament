@@ -129,9 +129,10 @@ shown where.
 
 ## Trade-offs accepted
 
-- **A restart mid-evening freezes earlier shows' `transcript.txt`.** The buffer starts empty, so
-  only shows with lines since the restart are rewritten; a folder written before it keeps what it
-  had. The evening file is append-only and stays complete.
+- **A restart mid-evening loses two lanes from earlier shows' `transcript.txt`.** The buffer starts
+  empty, but the reporter replays the log, the placed captures and the cached reads on the first
+  poll, so those shows are rebuilt. `admin` notes and `queue` lines cannot be replayed and survive
+  only in the evening file, which is append-only and stays complete.
 - **An earlier evening cannot be browsed in the admin.** `showDirsFor` keeps two days, so older
   folders are not listed at all. The files are still on disk.
 - **Nothing migrates.** Tonight's `captures/` and `shows/*.mp4` stay in the old shape and drop out

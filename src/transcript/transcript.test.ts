@@ -80,8 +80,20 @@ test("colour is for the terminal; the file stays greppable", () => {
   expect(kept.join()).not.toContain(ESC);
 });
 
-test("the transcript sits with the month of images it describes", () => {
-  expect(transcriptPath("/captures", "2026-09-02")).toBe("/captures/2026-09/2026-09-02.transcript.txt");
+test("the evening's transcript sits at the root of the capture tree", () => {
+  expect(transcriptPath("/capture", "2026-09-02")).toBe("/capture/2026-09-02.transcript.txt");
+});
+
+test("a tap sees every line, whatever the terminal was told to show", () => {
+  const tapped: Line[] = [];
+  const transcript = new Transcript({
+    level: "quiet",
+    colour: false,
+    out: () => {},
+    tap: (line) => tapped.push(line),
+  });
+  transcript.write(SPOT);
+  expect(tapped).toEqual([SPOT]);
 });
 
 test("a file transcript appends, so a restart does not cost the evening", async () => {

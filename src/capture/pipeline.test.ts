@@ -10,6 +10,7 @@ const MOMENT: Moment = {
   kind: "first",
   showIndex: 0,
   roundIndex: 2,
+  roundNumber: 3,
   date: "2026-09-05",
   at: AT,
   from: AT - 500,
@@ -19,6 +20,8 @@ const MOMENT: Moment = {
 
 const RUN = "/mnt/c/temp/FallGuysCapture/segments/2026-09-05T20h00m00";
 const SEGMENTS = [{ file: "seg-00003.mkv", dir: RUN, from: AT - 20_000, to: AT + 10_000 }];
+
+const SHOW_DIR = "show-2026-09-05T20h00-solos-1";
 
 async function harness() {
   const dir = await mkdtemp(`${tmpdir()}/capture-`);
@@ -30,7 +33,7 @@ async function harness() {
     deps: {
       ffmpeg: "ff",
       scratchDir,
-      captureDir: `${dir}/captures`,
+      showsDir: `${dir}/shows`,
       // Stands in for ffmpeg. The argv carries Windows paths, which this process cannot write to,
       // so the frames go where the pipeline will look for them instead.
       run: async (argv: string[]) => {
@@ -53,7 +56,7 @@ test("a moment nothing covers is left pending rather than half captured", async 
   const { dir, deps, ran } = await harness();
   const ledger = new Ledger();
   try {
-    expect(await captureMoment(MOMENT, [], ledger, deps)).toEqual([]);
+    expect(await captureMoment(MOMENT, SHOW_DIR, [], ledger, deps)).toEqual([]);
     expect(ran).toEqual([]);
     expect(ledger.pending("2026-09-05:0:first:2")).toBe(true);
   } finally {
@@ -61,17 +64,18 @@ test("a moment nothing covers is left pending rather than half captured", async 
   }
 });
 
-test("kept frames land in the capture root with the mtime of the instant they show", async () => {
+test("kept frames land in the show's own folder with the mtime of the instant they show", async () => {
   const { dir, deps, ran } = await harness();
   const ledger = new Ledger();
   try {
-    const kept = await captureMoment(MOMENT, SEGMENTS, ledger, deps);
+    const kept = await captureMoment(MOMENT, SHOW_DIR, SEGMENTS, ledger, deps);
     expect(ran.length).toBe(1);
     expect(ran[0]![0]).toBe("ff");
-    expect(kept.length).toBe(2);
-    const first = kept[0]!;
-    expect(first).toContain("2026-09/auto-1-first-");
-    const info = await stat(`${dir}/captures/${first}`);
+    expect(kept).toEqual([
+      "show-2026-09-05T20h00-solos-1/round-03-first-race-finisher-01.jpg",
+      "show-2026-09-05T20h00-solos-1/round-03-first-race-finisher-02.jpg",
+    ]);
+    const info = await stat(`${dir}/shows/${kept[0]!}`);
     // Frame 1 of a 30fps pull that began at `from`.
     expect(Math.round(info.mtimeMs)).toBe(MOMENT.from);
     expect(ledger.pending("2026-09-05:0:first:2")).toBe(false);
@@ -84,7 +88,7 @@ test("a moment whose frames all fail the classifier is counted as an attempt, no
   const { dir, deps } = await harness();
   const ledger = new Ledger();
   try {
-    const kept = await captureMoment(MOMENT, SEGMENTS, ledger, {
+    const kept = await captureMoment(MOMENT, SHOW_DIR, SEGMENTS, ledger, {
       ...deps,
       screenOf: () => undefined,
     });
@@ -98,7 +102,7 @@ test("a moment whose frames all fail the classifier is counted as an attempt, no
 test("the scratch folder is not left behind", async () => {
   const { dir, deps } = await harness();
   try {
-    await captureMoment(MOMENT, SEGMENTS, new Ledger(), deps);
+    await captureMoment(MOMENT, SHOW_DIR, SEGMENTS, new Ledger(), deps);
     expect(await Bun.file(`${dir}/scratch/2026-09-05-0-first-2/p0-0001.jpg`).exists()).toBe(false);
   } finally {
     await rm(dir, { recursive: true, force: true });
@@ -108,7 +112,7 @@ test("the scratch folder is not left behind", async () => {
 test("a frame is pulled from the run folder its segment came from", async () => {
   const { dir, deps, ran } = await harness();
   try {
-    await captureMoment(MOMENT, SEGMENTS, new Ledger(), deps);
+    await captureMoment(MOMENT, SHOW_DIR, SEGMENTS, new Ledger(), deps);
     expect(ran[0]![ran[0]!.indexOf("-i") + 1]).toBe(
       "C:\\temp\\FallGuysCapture\\segments\\2026-09-05T20h00m00\\seg-00003.mkv",
     );
@@ -117,18 +121,27 @@ test("a frame is pulled from the run folder its segment came from", async () => 
   }
 });
 
-test("a clip is cut with the streams copied, and named after the show", async () => {
+test("a clip is cut with the streams copied, into the folder of the show it is", async () => {
   const { dir, deps, ran } = await harness();
   const clip = { showIndex: 2, date: "2026-09-05", from: AT - 10_000, to: AT + 5_000 };
   const ledger = new Ledger();
   try {
-    const cut = await cutShowClip(clip, SEGMENTS, "show-03-slime-climb", ledger, {
-      ffmpeg: deps.ffmpeg,
-      scratchDir: deps.scratchDir,
-      showsDir: `${dir}/shows`,
-      run: deps.run,
+    const cut = await cutShowClip(
+      clip,
+      "show-2026-09-05T20h00-slime-climb-1/2026-09-05-show-03-slime-climb",
+      SEGMENTS,
+      ledger,
+      {
+        ffmpeg: deps.ffmpeg,
+        scratchDir: deps.scratchDir,
+        showsDir: deps.showsDir,
+        run: deps.run,
+      },
+    );
+    expect(cut).toEqual({
+      out: `${dir}/shows/show-2026-09-05T20h00-slime-climb-1/2026-09-05-show-03-slime-climb.mp4`,
+      gapped: false,
     });
-    expect(cut).toEqual({ out: `${dir}/shows/show-03-slime-climb.mp4`, gapped: false });
     expect(ran[0]).toContain("copy");
     expect(await Bun.file(`${dir}/scratch/clip-2.txt`).text()).toBe(
       "file 'C:\\temp\\FallGuysCapture\\segments\\2026-09-05T20h00m00\\seg-00003.mkv'\n",
@@ -149,10 +162,15 @@ test("a clip whose recording died inside it is cut anyway, and says so", async (
   try {
     const cut = await cutShowClip(
       { showIndex: 1, date: "2026-09-05", from: AT - 15_000, to: AT + 15_000 },
+      "show-2026-09-05T20h00-x-1/show-02-x",
       split,
-      "show-02-x",
       new Ledger(),
-      { ffmpeg: deps.ffmpeg, scratchDir: deps.scratchDir, showsDir: `${dir}/shows`, run: deps.run },
+      {
+        ffmpeg: deps.ffmpeg,
+        scratchDir: deps.scratchDir,
+        showsDir: deps.showsDir,
+        run: deps.run,
+      },
     );
     expect(cut?.gapped).toBe(true);
   } finally {
@@ -166,13 +184,13 @@ test("a clip the segments do not cover yet is left pending", async () => {
   try {
     const cut = await cutShowClip(
       { showIndex: 0, date: "2026-09-05", from: AT - 60_000, to: AT },
+      "show-2026-09-05T20h00-x-1/show-01-x",
       SEGMENTS,
-      "show-01-x",
       ledger,
       {
         ffmpeg: deps.ffmpeg,
         scratchDir: deps.scratchDir,
-        showsDir: `${dir}/shows`,
+        showsDir: deps.showsDir,
         run: deps.run,
       },
     );
@@ -198,14 +216,14 @@ test("waiting on a segment still being written costs no attempt", async () => {
   const writing = [{ file: "seg-00003.mkv", dir: RUN, from: AT - 20_000, to: AT + 10_000 }];
   const sweeping = { ...deps, now: () => AT + 20_000 };
   for (let sweep = 0; sweep < 10; sweep++) {
-    expect(await captureMoment(board, writing, ledger, sweeping)).toEqual([]);
+    expect(await captureMoment(board, SHOW_DIR, writing, ledger, sweeping)).toEqual([]);
   }
   expect(ledger.pending(key)).toBe(true);
 
   // Long past the window, whatever was going to be written has been. This is a real miss.
   const settled = { ...deps, now: () => AT + 30_000 + 200_000 };
   for (let sweep = 0; sweep < MAX_ATTEMPTS; sweep++) {
-    await captureMoment(board, writing, ledger, settled);
+    await captureMoment(board, SHOW_DIR, writing, ledger, settled);
   }
   expect(ledger.pending(key)).toBe(false);
 
