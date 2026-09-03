@@ -57,7 +57,6 @@ interface State {
 const WATCH_MS = 5_000;
 
 let state: State;
-let showLinked = false;
 let selection: Selection = { slot: "all" };
 let selectedShow = 0;
 /**
@@ -77,6 +76,7 @@ const COLLAPSED_KEY = "fallguys.admin.collapsed";
 const TAB_KEY = "fallguys.admin.tab";
 const SIZES_KEY = "fallguys.admin.sizes";
 const SCROLL_KEY = "fallguys.admin.scroll";
+const LINKED_KEY = "fallguys.admin.linked";
 
 function stored<T>(key: string): T[] {
   try {
@@ -94,6 +94,7 @@ function remember(key: string, entries: Iterable<unknown>): void {
   }
 }
 
+let showLinked = stored<boolean>(LINKED_KEY)[0] ?? false;
 const collapsed = new Set(stored<string>(COLLAPSED_KEY));
 const sizes = new Map(stored<[string, ShotSize]>(SIZES_KEY));
 const scrolls = new Map(stored<[string, [number, number]]>(SCROLL_KEY));
@@ -1069,6 +1070,7 @@ async function main(): Promise<void> {
 
   document.querySelector("#toggle-linked")!.addEventListener("click", () => {
     showLinked = !showLinked;
+    remember(LINKED_KEY, [showLinked]);
     renderPlayers();
   });
 
