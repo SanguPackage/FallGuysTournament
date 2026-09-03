@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import type { LiveStatus } from "../src/live";
 import type { LeaderboardRow } from "../src/types";
+import { beanColours } from "./bean";
 import { renderField, renderPodium, renderStandings, renderStatus } from "./render";
 import type { ShowInOrder } from "./rules";
 
@@ -61,6 +62,22 @@ test("players level on points share a podium rank", () => {
   ]);
   const ranks = [...html.matchAll(/class="rk">(\d+)</g)].map((m) => m[1]);
   expect(ranks).toEqual(["1", "1", "3"]);
+});
+
+test("each bean on the podium wears its own player's colour", () => {
+  const html = renderPodium(FIELD);
+  for (const colour of beanColours(["Alpha", "Bravo", "Charlie"])) {
+    expect(html).toContain(`color:${colour}`);
+  }
+});
+
+test("no two beans on the podium look alike", () => {
+  const colours = [...renderPodium(FIELD).matchAll(/color:(#[0-9a-f]{6})/g)].map((m) => m[1]);
+  expect(new Set(colours).size).toBe(3);
+});
+
+test("only the winner gets confetti", () => {
+  expect([...renderPodium(FIELD).matchAll(/class="confetti"/g)]).toHaveLength(1);
 });
 
 /* ----------------------------------------------------------------- field */

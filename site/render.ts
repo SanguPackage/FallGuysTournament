@@ -1,5 +1,6 @@
 import type { LiveStatus } from "../src/live";
 import type { LeaderboardRow } from "../src/types";
+import { beanColours, beanSvg } from "./bean";
 import { crownTitle } from "./crown";
 import type { ShowInOrder } from "./rules";
 
@@ -54,25 +55,42 @@ function sub(row: LeaderboardRow): string {
   return parts.filter(Boolean).join(" · ");
 }
 
-/** Second, first and third, so the tallest card sits in the middle. */
+/** Second, first and third, so the tallest block sits in the middle. */
 const PODIUM_ORDER = [1, 0, 2];
+
+const CROWN = `<svg class="crown" viewBox="0 0 60 44" aria-hidden="true">
+      <path d="M6 38 L2 10 l16 12 L30 4 l12 18 L58 10 l-4 28 Z"/>
+      <circle class="jewel" cx="30" cy="30" r="3.5"/>
+    </svg>`;
+
+/** Six strips, each on its own delay, so the fall reads as a scatter rather than a curtain. */
+const CONFETTI = `<div class="confetti" aria-hidden="true">${[6, 22, 42, 62, 80, 92]
+  .map((left, index) => `<i style="left:${left}%;animation-delay:${(index * 0.47).toFixed(2)}s"></i>`)
+  .join("")}</div>`;
 
 export function renderPodium(rows: LeaderboardRow[]): string {
   if (rows.length === 0) return EMPTY;
 
   const rank = ranks(rows);
+  // Assigned by finishing order, so the winner's bean is the one that never shifts colour.
+  const colours = beanColours(rows.slice(0, 3).map((row) => row.ingame || row.fom || ""));
   const cards = PODIUM_ORDER.filter((index) => index < rows.length)
     .map((index) => {
       const row = rows[index]!;
       return `
       <div class="p p${index + 1}">
-        <div class="rk">${rank[index]}</div>
-        ${index === 0 ? `<div class="crown">👑</div>` : ""}
-        <div class="bean"></div>
+        ${index === 0 ? CONFETTI : ""}
+        <div class="figure">
+          ${index === 0 ? CROWN : ""}
+          ${beanSvg(colours[index]!)}
+        </div>
         <div class="nm">${primary(row)}</div>
         <div class="ig">${secondary(row)}</div>
-        <div class="pts">${row.points}</div>
         <div class="sub">${row.raceWins} races · ${row.finalsReached} finals · ${row.finalsWon} wins</div>
+        <div class="block">
+          <span class="pts">${row.points}</span>
+          <span class="rk">${rank[index]}</span>
+        </div>
       </div>`;
     })
     .join("");

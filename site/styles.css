@@ -299,79 +299,103 @@ h2 {
 
 /* podium */
 
-.podium { display: grid; grid-template-columns: 1fr 1.25fr 1fr; gap: 1rem; align-items: end; margin-bottom: 2.25rem; }
+.podium { display: grid; grid-template-columns: 1fr 1.25fr 1fr; gap: 0.75rem; align-items: end; margin: 3rem 0 2.25rem; }
 
-.p {
-  border-radius: 26px;
-  padding: 1rem;
-  text-align: center;
-  position: relative;
-  border: 4px solid var(--ink);
-  box-shadow: 0 10px 0 var(--ink), 0 18px 30px #0005;
+.p { text-align: center; position: relative; }
+
+.p .figure { position: relative; display: grid; place-items: end center; margin-bottom: -0.4rem; animation: bob 2.6s ease-in-out infinite; }
+.p2 .figure { animation-delay: 0.35s; }
+.p3 .figure { animation-delay: 0.7s; }
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
 }
 
-.p1 { background: linear-gradient(#ffe27a, var(--yellow)); color: var(--ink); padding-top: 1.6rem; }
-.p2 { background: linear-gradient(#8ef0ff, var(--cyan)); color: var(--ink); }
-.p3 { background: linear-gradient(#ff8ac4, var(--pink)); color: #fff; }
+.bean { display: block; width: 84px; height: 105px; }
+.p1 .bean { width: 108px; height: 135px; }
+.bean .body, .bean .limb { fill: currentColor; stroke: var(--ink); stroke-width: 7; stroke-linejoin: round; }
+.bean .eye { fill: #fff; stroke: var(--ink); stroke-width: 5; }
+.bean .pupil { fill: var(--ink); }
+.bean .shine { fill: #ffffff4d; }
 
-.bean {
-  width: 76px;
-  height: 92px;
-  margin: 0 auto 0.5rem;
-  border-radius: 42px 42px 34px 34px;
-  border: 4px solid var(--ink);
-  position: relative;
-  background: #fff;
-}
-
-.p1 .bean { background: #ff7bb0; width: 96px; height: 116px; }
-.p2 .bean { background: #7b6bff; }
-.p3 .bean { background: #58e08a; }
-
-.bean::before,
-.bean::after {
-  content: "";
+.crown {
   position: absolute;
-  top: 30%;
-  width: 11px;
-  height: 15px;
-  border-radius: 50%;
-  background: var(--ink);
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 54px;
+  height: 40px;
+  z-index: 2;
 }
 
-.bean::before { left: 24%; }
-.bean::after { right: 24%; }
+.crown path { fill: var(--yellow); stroke: var(--ink); stroke-width: 5; stroke-linejoin: round; }
+.crown .jewel { fill: var(--pink); }
 
-.crown { position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 40px; filter: drop-shadow(0 4px 0 #0003); }
+/* Cut off at the top of the winner's block, so strips do not rain over the standings below. */
+.confetti { position: absolute; inset: -2rem 0 0; overflow: hidden; pointer-events: none; }
+.confetti i { position: absolute; width: 10px; height: 6px; border-radius: 2px; animation: fall 3.2s linear infinite; }
+.confetti i:nth-child(5n + 1) { background: var(--yellow); }
+.confetti i:nth-child(5n + 2) { background: var(--cyan); }
+.confetti i:nth-child(5n + 3) { background: var(--pink); }
+.confetti i:nth-child(5n + 4) { background: var(--lime); }
+.confetti i:nth-child(5n + 5) { background: var(--purple); }
 
-.p .nm { font-size: 20px; font-weight: 800; line-height: 1.1; }
+@keyframes fall {
+  0% { transform: translateY(-10px) rotate(0); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translateY(230px) rotate(420deg); opacity: 0; }
+}
+
+.p .nm { font-size: 19px; font-weight: 800; line-height: 1.1; }
 /* Reserves its line so a player with no FOM name does not sit a row shorter than the rest. */
 .p .ig { font-size: 13px; opacity: 0.7; font-weight: 600; min-height: 1.3em; }
-.p .pts { font-family: "Titan One", cursive; font-size: 40px; line-height: 1; margin-top: 0.35rem; }
-
-.p .rk {
-  position: absolute;
-  top: -14px;
-  left: -14px;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: var(--ink);
-  color: #fff;
-  display: grid;
-  place-items: center;
-  font-family: "Titan One", cursive;
-  font-size: 20px;
-  border: 4px solid #fff;
-}
 
 .p .sub {
   font: 600 12px/1 "Barlow Condensed", sans-serif;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   opacity: 0.75;
-  margin-top: 0.35rem;
+  margin: 0.35rem 0 0.9rem;
 }
+
+.p .block {
+  display: grid;
+  place-items: center;
+  position: relative;
+  border-radius: 14px 14px 6px 6px;
+  border: 4px solid var(--ink);
+  box-shadow: 0 9px 0 var(--ink), 0 18px 26px #0006;
+}
+
+.p1 .block { background: linear-gradient(#fff0b0, var(--yellow)); height: 118px; }
+.p2 .block { background: linear-gradient(#f2f7ff, #b9c8dd); height: 86px; }
+.p3 .block { background: linear-gradient(#ffc389, #d98442); height: 66px; }
+
+.p .rk {
+  font-family: "Titan One", cursive;
+  font-size: 40px;
+  line-height: 1;
+  color: var(--ink);
+  text-shadow: 0 3px 0 #ffffff8c;
+}
+
+.p .pts {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: "Titan One", cursive;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--ink);
+  background: #fff;
+  border: 4px solid var(--ink);
+  border-radius: 999px;
+  padding: 0.1rem 0.7rem;
+}
+
 
 /* field grid */
 
@@ -892,4 +916,9 @@ button.bn:hover, button.bn:focus-visible { border-color: #fff; }
   .gr .pt { grid-area: pt; }
   /* The round numbers only line up while every row is one grid; folded, they are noise. */
   .gr.head { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before, .p .figure, .confetti i, .live .dot { animation: none; }
+  .confetti { display: none; }
 }
