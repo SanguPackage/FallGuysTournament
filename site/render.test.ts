@@ -76,6 +76,11 @@ test("no two beans on the podium look alike", () => {
   expect(new Set(colours).size).toBe(3);
 });
 
+test("a player's tally is written on their block", () => {
+  const block = renderPodium(FIELD).split('<div class="block">')[1]!;
+  expect(block.split("</div>")[0]).toContain("races");
+});
+
 test("only the winner gets confetti", () => {
   expect([...renderPodium(FIELD).matchAll(/class="confetti"/g)]).toHaveLength(1);
 });

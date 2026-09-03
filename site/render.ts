@@ -86,10 +86,10 @@ export function renderPodium(rows: LeaderboardRow[]): string {
         </div>
         <div class="nm">${primary(row)}</div>
         <div class="ig">${secondary(row)}</div>
-        <div class="sub">${row.raceWins} races · ${row.finalsReached} finals · ${row.finalsWon} wins</div>
         <div class="block">
           <span class="pts">${row.points}</span>
           <span class="rk">${rank[index]}</span>
+          <span class="sub">${row.raceWins} races · ${row.finalsReached} finals · ${row.finalsWon} wins</span>
         </div>
       </div>`;
     })

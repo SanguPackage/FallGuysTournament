@@ -351,26 +351,33 @@ h2 {
 /* Reserves its line so a player with no FOM name does not sit a row shorter than the rest. */
 .p .ig { font-size: 13px; opacity: 0.7; font-weight: 600; min-height: 1.3em; }
 
-.p .sub {
-  font: 600 12px/1 "Barlow Condensed", sans-serif;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  opacity: 0.75;
-  margin: 0.35rem 0 0.9rem;
-}
-
 .p .block {
   display: grid;
   place-items: center;
   position: relative;
+  /* Room for the points pill overhanging the top edge and the tally pinned to the bottom. */
+  padding: 1.4rem 0.4rem 1.6rem;
+  margin-top: 0.9rem;
   border-radius: 14px 14px 6px 6px;
   border: 4px solid var(--ink);
   box-shadow: 0 9px 0 var(--ink), 0 18px 26px #0006;
 }
 
-.p1 .block { background: linear-gradient(#fff0b0, var(--yellow)); height: 118px; }
-.p2 .block { background: linear-gradient(#f2f7ff, #b9c8dd); height: 86px; }
-.p3 .block { background: linear-gradient(#ffc389, #d98442); height: 66px; }
+.p1 .block { background: linear-gradient(#fff0b0, var(--yellow)); height: 158px; }
+.p2 .block { background: linear-gradient(#f2f7ff, #b9c8dd); height: 128px; }
+.p3 .block { background: linear-gradient(#ffc389, #d98442); height: 108px; }
+
+.p .sub {
+  position: absolute;
+  bottom: 0.55rem;
+  left: 0.4rem;
+  right: 0.4rem;
+  font: 600 12px/1 "Barlow Condensed", sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink);
+  opacity: 0.65;
+}
 
 .p .rk {
   font-family: "Titan One", cursive;
