@@ -127,7 +127,9 @@ folder to zip and hand over. `listShowShots` only takes `.png/.jpg`, so it ignor
   read ten minutes late lands under its own timestamp — out of order in the file, in the right
   place in the evening. The file is read back; the clock column is the truth.
 - A show's own `transcript.txt` is rewritten, not appended: a line can land long after the show it
-  belongs to. A server restart mid-evening leaves earlier shows' copies frozen at what they had.
+  belongs to. A restart replays the log, the placed captures and the cached reads, so earlier shows
+  are rebuilt too — but `admin` notes and `queue` lines cannot be replayed, and from before a
+  restart those survive only in the evening file.
 
 ## Levels
 

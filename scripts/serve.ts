@@ -367,12 +367,15 @@ async function sweepCaptures(): Promise<void> {
   if (shows.length === 0) return;
   const event = (await Bun.file(EVENT_PATH).json()) as TournamentEvent;
   const day = date ?? event.date;
-  const segments = await segmentsNow();
-  if (segments.length === 0) return;
 
+  // Above the footage check: a transcript needs none, and a night where the recording never
+  // started is the night it is worth the most.
   const onDisk = showsOnDisk(shows, day);
   const dirOf = new Map(onDisk.map((show) => [show.showIndex, show.dir]));
   await writeShowTranscripts(onDisk);
+
+  const segments = await segmentsNow();
+  if (segments.length === 0) return;
 
   for (const moment of momentsIn(shows, day)) {
     const showDir = dirOf.get(moment.showIndex);
