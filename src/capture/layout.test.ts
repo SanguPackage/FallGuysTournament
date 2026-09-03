@@ -43,3 +43,42 @@ test("a show that started after midnight is named for the day it actually starte
 test("a slug is the suggested show name, lowercased and hyphenated", () => {
   expect(slugOf(parseLog(LOG), 0)).toBe("playlist-a-1");
 });
+
+import { showsOnDisk } from "./layout";
+
+const DATE = "2026-09-02";
+const utc = (clock: string) => Date.parse(`${DATE}T${clock}Z`);
+
+const TWO_SHOWS = `
+21:00:00.000: [HandleSuccessfulLogin] Selected show is playlist_a IsUltimatePartyEpisode: False
+21:00:05.000: [StateGameLoading] Finished loading game level, assumed to be first_round_normal. Duration: 1s
+21:00:40.000: ClientGameManager::HandleServerPlayerProgress PlayerId=1 is succeeded=True
+21:05:00.000: [HandleSuccessfulLogin] Selected show is playlist_b IsUltimatePartyEpisode: False
+21:05:05.000: [StateGameLoading] Finished loading game level, assumed to be first_round_normal. Duration: 1s
+`;
+
+test("each show that has loaded a round owns a folder, named for that round's clock", () => {
+  const folders = showsOnDisk(parseLog(TWO_SHOWS), DATE);
+  expect(folders.map((show) => [show.showIndex, show.dir])).toEqual([
+    [0, showFolder(utc("21:00:05"), "playlist-a-1")],
+    [1, showFolder(utc("21:05:05"), "playlist-b-1")],
+  ]);
+});
+
+test("a show's window runs from its own start to the next show's, so its header lines are in it", () => {
+  const [first, second] = showsOnDisk(parseLog(TWO_SHOWS), DATE);
+  expect([first!.from, first!.to]).toEqual([utc("21:00:00"), utc("21:05:00")]);
+  expect(second!.from).toBe(utc("21:05:00"));
+});
+
+test("the show still being played has no end to close its window at", () => {
+  const folders = showsOnDisk(parseLog(TWO_SHOWS), DATE);
+  expect(folders.at(-1)!.to).toBe(Infinity);
+});
+
+test("a show that has loaded no round yet has nothing to name a folder after", () => {
+  const selected = `
+21:00:00.000: [HandleSuccessfulLogin] Selected show is playlist_a IsUltimatePartyEpisode: False
+`;
+  expect(showsOnDisk(parseLog(selected), DATE)).toEqual([]);
+});

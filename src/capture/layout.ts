@@ -1,6 +1,7 @@
 import type { MomentKind } from "./moments";
 import { suggestShowName } from "../../site/admin-model";
 import type { ParsedShow } from "../log";
+import { absoluteTimes } from "../screenshots";
 
 /** What each moment is called in a file name. The code's own words are too terse to browse by. */
 const KIND: Record<MomentKind, string> = {
@@ -33,4 +34,40 @@ export function slugOf(shows: ParsedShow[], showIndex: number): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+export interface ShowFolder {
+  showIndex: number;
+  /** Folder name, relative to the shows root. */
+  dir: string;
+  /** The show's own start, so the lines that announce it are in its transcript. */
+  from: number;
+  /** The next show's start, or open-ended for the one still being played. */
+  to: number;
+}
+
+/**
+ * Which folder each show owns and which span of the evening belongs to it. Naming, transcript
+ * slicing and the folder filter all read this, so they cannot disagree about where a show ends.
+ *
+ * A show whose first round has not loaded is left out: there is nothing to name a folder after and
+ * nothing yet to put in it.
+ */
+export function showsOnDisk(shows: ParsedShow[], date: string): ShowFolder[] {
+  const times = absoluteTimes(shows, date);
+  const folders: ShowFolder[] = [];
+
+  times.forEach((span, showIndex) => {
+    const firstRound = span.rounds.find((start) => start !== undefined);
+    if (firstRound === undefined) return;
+    const next = times.slice(showIndex + 1).find((later) => later.startedAt !== undefined);
+    folders.push({
+      showIndex,
+      dir: showFolder(firstRound, slugOf(shows, showIndex)),
+      from: span.startedAt ?? firstRound,
+      to: next?.startedAt ?? Infinity,
+    });
+  });
+
+  return folders;
 }
