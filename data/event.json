@@ -1,6 +1,25 @@
 {
   "name": "FOM 2026",
   "date": "2026-09-04",
+  "startsAt": "2026-09-05T14:00:00+02:00",
+  "endsAt": "2026-09-05T19:00:00+02:00",
+  "prizes": [
+    {
+      "place": 1,
+      "name": "NH-D15 G2",
+      "image": "nh-d15-g2.png"
+    },
+    {
+      "place": 2,
+      "name": "NH-U12A chromax.black",
+      "image": "nh-u12a-chromax-black.png"
+    },
+    {
+      "place": 3,
+      "name": "NH-D12L",
+      "image": "nh-d12l.png"
+    }
+  ],
   "shows": [],
   "penalties": [],
   "lobbyCode": ""
