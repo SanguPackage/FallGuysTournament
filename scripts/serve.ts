@@ -7,7 +7,7 @@ import { publish } from "../src/publish";
 import { EVENT_PATH, PLAYERS_PATH, loadEvent, saveEvent } from "../src/storage";
 import { setLobbyCode } from "../src/event";
 import { parseShowOrder } from "../site/rules";
-import { defaultMessage, suggestShowName } from "../site/admin-model";
+import { canDeleteShow, defaultMessage, suggestShowName } from "../site/admin-model";
 import { ReadQueue } from "../src/ocr/queue";
 import { readShot } from "../src/ocr/read";
 import { cacheKey, loadCache, saveCache } from "../src/ocr/cache";
@@ -20,6 +20,7 @@ import { parseSegments, type Segment } from "../src/capture/segments";
 import { recordArgv, thumbArgv } from "../src/capture/command";
 import { captureFolders, captureSettings, runFolder, runsIn } from "../src/capture/paths";
 import { clipFile, showsOnDisk, slugOf, type ShowFolder } from "../src/capture/layout";
+import { archiveName, archivedShow, strayArchiveName } from "../src/capture/archive";
 import { toWindows } from "../src/capture/win-path";
 import { Recorder } from "../src/capture/recorder";
 import { onShutdown } from "../src/capture/shutdown";
@@ -545,6 +546,52 @@ const server = Bun.serve({
       });
       queueReads(shotDir, shots);
       return json({ rereading: shots.length });
+    }
+
+    /**
+     * Takes a misfired show back out of the board, archiving it beside its own captures first.
+     *
+     * One endpoint rather than an archive call the browser follows with a `PUT /api/event`: a
+     * delete that archived and did not pop, or popped and did not archive, is the case this
+     * exists to prevent.
+     */
+    if (request.method === "POST" && pathname === "/api/delete-show") {
+      const { showIndex } = (await request.json()) as { showIndex: number };
+      const event = await loadEvent();
+      const show = event.shows[showIndex];
+      if (!show || !canDeleteShow(event, showIndex)) {
+        return json({ message: "Only the last recorded show can be deleted." }, 409);
+      }
+
+      const { shows, date } = await parsedShows(await findLog());
+      const day = date ?? event.date;
+      const folder = showsOnDisk(shows, day).find((entry) => entry.showIndex === showIndex);
+
+      let archive: string;
+      if (folder) {
+        const dir = `${folders.shows}/${folder.dir}`;
+        await mkdir(dir, { recursive: true });
+        archive = `${dir}/${archiveName(await readdir(dir))}`;
+      } else {
+        await mkdir(folders.shows, { recursive: true });
+        archive = `${folders.shows}/${strayArchiveName(day, showIndex)}`;
+      }
+      const archived = archivedShow(show, showIndex, Date.now());
+      await Bun.write(archive, `${JSON.stringify(archived, null, 2)}\n`);
+
+      event.shows.pop();
+      await saveEvent(event);
+      transcript.write({
+        kind: "entry",
+        at: Date.now(),
+        lane: "admin",
+        text: `delete · show ${showIndex + 1} · ${show.name || "unnamed"} · saved to ${archive}`,
+      });
+
+      const subject = `data: delete show ${showIndex + 1} — ${show.name || "unnamed"}`;
+      const published = AUTO_PUBLISH ? await publish(subject) : undefined;
+      if (published) console.log(`${subject} — ${published.message}`);
+      return json({ archive, ...(published ? { published } : {}) });
     }
 
     /** The admin does its own filling in the browser; this is how the transcript hears about it. */
