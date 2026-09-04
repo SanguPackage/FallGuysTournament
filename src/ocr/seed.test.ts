@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { seededRoster } from "./seed";
+import { anyoneRegistered, seededRoster } from "./seed";
 import type { PlacedShot } from "../screenshots";
 import type { ShotRead } from "./read";
 import type { Player } from "../types";
@@ -120,4 +120,16 @@ test("a board holding nobody new leaves the roster alone", () => {
     "g.jpg": { screen: "grid", tokens: ["AnotherAccount58"] },
   };
   expect(seededRoster([ADMIN], shots, reads)).toBeUndefined();
+});
+
+test("nobody is signed up when the file holds only an admin and a row being typed in", () => {
+  expect(anyoneRegistered([ADMIN, { ingame: "" }])).toBe(false);
+});
+
+test("one name is enough to be signed up, even from a player who withdrew", () => {
+  expect(anyoneRegistered([ADMIN, { ingame: "BigMooseLips", joined: false }])).toBe(true);
+});
+
+test("an admin playing under their own name is not a signup", () => {
+  expect(anyoneRegistered([ADMIN])).toBe(false);
 });

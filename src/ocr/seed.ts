@@ -3,6 +3,14 @@ import type { Player } from "../types";
 import type { ShotRead } from "./read";
 
 /**
+ * Whether anybody is signed up to play. Admins run the event rather than competing, and a row with
+ * no name is one still being typed in, so neither counts as a roster.
+ */
+export function anyoneRegistered(players: Player[]): boolean {
+  return players.some((player) => !player.admin && player.ingame);
+}
+
+/**
  * The roster a test run should adopt, or `undefined` to leave the file alone. Nobody registered is
  * the whole condition: on game day the roster is typed in, so this never comes true.
  */
@@ -11,8 +19,7 @@ export function seededRoster(
   shots: PlacedShot[],
   reads: Record<string, ShotRead>,
 ): Player[] | undefined {
-  const registered = players.some((player) => !player.admin && player.ingame);
-  if (registered) return undefined;
+  if (anyoneRegistered(players)) return undefined;
 
   const boards = shots.flatMap((shot) => {
     const read = reads[shot.file];
