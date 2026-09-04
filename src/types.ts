@@ -70,6 +70,8 @@ export interface Player {
   joined?: boolean;
   /** The crown level beside their in-game name. Typed in by hand; nothing reads it off a capture. */
   crownRank?: number;
+  /** Read off a board rather than signed up, so the next show's board replaces them. */
+  seeded?: boolean;
 }
 
 export interface Players {

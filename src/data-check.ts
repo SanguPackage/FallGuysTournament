@@ -96,7 +96,7 @@ export function checkPlayers(value: unknown): string[] {
     if (player.crownRank !== undefined && typeof player.crownRank !== "number") {
       problems.push(`${at}.crownRank is not a number`);
     }
-    for (const key of ["admin", "joined"] as const) {
+    for (const key of ["admin", "joined", "seeded"] as const) {
       if (player[key] !== undefined && typeof player[key] !== "boolean") {
         problems.push(`${at}.${key} is not true or false`);
       }

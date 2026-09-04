@@ -16,15 +16,15 @@ test("a roster with nobody registered takes its players off the first board", ()
     "g.jpg": { screen: "grid", tokens: ["Diego_9942", "Serxav_9"] },
   };
   expect(seededRoster([], shots, reads)).toEqual([
-    { ingame: "Diego_9942" },
-    { ingame: "Serxav_9" },
+    { ingame: "Diego_9942", seeded: true },
+    { ingame: "Serxav_9", seeded: true },
   ]);
 });
 
 test("the admin keeps their row and their fields", () => {
   const shots = [shot("g.jpg")];
   const reads: Record<string, ShotRead> = { "g.jpg": { screen: "grid", tokens: ["Diego_9942"] } };
-  expect(seededRoster([ADMIN], shots, reads)).toEqual([ADMIN, { ingame: "Diego_9942" }]);
+  expect(seededRoster([ADMIN], shots, reads)).toEqual([ADMIN, { ingame: "Diego_9942", seeded: true }]);
 });
 
 test("one registered player is enough to leave the roster alone", () => {
@@ -45,7 +45,7 @@ test("a row still being typed in is not a registered player", () => {
   expect(seededRoster([ADMIN, { ingame: "" }], shots, reads)).toEqual([
     ADMIN,
     { ingame: "" },
-    { ingame: "Diego_9942" },
+    { ingame: "Diego_9942", seeded: true },
   ]);
 });
 
@@ -55,10 +55,46 @@ test("a board off a later round is not the first board", () => {
   expect(seededRoster([], shots, reads)).toBeUndefined();
 });
 
-test("a board off a later show is not the first board", () => {
+test("the show being played is the one the roster comes from", () => {
+  const shots = [
+    shot("one.jpg", { showIndex: 0 }),
+    shot("two.jpg", { showIndex: 1 }),
+  ];
+  const reads: Record<string, ShotRead> = {
+    "one.jpg": { screen: "grid", tokens: ["Diego_9942"] },
+    "two.jpg": { screen: "grid", tokens: ["Serxav_9"] },
+  };
+  expect(seededRoster([], shots, reads)).toEqual([{ ingame: "Serxav_9", seeded: true }]);
+});
+
+test("a roster read off an earlier show is replaced, not added to", () => {
+  const shots = [
+    shot("one.jpg", { showIndex: 0 }),
+    shot("two.jpg", { showIndex: 1 }),
+  ];
+  const reads: Record<string, ShotRead> = {
+    "one.jpg": { screen: "grid", tokens: ["Diego_9942"] },
+    "two.jpg": { screen: "grid", tokens: ["Serxav_9"] },
+  };
+  const already = [ADMIN, { ingame: "Diego_9942", seeded: true }];
+  expect(seededRoster(already, shots, reads)).toEqual([ADMIN, { ingame: "Serxav_9", seeded: true }]);
+});
+
+test("a roster read off a board is not a signup, so the next show replaces it", () => {
+  expect(anyoneRegistered([ADMIN, { ingame: "Diego_9942", seeded: true }])).toBe(false);
+});
+
+test("a name typed in by hand is a signup, so no board ever overwrites it", () => {
+  const shots = [shot("g.jpg", { showIndex: 3 })];
+  const reads: Record<string, ShotRead> = { "g.jpg": { screen: "grid", tokens: ["Serxav_9"] } };
+  expect(seededRoster([{ ingame: "BigMooseLips" }], shots, reads)).toBeUndefined();
+});
+
+test("the same show read twice does not churn the roster", () => {
   const shots = [shot("g.jpg", { showIndex: 1 })];
-  const reads: Record<string, ShotRead> = { "g.jpg": { screen: "grid", tokens: ["Diego_9942"] } };
-  expect(seededRoster([], shots, reads)).toBeUndefined();
+  const reads: Record<string, ShotRead> = { "g.jpg": { screen: "grid", tokens: ["Serxav_9"] } };
+  const already = [ADMIN, { ingame: "Serxav_9", seeded: true }];
+  expect(seededRoster(already, shots, reads)).toBeUndefined();
 });
 
 test("the board before it settles names everyone still in, so it is not read", () => {
@@ -83,9 +119,9 @@ test("two captures of the same board give the roster the fuller read", () => {
     "late.jpg": { screen: "grid", tokens: ["Diego_9942"] },
   };
   expect(seededRoster([], shots, reads)).toEqual([
-    { ingame: "Diego_9942" },
-    { ingame: "Serxav_9" },
-    { ingame: "BigMooseLips" },
+    { ingame: "Diego_9942", seeded: true },
+    { ingame: "Serxav_9", seeded: true },
+    { ingame: "BigMooseLips", seeded: true },
   ]);
 });
 
@@ -95,7 +131,7 @@ test("two reads of the same size go with the later capture", () => {
     "early.jpg": { screen: "grid", tokens: ["Diego_9942"] },
     "late.jpg": { screen: "grid", tokens: ["Serxav_9"] },
   };
-  expect(seededRoster([], shots, reads)).toEqual([{ ingame: "Serxav_9" }]);
+  expect(seededRoster([], shots, reads)).toEqual([{ ingame: "Serxav_9", seeded: true }]);
 });
 
 test("the admin read off the board keeps their own row rather than gaining a second", () => {
@@ -103,7 +139,7 @@ test("the admin read off the board keeps their own row rather than gaining a sec
   const reads: Record<string, ShotRead> = {
     "g.jpg": { screen: "grid", tokens: ["AnotherAccount58", "Diego_9942"] },
   };
-  expect(seededRoster([ADMIN], shots, reads)).toEqual([ADMIN, { ingame: "Diego_9942" }]);
+  expect(seededRoster([ADMIN], shots, reads)).toEqual([ADMIN, { ingame: "Diego_9942", seeded: true }]);
 });
 
 test("a board that read one name twice seeds it once", () => {
@@ -111,7 +147,7 @@ test("a board that read one name twice seeds it once", () => {
   const reads: Record<string, ShotRead> = {
     "g.jpg": { screen: "grid", tokens: ["Diego_9942", "Diego_9942"] },
   };
-  expect(seededRoster([], shots, reads)).toEqual([{ ingame: "Diego_9942" }]);
+  expect(seededRoster([], shots, reads)).toEqual([{ ingame: "Diego_9942", seeded: true }]);
 });
 
 test("a board holding nobody new leaves the roster alone", () => {
