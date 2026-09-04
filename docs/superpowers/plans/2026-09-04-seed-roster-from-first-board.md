@@ -473,7 +473,7 @@ whole of `data/` and pushes, and a GET must not. The seeded file rides along on 
 - [ ] **Step 3: Check it compiles and the suite still passes**
 
 ```bash
-bunx tsc --noEmit && bun test
+bun run typecheck && bun test
 ```
 
 Expected: no TypeScript output, all tests PASS.
@@ -495,14 +495,14 @@ git commit -m "feat: adopt the roster read off the first board on a test run"
 
 ```bash
 cp data/players.json /tmp/players.json.bak
-bunx jq '{players: [.players[] | select(.admin == true)]}' data/players.json > /tmp/bare.json
+jq '{players: [.players[] | select(.admin == true)]}' data/players.json > /tmp/bare.json
 cp /tmp/bare.json data/players.json
 ```
 
 - [ ] **Step 2: Start the server**
 
 ```bash
-bun run scripts/serve.ts
+bun run dev
 ```
 
 - [ ] **Step 3: Open the admin and watch for the line**
