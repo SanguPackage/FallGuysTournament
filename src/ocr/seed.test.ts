@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { anyoneRegistered, seededRoster } from "./seed";
+import { anyoneRegistered, fillableShots, seededRoster } from "./seed";
 import type { PlacedShot } from "../screenshots";
 import type { ShotRead } from "./read";
 import type { Player } from "../types";
@@ -168,4 +168,78 @@ test("one name is enough to be signed up, even from a player who withdrew", () =
 
 test("an admin playing under their own name is not a signup", () => {
   expect(anyoneRegistered([ADMIN])).toBe(false);
+});
+
+test("a board is not seeded from while a capture of its round is still unread", () => {
+  const shots = [shot("early.jpg"), shot("late.jpg")];
+  const reads: Record<string, ShotRead> = {
+    "early.jpg": { screen: "grid", tokens: ["Diego_9942"] },
+  };
+  expect(seededRoster([], shots, reads)).toBeUndefined();
+});
+
+test("the board with the most names wins once the whole round is read", () => {
+  const shots = [shot("early.jpg"), shot("late.jpg")];
+  const reads: Record<string, ShotRead> = {
+    "early.jpg": { screen: "grid", tokens: ["Diego_9942"] },
+    "late.jpg": { screen: "grid", tokens: ["Diego_9942", "Serxav_9"] },
+  };
+  expect(seededRoster([], shots, reads)).toEqual([
+    { ingame: "Diego_9942", seeded: true },
+    { ingame: "Serxav_9", seeded: true },
+  ]);
+});
+
+test("a show still being read leaves the show before it as the roster", () => {
+  const shots = [
+    shot("one.jpg", { showIndex: 0 }),
+    shot("two.jpg", { showIndex: 1 }),
+    shot("three.jpg", { showIndex: 1 }),
+  ];
+  const reads: Record<string, ShotRead> = {
+    "one.jpg": { screen: "grid", tokens: ["Diego_9942"] },
+    "two.jpg": { screen: "grid", tokens: ["Serxav_9"] },
+  };
+  expect(seededRoster([], shots, reads)).toEqual([{ ingame: "Diego_9942", seeded: true }]);
+});
+
+test("stray glyphs are stripped from the names the roster is seeded with", () => {
+  const shots = [shot("g.jpg")];
+  const reads: Record<string, ShotRead> = {
+    "g.jpg": { screen: "grid", tokens: ["- Diego_9942 ", "Serxav_9 @"] },
+  };
+  expect(seededRoster([], shots, reads)).toEqual([
+    { ingame: "Diego_9942", seeded: true },
+    { ingame: "Serxav_9", seeded: true },
+  ]);
+});
+
+test("a test run writes no fill until its first board is in", () => {
+  const shots = [shot("t.jpg"), shot("g.jpg")];
+  const reads: Record<string, ShotRead> = { "t.jpg": { screen: "toast", tokens: ["D1ego_994z"] } };
+  expect(fillableShots([], shots, reads)).toEqual([]);
+});
+
+test("a test run fills from every capture once its board is in", () => {
+  const shots = [shot("t.jpg"), shot("g.jpg")];
+  const reads: Record<string, ShotRead> = {
+    "t.jpg": { screen: "toast", tokens: ["D1ego_994z"] },
+    "g.jpg": { screen: "grid", tokens: ["Diego_9942"] },
+  };
+  expect(fillableShots([], shots, reads)).toEqual(shots);
+});
+
+test("a test run holds back a show whose lobby it has not read yet", () => {
+  const shots = [shot("g.jpg", { showIndex: 0 }), shot("t.jpg", { showIndex: 1 })];
+  const reads: Record<string, ShotRead> = {
+    "g.jpg": { screen: "grid", tokens: ["Diego_9942"] },
+    "t.jpg": { screen: "toast", tokens: ["Serxav_9"] },
+  };
+  expect(fillableShots([], shots, reads)).toEqual([shots[0]!]);
+});
+
+test("a tournament fills from every capture, board or no board", () => {
+  const shots = [shot("t.jpg")];
+  const reads: Record<string, ShotRead> = { "t.jpg": { screen: "toast", tokens: ["B1gMooseL1ps"] } };
+  expect(fillableShots([{ ingame: "BigMooseLips" }], shots, reads)).toEqual(shots);
 });

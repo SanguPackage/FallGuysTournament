@@ -12,7 +12,7 @@ import { ReadQueue } from "../src/ocr/queue";
 import { readShot } from "../src/ocr/read";
 import { cacheKey, loadCache, saveCache } from "../src/ocr/cache";
 import { fillsFor } from "../src/ocr/autofill";
-import { seededRoster } from "../src/ocr/seed";
+import { fillableShots, seededRoster } from "../src/ocr/seed";
 import { identify } from "../src/ocr/recognizers";
 import { frameFrom } from "../src/ocr/frame";
 import { clipKey, momentKey, momentsIn, showClips } from "../src/capture/moments";
@@ -479,7 +479,8 @@ const server = Bun.serve({
       const roster = players.players.flatMap((player) =>
         player.ingame && player.joined !== false ? [player.ingame] : [],
       );
-      const fills = fillsFor(shots, readsFor(shots), roster, times, event.shows);
+      const fillable = fillableShots(players.players, shots, readsFor(shots));
+      const fills = fillsFor(fillable, readsFor(shots), roster, times, event.shows);
 
       await openTranscript(day);
       const reads = readsFor(shots);

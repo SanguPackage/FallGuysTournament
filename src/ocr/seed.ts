@@ -1,3 +1,4 @@
+import { cleanToken } from "./match";
 import type { PlacedShot } from "../screenshots";
 import type { Player } from "../types";
 import type { ShotRead } from "./read";
@@ -26,14 +27,14 @@ export function seededRoster(
 ): Player[] | undefined {
   if (anyoneRegistered(players)) return undefined;
 
+  const settled = settledShows(shots, reads);
   const boards = shots.flatMap((shot) => {
     const read = reads[shot.file];
     // A capture that landed in no show cannot say which lobby it is the roster of.
     const showIndex = shot.showIndex;
-    if (showIndex === undefined || shot.roundIndex !== 0) return [];
+    if (showIndex === undefined || shot.roundIndex !== 0 || !settled.has(showIndex)) return [];
     return read?.screen === "grid" && read.tokens.length > 0 ? [{ shot, read, showIndex }] : [];
   });
-  // A capture caught before the plate settles has fewer cards green than one caught after it.
   const board = boards.sort(
     (a, b) =>
       b.showIndex - a.showIndex ||
@@ -45,8 +46,8 @@ export function seededRoster(
   const kept = players.filter((player) => !player.seeded);
   const known = new Set(kept.map((player) => player.ingame));
   const fresh: Player[] = [];
-  for (const ingame of board.read.tokens) {
-    if (known.has(ingame)) continue;
+  for (const ingame of board.read.tokens.map(cleanToken)) {
+    if (!ingame || known.has(ingame)) continue;
     known.add(ingame);
     fresh.push({ ingame, seeded: true });
   }
@@ -59,4 +60,39 @@ export function seededRoster(
     return undefined;
   }
   return [...kept, ...fresh];
+}
+
+/**
+ * The shows whose first round has been read to the end, board and all. A capture caught before the
+ * plate settles has fewer cards green than one caught after it, so which board holds the lobby is
+ * only worth asking once every capture of that round is in.
+ */
+function settledShows(shots: PlacedShot[], reads: Record<string, ShotRead>): Set<number> {
+  const pending = new Set<number>();
+  const boards = new Set<number>();
+  for (const shot of shots) {
+    if (shot.showIndex === undefined || shot.roundIndex !== 0) continue;
+    const read = reads[shot.file];
+    if (!read) pending.add(shot.showIndex);
+    else if (read.screen === "grid" && read.tokens.length > 0) boards.add(shot.showIndex);
+  }
+  return new Set([...boards].filter((show) => !pending.has(show)));
+}
+
+/**
+ * The captures a fill may be written from. A test run learns its lobby off the first board of the
+ * show being played, and the roster is the answer key the reading is scored against — so a capture
+ * from a show whose board is not in yet has nothing to be checked against, and the name it offers
+ * would go in as it was misread. Every player in a tournament is registered before anyone plays,
+ * so nothing is ever held back there.
+ */
+export function fillableShots(
+  players: Player[],
+  shots: PlacedShot[],
+  reads: Record<string, ShotRead>,
+): PlacedShot[] {
+  if (anyoneRegistered(players)) return shots;
+  const seeded = [...settledShows(shots, reads)].sort((a, b) => b - a)[0];
+  if (seeded === undefined) return [];
+  return shots.filter((shot) => shot.showIndex !== undefined && shot.showIndex <= seeded);
 }
