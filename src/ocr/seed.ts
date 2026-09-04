@@ -14,22 +14,20 @@ export function seededRoster(
   const registered = players.some((player) => !player.admin && player.ingame);
   if (registered) return undefined;
 
-  const boards = shots.filter(
-    (shot) =>
-      shot.showIndex === 0 &&
-      shot.roundIndex === 0 &&
-      reads[shot.file]?.screen === "grid" &&
-      (reads[shot.file]?.tokens.length ?? 0) > 0,
-  );
+  const boards = shots.flatMap((shot) => {
+    const read = reads[shot.file];
+    const first = shot.showIndex === 0 && shot.roundIndex === 0;
+    return first && read?.screen === "grid" && read.tokens.length > 0 ? [{ shot, read }] : [];
+  });
   // A capture caught before the plate settles has fewer cards green than one caught after it.
   const board = boards.sort(
-    (a, b) => reads[b.file]!.tokens.length - reads[a.file]!.tokens.length || b.takenAt - a.takenAt,
+    (a, b) => b.read.tokens.length - a.read.tokens.length || b.shot.takenAt - a.shot.takenAt,
   )[0];
   if (!board) return undefined;
 
   const known = new Set(players.map((player) => player.ingame));
   const fresh: Player[] = [];
-  for (const ingame of reads[board.file]!.tokens) {
+  for (const ingame of board.read.tokens) {
     if (known.has(ingame)) continue;
     known.add(ingame);
     fresh.push({ ingame });
