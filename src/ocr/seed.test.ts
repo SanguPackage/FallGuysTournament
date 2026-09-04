@@ -48,3 +48,30 @@ test("a row still being typed in is not a registered player", () => {
     { ingame: "Diego_9942" },
   ]);
 });
+
+test("a board off a later round is not the first board", () => {
+  const shots = [shot("g.jpg", { roundIndex: 2 })];
+  const reads: Record<string, ShotRead> = { "g.jpg": { screen: "grid", tokens: ["Diego_9942"] } };
+  expect(seededRoster([], shots, reads)).toBeUndefined();
+});
+
+test("a board off a later show is not the first board", () => {
+  const shots = [shot("g.jpg", { showIndex: 1 })];
+  const reads: Record<string, ShotRead> = { "g.jpg": { screen: "grid", tokens: ["Diego_9942"] } };
+  expect(seededRoster([], shots, reads)).toBeUndefined();
+});
+
+test("the board before it settles names everyone still in, so it is not read", () => {
+  const shots = [shot("f.jpg")];
+  const reads: Record<string, ShotRead> = { "f.jpg": { screen: "field", tokens: ["Diego_9942"] } };
+  expect(seededRoster([], shots, reads)).toBeUndefined();
+});
+
+test("a capture nobody has read yet seeds nothing", () => {
+  expect(seededRoster([], [shot("g.jpg")], {})).toBeUndefined();
+});
+
+test("a board that read no names seeds nothing", () => {
+  const reads: Record<string, ShotRead> = { "g.jpg": { screen: "grid", tokens: [] } };
+  expect(seededRoster([], [shot("g.jpg")], reads)).toBeUndefined();
+});
