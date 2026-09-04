@@ -35,7 +35,10 @@ for (const run of readdirSync(`${BENCH}/segments`)) {
   const startedAt = runStartedAt(run);
   if (startedAt === undefined) continue;
   const dir = `${BENCH}/segments/${run}`;
-  segments.push(...parseSegments(await Bun.file(`${dir}/segments.csv`).text(), startedAt, dir));
+  // A recorder that died before its first segment closed wrote no list at all.
+  const csv = Bun.file(`${dir}/segments.csv`);
+  if (!(await csv.exists())) continue;
+  segments.push(...parseSegments(await csv.text(), startedAt, dir));
 }
 if (segments.length === 0) throw new Error(`no segments under ${BENCH}/segments`);
 
