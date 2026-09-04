@@ -84,3 +84,32 @@ test("a key that has finished can be queued again", async () => {
   await serial.drained();
   expect(ran).toBe(2);
 });
+
+test("the moment stamped latest runs first, so a live round never waits on an old failure", async () => {
+  const order: string[] = [];
+  const serial = new Serial();
+  const job = (name: string) => async () => {
+    await Bun.sleep(1);
+    order.push(name);
+  };
+  serial.add("blocker", job("blocker"), 100);
+  serial.add("old", job("old"), 1);
+  serial.add("new", job("new"), 3);
+  serial.add("middle", job("middle"), 2);
+  await serial.drained();
+  expect(order).toEqual(["blocker", "new", "middle", "old"]);
+});
+
+test("a job queued without a stamp waits behind every stamped one", async () => {
+  const order: string[] = [];
+  const serial = new Serial();
+  const job = (name: string) => async () => {
+    await Bun.sleep(1);
+    order.push(name);
+  };
+  serial.add("blocker", job("blocker"), 100);
+  serial.add("unstamped", job("unstamped"));
+  serial.add("stamped", job("stamped"), 1);
+  await serial.drained();
+  expect(order).toEqual(["blocker", "stamped", "unstamped"]);
+});

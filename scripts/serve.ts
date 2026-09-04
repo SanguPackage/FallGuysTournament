@@ -401,7 +401,7 @@ async function sweepCaptures(): Promise<void> {
         screenOf: identify,
         now: () => Date.now(),
       });
-    });
+    }, moment.at);
   }
 
   for (const clip of showClips(shows, day)) {
@@ -416,7 +416,7 @@ async function sweepCaptures(): Promise<void> {
         run: runFfmpeg,
       });
       if (cut?.gapped) console.log(`${file}.mp4 — a recording died inside it, so the clip jumps`);
-    });
+    }, clip.to);
   }
 }
 
