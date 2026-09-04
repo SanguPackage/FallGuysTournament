@@ -1,4 +1,5 @@
 import type { ParsedShow } from "../src/log";
+import { anyoneRegistered } from "../src/ocr/seed";
 import type { Players, TournamentEvent } from "../src/types";
 import {
   applyFills,
@@ -1020,6 +1021,11 @@ async function watchLog(): Promise<void> {
       status("watch-status", "Lost the server. Retrying…", false);
       return;
     }
+    // The roster is otherwise never refreshed, so that a name half typed in is not snatched away
+    // mid-edit. A test run's is seeded on the server off the first board, and a tab that opened
+    // before that still holds the empty one its next save would write back over the top.
+    if (!anyoneRegistered(state.players.players)) state.players = next.players;
+
     const signature = JSON.stringify([
       next.shows,
       next.shots,
