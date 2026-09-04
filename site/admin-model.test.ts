@@ -935,27 +935,56 @@ test("a show the log has but nobody entered has nothing to delete", () => {
   expect(canDeleteShow({ name: "FOM", date: "d", shows: [], penalties: [] }, 0)).toBe(false);
 });
 
-const shots = ["a.png", "b.png", "c.png"];
+type Capture = { file: string; source: "sharex" | "auto" };
 
-test("only the newest capture of a group shows itself", () => {
+const auto = (file: string): Capture => ({ file: `show-1/${file}`, source: "auto" });
+const burst: Capture[] = [
+  auto("round-01-whole-field-01.jpg"),
+  auto("round-01-whole-field-02.jpg"),
+  auto("round-01-whole-field-03.jpg"),
+];
+
+test("only the last frame of a pull shows itself", () => {
   const folded = new Map<string, boolean>();
-  expect(showsCapture(shots, "a.png", folded)).toBe(false);
-  expect(showsCapture(shots, "b.png", folded)).toBe(false);
-  expect(showsCapture(shots, "c.png", folded)).toBe(true);
+  expect(showsCapture(burst, burst[0]!.file, folded)).toBe(false);
+  expect(showsCapture(burst, burst[1]!.file, folded)).toBe(false);
+  expect(showsCapture(burst, burst[2]!.file, folded)).toBe(true);
 });
 
-test("a capture the newest one arrives after folds itself away", () => {
+test("every pull keeps a frame on show, not just the newest pull", () => {
+  const shots = [...burst, auto("round-02-winner-01.jpg"), auto("round-02-winner-02.jpg")];
   const folded = new Map<string, boolean>();
-  expect(showsCapture(["a.png"], "a.png", folded)).toBe(true);
-  expect(showsCapture(shots, "a.png", folded)).toBe(false);
+  expect(showsCapture(shots, burst[2]!.file, folded)).toBe(true);
+  expect(showsCapture(shots, shots[4]!.file, folded)).toBe(true);
+  expect(showsCapture(shots, shots[3]!.file, folded)).toBe(false);
+});
+
+test("kinds cut out of one pass are pulls of their own", () => {
+  const shots = [auto("round-01-finalists-board-01.jpg"), auto("round-01-whole-field-01.jpg")];
+  const folded = new Map<string, boolean>();
+  expect(showsCapture(shots, shots[0]!.file, folded)).toBe(true);
+  expect(showsCapture(shots, shots[1]!.file, folded)).toBe(true);
+});
+
+test("a ShareX capture was asked for one at a time, so each one shows", () => {
+  const shots: Capture[] = [
+    { file: "2026-09/shot-01.png", source: "sharex" },
+    { file: "2026-09/shot-02.png", source: "sharex" },
+  ];
+  const folded = new Map<string, boolean>();
+  expect(showsCapture(shots, shots[0]!.file, folded)).toBe(true);
+  expect(showsCapture(shots, shots[1]!.file, folded)).toBe(true);
 });
 
 test("what the admin folded by hand outranks both defaults", () => {
-  const folded = new Map([["a.png", false], ["c.png", true]]);
-  expect(showsCapture(shots, "a.png", folded)).toBe(true);
-  expect(showsCapture(shots, "c.png", folded)).toBe(false);
+  const folded = new Map([
+    [burst[0]!.file, false],
+    [burst[2]!.file, true],
+  ]);
+  expect(showsCapture(burst, burst[0]!.file, folded)).toBe(true);
+  expect(showsCapture(burst, burst[2]!.file, folded)).toBe(false);
 });
 
-test("nothing shows in an empty group", () => {
+test("nothing shows in an empty panel", () => {
   expect(showsCapture([], "a.png", new Map())).toBe(false);
 });

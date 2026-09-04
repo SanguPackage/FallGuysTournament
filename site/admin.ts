@@ -341,11 +341,9 @@ const NEXT_SIZE: Record<ShotSize, ShotSize> = { thumb: "fit", fit: "full", full:
 function shotImages(shots: PlacedShot[]): Node[] {
   if (shots.length === 0) return [el("p", { class: "empty" }, ["No screenshots for this."])];
 
-  const files = shots.map((shot) => shot.file);
-
   return shots.flatMap((shot) => {
     const name = shot.file.split("/").pop() ?? shot.file;
-    const showing = showsCapture(files, shot.file, folded);
+    const showing = showsCapture(shots, shot.file, folded);
     const hide = el("button", { type: "button", class: "link" }, [showing ? "hide" : "show"]);
     hide.addEventListener("click", () => {
       folded.set(shot.file, showing);

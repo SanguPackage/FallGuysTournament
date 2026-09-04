@@ -7,6 +7,7 @@ export { ROUND_TYPES, SCORES_FIRST } from "../src/rounds";
 import type { Players, Round, RoundType, Show, TournamentEvent } from "../src/types";
 import type { SlotFill } from "../src/ocr/autofill";
 import type { RecorderStatus } from "../src/capture/recorder";
+import type { ShotSource } from "../src/screenshots";
 
 export interface Badge {
   text: string;
@@ -476,11 +477,40 @@ export function canResyncWinners(
   return draft.winners.some((_, slot) => memo.sources.has(`show:${showIndex}:winner:${slot}`));
 }
 
+/** All a panel knows about a capture when deciding whether to unfold it. */
+export interface Capture {
+  file: string;
+  source: ShotSource;
+}
+
+/** The index the pull's own frames are numbered with. See `captureFile`. */
+const FRAME = /-\d+\.[a-z]+$/i;
+
 /**
- * Whether a capture in a panel shows its image or only its caption. Captures land in bursts, and
- * the one worth reading is the last, so the ones before it fold themselves away rather than push
- * it off the panel. `folded` is what the admin worked by hand, which outranks that either way.
+ * The pull a capture came out of, which is what its name is built from: one moment is cut into
+ * frames numbered off a single name, and each kind counts its own. Anything ShareX filed stands
+ * alone, since the admin pressed the key for it.
  */
-export function showsCapture(files: string[], file: string, folded: Map<string, boolean>): boolean {
-  return !(folded.get(file) ?? file !== files.at(-1));
+function pullOf(shot: Capture): string {
+  return shot.source === "auto" ? shot.file.replace(FRAME, "") : shot.file;
+}
+
+/**
+ * Whether a capture shows its image or only its caption. A pull lands as a handful of frames at
+ * once and the readable one is the last, so the frames before it fold themselves away rather than
+ * push it off the panel. Every pull keeps one on show, not just the newest. `folded` is what the
+ * admin worked by hand, which outranks that either way.
+ */
+export function showsCapture(
+  shots: Capture[],
+  file: string,
+  folded: Map<string, boolean>,
+): boolean {
+  const decided = folded.get(file);
+  if (decided !== undefined) return !decided;
+
+  const shot = shots.find((candidate) => candidate.file === file);
+  if (!shot) return false;
+  const pull = pullOf(shot);
+  return shots.filter((candidate) => pullOf(candidate) === pull).at(-1)?.file === file;
 }
