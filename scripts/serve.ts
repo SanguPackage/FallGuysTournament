@@ -12,6 +12,7 @@ import { ReadQueue } from "../src/ocr/queue";
 import { readShot } from "../src/ocr/read";
 import { cacheKey, loadCache, saveCache } from "../src/ocr/cache";
 import { fillsFor } from "../src/ocr/autofill";
+import { seededRoster } from "../src/ocr/seed";
 import { identify } from "../src/ocr/recognizers";
 import { frameFrom } from "../src/ocr/frame";
 import { clipKey, momentKey, momentsIn, showClips } from "../src/capture/moments";
@@ -445,6 +446,17 @@ const server = Bun.serve({
       const times = absoluteTimes(shows, day);
       queueReads(shotDir, shots);
       const players = (await Bun.file(PLAYERS_PATH).json()) as Players;
+      const seeded = seededRoster(players.players, shots, readsFor(shots));
+      if (seeded) {
+        players.players = seeded;
+        await Bun.write(PLAYERS_PATH, `${JSON.stringify(players, null, 2)}\n`);
+        transcript.write({
+          kind: "entry",
+          at: Date.now(),
+          lane: "admin",
+          text: `roster · nobody was registered, so ${seeded.length} players were read off the first board`,
+        });
+      }
       const roster = players.players.flatMap((player) =>
         player.ingame && player.joined !== false ? [player.ingame] : [],
       );
