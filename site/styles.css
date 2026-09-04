@@ -77,7 +77,7 @@ h1 {
   text-shadow: 0 6px 0 var(--ink), 0 10px 18px #0006;
 }
 
-.live {
+.topbar .live {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -99,8 +99,8 @@ h1 {
   animation: pulse 2s infinite;
 }
 
-.live.stale { color: #ffb4b4; }
-.live.stale .dot { background: #ff6b6b; box-shadow: none; animation: none; }
+.topbar .live.stale { color: #ffb4b4; }
+.topbar .live.stale .dot { background: #ff6b6b; box-shadow: none; animation: none; }
 
 @keyframes pulse {
   70% { box-shadow: 0 0 0 8px #6ee78700; }
@@ -1040,6 +1040,6 @@ button.bn:hover, button.bn:focus-visible { border-color: #fff; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body::before, .p .figure, .confetti i, .live .dot { animation: none; }
+  body::before, .p .figure, .confetti i, .topbar .live .dot { animation: none; }
   .confetti { display: none; }
 }
