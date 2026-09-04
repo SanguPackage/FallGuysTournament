@@ -215,7 +215,7 @@ button.danger { color: var(--bad); }
 .show-done.waiting { opacity: 0.6; }
 .show-done.ok { border-color: var(--read); }
 
-.tick { font-weight: 700; padding: 0.25rem 0.6rem; }
+.tick, .show-head button.danger { font-weight: 700; padding: 0.25rem 0.6rem; }
 .tick.on { color: var(--read); border-color: var(--read); }
 
 .show-head { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }

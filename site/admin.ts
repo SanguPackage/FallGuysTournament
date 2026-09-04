@@ -1,9 +1,10 @@
 import type { ParsedShow } from "../src/log";
 import { anyoneRegistered } from "../src/ocr/seed";
-import type { Players, TournamentEvent } from "../src/types";
+import type { Players, Show, TournamentEvent } from "../src/types";
 import {
   applyFills,
   candidatesFor,
+  canDeleteShow,
   canResyncWinners,
   resyncRound,
   resyncShow,
@@ -854,6 +855,57 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
   ]);
 }
 
+/**
+ * Takes a misfired show back off the board. Disabled rather than absent on the rows that cannot be
+ * deleted: a button missing from some rows and not others reads as a fault in the panel.
+ */
+function deleteButton(show: Show | undefined, index: number): HTMLButtonElement {
+  const button = el("button", { type: "button", class: "danger" }, ["×"]);
+  const allowed = canDeleteShow(state.event, index);
+  button.disabled = !allowed;
+  button.title = allowed
+    ? "Delete this show from the leaderboard"
+    : show
+      ? "Only the last recorded show can be deleted"
+      : "Nothing recorded for this show yet";
+
+  button.addEventListener("click", async (event) => {
+    event.stopPropagation();
+    const name = show?.name || `show ${index + 1}`;
+    const go = confirm(
+      `Delete "${name}" from the leaderboard?\n\n` +
+        `Its data is saved beside that show's captures in ${state.captureDir}.`,
+    );
+    if (!go) return;
+
+    try {
+      const response = await fetch("/api/delete-show", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ showIndex: index }),
+      });
+      const body = (await response.json()) as {
+        archive?: string;
+        message?: string;
+        published?: PublishResult;
+      };
+      if (!response.ok) throw new Error(body.message ?? response.statusText);
+
+      // The server popped the same entry, and the poll never refreshes the event.
+      state.event.shows.pop();
+      drafts.delete(index);
+      if (editing === index) editing = null;
+      selectedShow = Math.min(selectedShow, state.event.shows.length);
+      render();
+      status("publish-status", body.published?.message ?? `Deleted. Saved to ${body.archive}`, true);
+    } catch (error) {
+      status("publish-status", `Could not delete: ${error}`, false);
+    }
+  });
+
+  return button;
+}
+
 function renderShows(): void {
   const target = document.querySelector("#shows")!;
 
@@ -932,7 +984,7 @@ function renderShows(): void {
       render();
     });
     tick.classList.add("push");
-    cells.push(tick, edit);
+    cells.push(tick, edit, deleteButton(show, index));
 
     const classes = ["show-done", ...(show ? [] : ["waiting"]), ...(show?.checked ? ["ok"] : [])];
     return selectable(

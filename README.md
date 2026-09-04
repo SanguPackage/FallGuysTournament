@@ -174,6 +174,12 @@ typed out once and picked from the list after that.
 board. It is filled in from what is already published, so clearing the box is what takes
 the badge down.
 
+**×** takes a misfired show back off the leaderboard, after a confirmation. Only the last
+recorded show has it: a show's slot is its number in the log, and pulling an earlier one
+out would re-point every show after it at the wrong log entry. The show's JSON is written
+to `deleted-show.json` in that show's own capture folder first — numbered on collision, so
+nothing is ever overwritten. Restoring is pasting it back into `data/event.json`.
+
 It finds `Player.log` under `AppData/LocalLow/Mediatonic/FallGuys_client` for any user
 on the C: drive. Set `FALLGUYS_LOG` to override.
 
