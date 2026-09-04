@@ -1,5 +1,28 @@
 # FOM Fall Guys Tournament
 
+Admin: I-36
+
+🥇 1st: NH-D15 G2
+🥈 2nd: NH-U12A  chromax.black
+🥉 3rd: NH-D12L
+--> Rules: we need two tabs "rules" & prizes on that page
+--> Prizes tab: add the podium like on the dashboard but instead of showing a bean: show a picture of the prize
+
+Saturday from 14:00 -19:00
+--> when it's not yet saturday 14:00, can you do a countdown till the game start on the dashboard?
+--> also add text there: join the discord https://discord.gg/J8msxSh6v and add the Fall Guys role
+
+
+TODO:
+- Check that WITH sound actually works
+- How does the "now playing" work? on dashboard vs on Results?
+- Test run!
+
+Also?
+- Cut the show mp4 per round
+- Cut stuff and put them on the website (or youtube?) "HIGHLIGHTS" :D
+
+
 Scoring and leaderboard for the Fall Guys solo tournament at the FOM LAN party.
 
 Participant list: https://www.fom.be/compos/view/507
