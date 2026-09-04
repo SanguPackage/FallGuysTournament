@@ -1,6 +1,7 @@
 import { liveStatus, withLiveLog, type LiveNow } from "../src/live";
 import { score } from "../src/scoring";
 import type { LeaderboardRow, Players, TournamentEvent } from "../src/types";
+import { countdownClock, renderCountdown } from "./countdown";
 import { renderField, renderPodium, renderStandings, renderStatus } from "./render";
 import { renderResults } from "./results";
 import { attachPlayerDialog } from "./player-dialog";
@@ -52,6 +53,7 @@ function render(page: string, data: Data, rows: LeaderboardRow[], movers: Set<st
   switch (page) {
     case "dashboard":
       return (
+        renderCountdown(data.event, Date.now()) +
         renderStatus(status, data.order) +
         renderShowNow(data.event, data.players.players, status) +
         renderPodium(rows) +
@@ -84,6 +86,20 @@ function paintLobby(lobby: HTMLElement | null, code?: string): void {
   document.querySelectorAll<HTMLElement>("[data-lobby-code]").forEach((slot) => {
     slot.textContent = (code ?? "").toUpperCase();
   });
+}
+
+/**
+ * A beat of its own: the poll is far too slow to move a second hand, and it repaints the panel
+ * wholesale, so the ticker finds the clock again each time rather than holding on to one.
+ */
+function tickCountdown(): void {
+  const panel = document.querySelector<HTMLElement>("#countdown");
+  const clock = panel?.querySelector<HTMLElement>("[data-countdown]");
+  if (!panel || !clock || !panel.dataset.starts) return;
+
+  const left = new Date(panel.dataset.starts).getTime() - Date.now();
+  if (left <= 0) panel.remove();
+  else clock.innerHTML = countdownClock(left);
 }
 
 function main(): void {
@@ -132,6 +148,7 @@ function main(): void {
 
   void poll();
   setInterval(() => void poll(), POLL_MS);
+  setInterval(tickCountdown, 1000);
 }
 
 main();

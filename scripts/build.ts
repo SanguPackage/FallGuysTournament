@@ -4,6 +4,7 @@ import { score } from "../src/scoring";
 import type { Players, TournamentEvent } from "../src/types";
 import type { LivePage } from "../site/page";
 import { page } from "../site/page";
+import { renderCountdown } from "../site/countdown";
 import { renderField, renderPodium, renderStandings, renderStatus } from "../site/render";
 import { renderResults } from "../site/results";
 import { renderShowNow } from "../site/show-field";
@@ -56,7 +57,8 @@ const PAGES: { file: string; heading: string; title: string; live?: LivePage; bo
     title: TITLE,
     live: "dashboard",
     body: data(
-      renderStatus(status, order) +
+      renderCountdown(event, Date.now()) +
+        renderStatus(status, order) +
         renderShowNow(event, players.players, status) +
         renderPodium(rows) +
         renderField(rows),

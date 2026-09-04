@@ -42,6 +42,9 @@ export interface TournamentEvent {
   date: string;
   /** The custom lobby's join code, so the board can hand it to everyone still outside. */
   lobbyCode?: string;
+  /** When play starts, with its offset. Absent for an event whose hour is not settled yet. */
+  startsAt?: string;
+  endsAt?: string;
   shows: Show[];
   penalties: Penalty[];
 }
