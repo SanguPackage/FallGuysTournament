@@ -61,3 +61,24 @@ export function coverage(segments: Segment[], from: number, to: number): Coverag
 export function offsetIn(segment: Segment, at: number): number {
   return Math.max(0, (at - segment.from) / 1000);
 }
+
+/**
+ * How far into `[from, to]` the closed segments reach without a hole, or nothing if the recording
+ * was not yet running at `from`.
+ *
+ * A window is worth searching before the recording has passed it: the screen a moment wants is
+ * usually in the first seconds of it, and waiting for the tail costs the whole tail.
+ */
+export function coveredUntil(segments: Segment[], from: number, to: number): number | undefined {
+  const parts = segments
+    .filter((segment) => segment.from < to && segment.to > from)
+    .sort((a, b) => a.from - b.from);
+  if (parts[0] === undefined || parts[0].from > from) return undefined;
+
+  let until = parts[0].to;
+  for (const part of parts.slice(1)) {
+    if (part.from - until > GAP_MS) break;
+    until = part.to;
+  }
+  return Math.min(until, to);
+}

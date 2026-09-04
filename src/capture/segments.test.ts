@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { coverage, offsetIn, parseSegments } from "./segments";
+import { coverage, coveredUntil, offsetIn, parseSegments } from "./segments";
 
 const START = Date.parse("2026-09-05T20:00:00Z");
 const DIR = "/mnt/c/temp/FallGuysCapture/segments/2026-09-05T22h00m00";
@@ -75,4 +75,26 @@ test("an offset is seconds into the segment, never negative", () => {
   const [first] = parseSegments(CSV, START, DIR);
   expect(offsetIn(first!, START + 4_500)).toBeCloseTo(4.5);
   expect(offsetIn(first!, START - 1_000)).toBe(0);
+});
+
+test("a window the recording has passed is covered to its end", () => {
+  const until = coveredUntil(parseSegments(CSV, START, DIR), START + 5_000, START + 7_000);
+  expect(until).toBe(START + 7_000);
+});
+
+test("a window the recording is still inside is covered to the last closed segment", () => {
+  const until = coveredUntil(parseSegments(CSV, START, DIR), START + 80_000, START + 110_000);
+  expect(until).toBe(START + 90_100);
+});
+
+test("a window the recording had not started is covered to nothing", () => {
+  expect(coveredUntil(parseSegments(CSV, START, DIR), START - 5_000, START + 1_000)).toBeUndefined();
+});
+
+test("coverage stops at a hole rather than counting what is past it", () => {
+  const segments = [
+    ...parseSegments(CSV, START, DIR),
+    ...parseSegments(NEXT_CSV, NEXT_START, NEXT_DIR),
+  ];
+  expect(coveredUntil(segments, START + 80_000, START + 130_000)).toBe(START + 90_100);
 });

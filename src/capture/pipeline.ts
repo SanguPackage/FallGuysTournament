@@ -4,7 +4,7 @@ import { CLASSIFY_HEIGHT, concatList, cutArgv, extractArgv } from "./command";
 import { captureFile } from "./layout";
 import { clipKey, momentKey, type Moment, type MomentKind, type ShowClip } from "./moments";
 import { pick, type Candidate } from "./pick";
-import { coverage, offsetIn, type Segment } from "./segments";
+import { coverage, coveredUntil, offsetIn, type Segment } from "./segments";
 import { toWindows } from "./win-path";
 import type { Ledger } from "./ledger";
 import type { Frame } from "../ocr/frame";
@@ -41,6 +41,15 @@ export interface CaptureDeps {
  * listed once it closes, which is up to its own length after the frames went into it.
  */
 const SETTLE_MS = 90_000;
+
+/**
+ * The least of a window worth searching before the recording has passed the rest of it.
+ *
+ * The screen a moment wants comes up within seconds of the stamp, while the window runs to half a
+ * minute so that a slow one is still inside it. Waiting for the tail to close costs the whole tail
+ * on every moment, and the next round has loaded by then.
+ */
+const EARLY_MS = 10_000;
 
 /**
  * The full-size frames behind what the search settled on. The search reads a scaled copy — decoding
@@ -112,13 +121,15 @@ export async function captureMoment(
   deps: CaptureDeps,
 ): Promise<string[]> {
   const key = momentKey(moment);
-  const { parts, complete } = coverage(segments, moment.from, moment.to);
-  if (!complete) {
+  const until = coveredUntil(segments, moment.from, moment.to);
+  const complete = until !== undefined && until >= moment.to;
+  if (until === undefined || until - moment.from < EARLY_MS) {
     // Waiting on a segment still being written is the normal case for the first half-minute, and
     // spending an attempt on it abandons the moment before the footage holding it exists.
     if (deps.now() > moment.to + SETTLE_MS) ledger.failed(key);
     return [];
   }
+  const { parts } = coverage(segments, moment.from, until);
 
   const scratch = `${deps.scratchDir}/${key.replace(/:/g, "-")}`;
   await rm(scratch, { recursive: true, force: true });
@@ -126,11 +137,15 @@ export async function captureMoment(
   await mkdir(`${deps.showsDir}/${showDir}`, { recursive: true });
 
   try {
-    const candidates: Candidate[] = [];
+    const chosen: Candidate[] = [];
+    let classified = 0;
 
+    // A segment at a time, reading each before opening the next: `pick` takes frames in order, so
+    // once the quota is full the segments behind it hold nothing that would be kept — and opening
+    // a 4K segment is most of what a pass costs.
     for (const [index, part] of parts.entries()) {
       const from = Math.max(moment.from, part.from);
-      const to = Math.min(moment.to, part.to);
+      const to = Math.min(until, part.to);
       const result = await deps.run(
         extractArgv({
           ffmpeg: deps.ffmpeg,
@@ -145,21 +160,31 @@ export async function captureMoment(
       if (!result.ok) continue;
 
       const names = (await readdir(scratch)).filter((name) => name.startsWith(`p${index}-`)).sort();
-      names.forEach((name, frame) => {
+      const candidates: Candidate[] = names.map((name, frame) => ({
+        path: `${scratch}/${name}`,
+        part,
         // ffmpeg numbers from 1, and each frame is one tick of the requested rate past the seek.
-        candidates.push({ path: `${scratch}/${name}`, part, at: from + (frame * 1000) / moment.fps });
-      });
+        at: from + (frame * 1000) / moment.fps,
+      }));
+
+      const searched = await pick(
+        candidates,
+        WANTED[moment.kind],
+        KEEP - chosen.length,
+        deps.frameOf,
+        deps.screenOf,
+      );
+      chosen.push(...searched.kept);
+      classified += searched.classified;
+      if (chosen.length >= KEEP) break;
     }
 
-    const kept: string[] = [];
-    const { kept: chosen, classified } = await pick(
-      candidates,
-      WANTED[moment.kind],
-      KEEP,
-      deps.frameOf,
-      deps.screenOf,
-    );
+    // A pass over part of a window keeps what it found: the frames `pick` takes are the earliest,
+    // so a short pass returns a prefix of what the whole window would have given. Only a pass that
+    // found nothing has to wait — the screen may be past where the recording has closed.
+    if (chosen.length === 0 && !complete) return [];
 
+    const kept: string[] = [];
     const fulls = await fullFrames(chosen, scratch, moment.fps, deps);
 
     for (const [index, candidate] of chosen.entries()) {

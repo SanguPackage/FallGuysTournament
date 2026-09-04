@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { mkdir, mkdtemp, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
+import { dirname } from "node:path";
 import { Ledger, MAX_ATTEMPTS } from "./ledger";
 import { CLASSIFY_HEIGHT } from "./command";
 import { captureMoment, cutShowClip } from "./pipeline";
@@ -16,7 +17,7 @@ const MOMENT: Moment = {
   roundNumber: 3,
   at: AT,
   from: AT - 500,
-  to: AT + 1500,
+  to: AT + 10_000,
   fps: 30,
 };
 
@@ -36,22 +37,15 @@ async function harness() {
       ffmpeg: "ff",
       scratchDir,
       showsDir: `${dir}/shows`,
-      // Stands in for ffmpeg. The argv carries Windows paths, which this process cannot write to,
-      // so the frames go where the pipeline will look for them instead.
-      // Stands in for ffmpeg twice over: the scaled search pull, and the full-size still of one
-      // frame the search kept. A tmpdir path is not a WSL mount, so `toWindows` left it alone.
+      // Stands in for ffmpeg, for both the pulls the pipeline makes: the scaled one the search
+      // reads, and the full-size stills of what it kept. Two frames each, written where the argv's
+      // output pattern says — a tmpdir path is not a WSL mount, so `toWindows` left it alone.
       run: async (argv: string[]) => {
         ran.push(argv);
-        const folder = `${scratchDir}/${STAMP}-first-2`;
-        await mkdir(folder, { recursive: true });
         const pattern = argv.at(-1)!;
-        if (pattern.includes("keep-")) {
-          for (const n of [1, 2]) {
-            await writeFile(pattern.replace("%04d", `000${n}`), `full size ${n}`);
-          }
-          return { ok: true, stderr: "" };
-        }
-        for (const n of [1, 2]) await writeFile(`${folder}/p0-000${n}.jpg`, `scaled ${n}`);
+        await mkdir(dirname(pattern), { recursive: true });
+        const what = pattern.includes("keep-") ? "full size" : "scaled";
+        for (const n of [1, 2]) await writeFile(pattern.replace("%04d", `000${n}`), `${what} ${n}`);
         return { ok: true, stderr: "" };
       },
       frameOf: async () => ({ width: 2, height: 2, at: () => [0, 0, 0] as const }),
@@ -60,6 +54,27 @@ async function harness() {
     },
   };
 }
+
+// The board: a long window, at a rate that puts several frames in every segment behind it.
+const BOARD: Moment = {
+  kind: "finalists",
+  showIndex: 0,
+  stamp: STAMP,
+  roundIndex: 0,
+  roundNumber: 1,
+  at: AT,
+  from: AT + 1000,
+  to: AT + 31_000,
+  fps: 2,
+};
+
+/** Ten-second segments across the board's window, as the recorder cuts them. */
+const TENS = [0, 10, 20, 30].map((offset) => ({
+  file: `seg-0000${offset / 10}.mkv`,
+  dir: RUN,
+  from: AT + offset * 1000,
+  to: AT + (offset + 10) * 1000,
+}));
 
 test("a moment nothing covers is left pending rather than half captured", async () => {
   const { dir, deps, ran } = await harness();
@@ -143,7 +158,7 @@ test("the scratch folder is not left behind", async () => {
   const { dir, deps } = await harness();
   try {
     await captureMoment(MOMENT, SHOW_DIR, SEGMENTS, new Ledger(), deps);
-    expect(await Bun.file(`${dir}/scratch/2026-09-05-0-first-2/p0-0001.jpg`).exists()).toBe(false);
+    expect(await Bun.file(`${dir}/scratch/${STAMP}-first-2/p0-0001.jpg`).exists()).toBe(false);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -315,6 +330,71 @@ test("a still that will not come out leaves the scaled frame rather than losing 
     });
     expect(kept.length).toBe(2);
     expect(await Bun.file(`${dir}/shows/${kept[0]!}`).text()).toBe("scaled 1");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("a window the recording is still inside is searched once enough of it is on disk", async () => {
+  const { dir, deps, ran } = await harness();
+  const ledger = new Ledger();
+  try {
+    const kept = await captureMoment(BOARD, SHOW_DIR, TENS.slice(0, 2), ledger, {
+      ...deps,
+      screenOf: () => "grid" as const,
+    });
+    // Fewer than the quota, and kept anyway: they are the frames the whole window would have
+    // given first, and the round after this one is already being played.
+    expect(kept).toEqual([
+      "show-2026-09-05T20h00-solos-1/round-01-finalists-board-01.jpg",
+      "show-2026-09-05T20h00-solos-1/round-01-finalists-board-02.jpg",
+      "show-2026-09-05T20h00-solos-1/round-01-finalists-board-03.jpg",
+      "show-2026-09-05T20h00-solos-1/round-01-finalists-board-04.jpg",
+    ]);
+    // Only the segments that had closed: the window runs another ten seconds past them.
+    expect(ran.filter((argv) => !argv.at(-1)!.includes("keep-")).length).toBe(2);
+    expect(ledger.pending(`${STAMP}:finalists:0`)).toBe(false);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("a short window holding nothing waits for the rest rather than being given up on", async () => {
+  const { dir, deps } = await harness();
+  const ledger = new Ledger();
+  try {
+    const kept = await captureMoment(BOARD, SHOW_DIR, TENS.slice(0, 2), ledger, {
+      ...deps,
+      screenOf: () => undefined,
+    });
+    expect(kept).toEqual([]);
+    expect(ledger.pending(`${STAMP}:finalists:0`)).toBe(true);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("a window barely open yet is left alone rather than searched a frame at a time", async () => {
+  const { dir, deps, ran } = await harness();
+  try {
+    const kept = await captureMoment(BOARD, SHOW_DIR, TENS.slice(0, 1), new Ledger(), deps);
+    expect(kept).toEqual([]);
+    expect(ran).toEqual([]);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("segments past the one that filled the quota are never opened", async () => {
+  const { dir, deps, ran } = await harness();
+  try {
+    const kept = await captureMoment(BOARD, SHOW_DIR, TENS, new Ledger(), {
+      ...deps,
+      screenOf: () => "grid" as const,
+    });
+    // Two frames a segment, so the fifth keeps the search inside the third.
+    expect(kept.length).toBe(5);
+    expect(ran.filter((argv) => !argv.at(-1)!.includes("keep-")).length).toBe(3);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
