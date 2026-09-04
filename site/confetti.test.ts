@@ -33,3 +33,7 @@ test("specks drift both ways", () => {
   expect(Math.min(...sway)).toBeLessThan(0);
   expect(Math.max(...sway)).toBeGreaterThan(0);
 });
+
+test("no speck waits at the top: every one starts partway down", () => {
+  for (const delay of props(confettiHtml(), "delay")) expect(parseFloat(delay)).toBeLessThan(0);
+});

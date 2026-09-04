@@ -27,8 +27,11 @@ export function confettiHtml(count = 60): string {
       `--sway:${(next() * 60 - 30).toFixed(1)}px`,
       `--d:${(4.5 + next() * 4).toFixed(2)}s`,
       `--f:${(0.9 + next() * 1.6).toFixed(2)}s`,
-      // Spread over a stretch longer than the fall itself, so the air is never briefly empty.
-      `--delay:${((index * 6.13) % 8.9).toFixed(3)}s`,
+      /*
+       * Negative, and spread past the longest fall: every speck starts already partway down, so
+       * there is no waiting state where the whole set sits stacked at the top of the column.
+       */
+      `--delay:-${(0.4 + ((index * 6.13) % 8.5)).toFixed(3)}s`,
     ].join(";");
     specks.push(`<i style="${style}"></i>`);
   }
