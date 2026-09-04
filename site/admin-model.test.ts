@@ -17,6 +17,7 @@ import {
   canResyncWinners,
   everyPlayerNamed,
   suggestShowName,
+  showsCapture,
   syncDraft,
   toShow,
   missingFrom,
@@ -932,4 +933,29 @@ test("only the last recorded show can be deleted", () => {
 test("a show the log has but nobody entered has nothing to delete", () => {
   expect(canDeleteShow(twoShows, 2)).toBe(false);
   expect(canDeleteShow({ name: "FOM", date: "d", shows: [], penalties: [] }, 0)).toBe(false);
+});
+
+const shots = ["a.png", "b.png", "c.png"];
+
+test("only the newest capture of a group shows itself", () => {
+  const folded = new Map<string, boolean>();
+  expect(showsCapture(shots, "a.png", folded)).toBe(false);
+  expect(showsCapture(shots, "b.png", folded)).toBe(false);
+  expect(showsCapture(shots, "c.png", folded)).toBe(true);
+});
+
+test("a capture the newest one arrives after folds itself away", () => {
+  const folded = new Map<string, boolean>();
+  expect(showsCapture(["a.png"], "a.png", folded)).toBe(true);
+  expect(showsCapture(shots, "a.png", folded)).toBe(false);
+});
+
+test("what the admin folded by hand outranks both defaults", () => {
+  const folded = new Map([["a.png", false], ["c.png", true]]);
+  expect(showsCapture(shots, "a.png", folded)).toBe(true);
+  expect(showsCapture(shots, "c.png", folded)).toBe(false);
+});
+
+test("nothing shows in an empty group", () => {
+  expect(showsCapture([], "a.png", new Map())).toBe(false);
 });

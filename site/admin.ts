@@ -20,6 +20,7 @@ import {
   namesByPoints,
   ROUND_TYPES,
   SCORES_FIRST,
+  showsCapture,
   suggestShowName,
   syncDraft,
   toShow,
@@ -68,14 +69,14 @@ let selectedShow = 0;
  * moment a show is saved.
  */
 let editing: number | null = null;
-/** How large each capture is being shown, and which are collapsed, so a rebuild keeps them that way. */
+/** How large each capture is being shown, and which are folded, so a rebuild keeps them that way. */
 type ShotSize = "thumb" | "fit" | "full";
 
 /**
  * How the panel was left outlives the page: reloading is how the admin recovers from a mistake,
  * and refolding and re-zooming a dozen captures afterwards would make that too expensive to do.
  */
-const COLLAPSED_KEY = "fallguys.admin.collapsed";
+const FOLDED_KEY = "fallguys.admin.folded";
 const TAB_KEY = "fallguys.admin.tab";
 const SIZES_KEY = "fallguys.admin.sizes";
 const SCROLL_KEY = "fallguys.admin.scroll";
@@ -98,7 +99,8 @@ function remember(key: string, entries: Iterable<unknown>): void {
 }
 
 let showLinked = stored<boolean>(LINKED_KEY)[0] ?? false;
-const collapsed = new Set(stored<string>(COLLAPSED_KEY));
+/** Only what the admin folded or unfolded by hand; the rest is `showsCapture`'s doing. */
+const folded = new Map(stored<[string, boolean]>(FOLDED_KEY));
 const sizes = new Map(stored<[string, ShotSize]>(SIZES_KEY));
 const scrolls = new Map(stored<[string, [number, number]]>(SCROLL_KEY));
 let panelShowing = "";
@@ -339,20 +341,20 @@ const NEXT_SIZE: Record<ShotSize, ShotSize> = { thumb: "fit", fit: "full", full:
 function shotImages(shots: PlacedShot[]): Node[] {
   if (shots.length === 0) return [el("p", { class: "empty" }, ["No screenshots for this."])];
 
+  const files = shots.map((shot) => shot.file);
+
   return shots.flatMap((shot) => {
     const name = shot.file.split("/").pop() ?? shot.file;
-    const hide = el("button", { type: "button", class: "link" }, [
-      collapsed.has(shot.file) ? "show" : "hide",
-    ]);
+    const showing = showsCapture(files, shot.file, folded);
+    const hide = el("button", { type: "button", class: "link" }, [showing ? "hide" : "show"]);
     hide.addEventListener("click", () => {
-      if (collapsed.has(shot.file)) collapsed.delete(shot.file);
-      else collapsed.add(shot.file);
-      remember(COLLAPSED_KEY, collapsed);
+      folded.set(shot.file, showing);
+      remember(FOLDED_KEY, folded);
       renderShots();
     });
 
     const caption = el("p", { class: "shot-time" }, [`${clock(shot.takenAt)} · ${name} `, hide]);
-    if (collapsed.has(shot.file)) return [caption];
+    if (!showing) return [caption];
 
     const size = sizes.get(shot.file) ?? "thumb";
     const image = el("img", {
@@ -814,11 +816,16 @@ function renderShowForm(parsed: ParsedShow, index: number): HTMLElement {
     state.event.shows[index] = toShow(draft);
     try {
       const published = await save("/api/event", state.event);
-      drafts.delete(index);
-      editing = null;
-      selectedShow = state.event.shows.length;
-      selection = { slot: "all" };
-      render();
+      const gaps = missingFrom(state.event.shows[index], parsed);
+      if (gaps.length > 0) {
+        problems.replaceChildren(el("li", {}, [`Saved, but still needs ${gaps.join(", ")}.`]));
+      } else {
+        drafts.delete(index);
+        editing = null;
+        selectedShow = state.event.shows.length;
+        selection = { slot: "all" };
+        render();
+      }
       if (published) status("publish-status", published.message, published.pushed);
     } catch (error) {
       state.event.shows = before;

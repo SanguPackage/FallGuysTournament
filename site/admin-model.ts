@@ -475,3 +475,12 @@ export function canResyncWinners(
   if (captures > 0) return true;
   return draft.winners.some((_, slot) => memo.sources.has(`show:${showIndex}:winner:${slot}`));
 }
+
+/**
+ * Whether a capture in a panel shows its image or only its caption. Captures land in bursts, and
+ * the one worth reading is the last, so the ones before it fold themselves away rather than push
+ * it off the panel. `folded` is what the admin worked by hand, which outranks that either way.
+ */
+export function showsCapture(files: string[], file: string, folded: Map<string, boolean>): boolean {
+  return !(folded.get(file) ?? file !== files.at(-1));
+}
