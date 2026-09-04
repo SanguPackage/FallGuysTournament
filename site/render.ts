@@ -56,6 +56,13 @@ function sub(row: LeaderboardRow): string {
   return parts.filter(Boolean).join(" · ");
 }
 
+/** The name opens the same details dialog a standings row does; without one there is nothing to open. */
+function podiumName(row: LeaderboardRow): string {
+  if (!row.ingame) return `<div class="nm">${primary(row)}</div>`;
+  return `<button type="button" class="nm open-player" data-player="${escapeHtml(row.ingame)}"
+          aria-label="Details for ${primary(row)}">${primary(row)}</button>`;
+}
+
 /** Second, first and third, so the tallest block sits in the middle. */
 const PODIUM_ORDER = [1, 0, 2];
 
@@ -80,7 +87,7 @@ export function renderPodium(rows: LeaderboardRow[]): string {
           ${index === 0 ? CROWN : ""}
           ${beanSvg(colours[index]!)}
         </div>
-        <div class="nm">${primary(row)}</div>
+        ${podiumName(row)}
         <div class="ig">${secondary(row)}</div>
         <div class="block">
           <span class="pts">${row.points}</span>

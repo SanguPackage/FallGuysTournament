@@ -35,7 +35,7 @@ const ORDER: ShowInOrder[] = [
 
 test("the podium shows second, first and third in that order", () => {
   const html = renderPodium(FIELD);
-  const names = [...html.matchAll(/class="nm">([^<]+)</g)].map((m) => m[1]);
+  const names = [...html.matchAll(/class="nm[^"]*"[^>]*>([^<]+)</g)].map((m) => m[1]);
   expect(names).toEqual(["Bravo", "Alpha", "Charlie"]);
 });
 
@@ -79,6 +79,17 @@ test("no two beans on the podium look alike", () => {
 test("a player's tally is written on their block", () => {
   const block = renderPodium(FIELD).split('<div class="block">')[1]!;
   expect(block.split("</div>")[0]).toContain("races");
+});
+
+test("a podium name opens that player's details", () => {
+  const html = renderPodium(FIELD);
+  expect(html).toContain(`class="nm open-player" data-player="Alpha"`);
+});
+
+test("a player with no in-game name has no name to click", () => {
+  const html = renderPodium([row({ fom: "Ann", ingame: "", points: 9 })]);
+  expect(html).not.toContain("open-player");
+  expect(html).toContain("Ann");
 });
 
 test("only the winner gets confetti", () => {

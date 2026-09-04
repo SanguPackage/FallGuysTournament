@@ -358,7 +358,20 @@ h2 {
   to { opacity: 1; filter: brightness(1.6); }
 }
 
-.p .nm { font-size: 19px; font-weight: 800; line-height: 1.1; }
+.p .nm { display: block; width: 100%; font-size: 19px; font-weight: 800; line-height: 1.1; }
+
+button.nm {
+  font-family: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0.1rem 0.3rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+button.nm:hover, button.nm:focus-visible { color: var(--yellow); background: #ffffff1f; }
 /* Reserves its line so a player with no FOM name does not sit a row shorter than the rest. */
 .p .ig { font-size: 13px; opacity: 0.7; font-weight: 600; min-height: 1.3em; }
 
