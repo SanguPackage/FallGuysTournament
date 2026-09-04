@@ -79,6 +79,11 @@ is emptied between test runs, so keep one somewhere before starting.
   moment carrying `also`, and `pick` fills both screens from one read.
 - Newest moment first, so a live round never waits on an old failure — `Serial`.
 - A pass that read frames and matched none of them is given up on rather than retried — `exhausted`.
+- A round that reported its whole result set on one tick draws no trophy pill, so it gets no `first`
+  moment. It is not the map: Bubble Trouble is a hunt whose qualifiers trickled in over 88s and had
+  a toast, where Volleyfall's fourteen results all landed on 18:54:40 and had none. `firstQualifiedAt
+  === endedAt` names it, and across the two logs of 2026-09-04 it picks out exactly the three rounds
+  that filed nothing — Volleyfall, Roll Off, Lost Temple. Each had cost a 315-frame pass.
 
 ## Already tried, do not re-attempt
 

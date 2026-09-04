@@ -103,9 +103,12 @@ export function momentsIn(shows: ParsedShow[], date: string): Moment[] {
     if (firstRound === undefined) return;
     const stamp = showStamp(firstRound);
 
+    // The trophy pill is drawn per qualifier as the server reports them. A round that reported its
+    // whole result set on one tick — a survival round timing out, a final ending on the last bean
+    // standing — never drew one, so there is nothing in that window to find.
     span.firsts.forEach((at, roundIndex) => {
-      if (at !== undefined)
-        moments.push(moment("first", showIndex, stamp, at, { index: roundIndex }));
+      if (at === undefined || at === span.ends[roundIndex]) return;
+      moments.push(moment("first", showIndex, stamp, at, { index: roundIndex }));
     });
 
     // Round one is the only board that has the whole field on it, and only while it still reads

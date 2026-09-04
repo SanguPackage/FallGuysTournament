@@ -16,6 +16,7 @@ const SHOW = `
 20:00:44.000: ClientGameManager::HandleServerPlayerProgress PlayerId=2 is succeeded=True
 20:01:00.000: [StateGameLoading] Finished loading game level, assumed to be round_floor_fall_final. Duration: 1s
 20:01:30.000: ClientGameManager::HandleServerPlayerProgress PlayerId=1 is succeeded=True
+20:01:32.000: ClientGameManager::HandleServerPlayerProgress PlayerId=2 is succeeded=False
 20:01:35.000: VictoryScene::winnerPlayerId:1 squadId:0 teamId:-1
 `;
 
@@ -29,6 +30,7 @@ const EARLIER_SHOW = `
 19:00:44.000: ClientGameManager::HandleServerPlayerProgress PlayerId=2 is succeeded=True
 19:01:00.000: [StateGameLoading] Finished loading game level, assumed to be round_floor_fall_final. Duration: 1s
 19:01:30.000: ClientGameManager::HandleServerPlayerProgress PlayerId=1 is succeeded=True
+19:01:32.000: ClientGameManager::HandleServerPlayerProgress PlayerId=2 is succeeded=False
 19:01:35.000: VictoryScene::winnerPlayerId:1 squadId:0 teamId:-1
 `;
 
@@ -42,6 +44,7 @@ const THREE_ROUND_SHOW = `
 20:01:24.000: ClientGameManager::HandleServerPlayerProgress PlayerId=2 is succeeded=True
 20:02:00.000: [StateGameLoading] Finished loading game level, assumed to be round_floor_fall_final. Duration: 1s
 20:02:30.000: ClientGameManager::HandleServerPlayerProgress PlayerId=1 is succeeded=True
+20:02:32.000: ClientGameManager::HandleServerPlayerProgress PlayerId=3 is succeeded=False
 20:02:35.000: VictoryScene::winnerPlayerId:1 squadId:0 teamId:-1
 `;
 
@@ -232,4 +235,30 @@ test("in a three-round show, finalists sits on the round before the final and wi
 test("the ledger's key does not change, so nothing already captured is pulled twice", () => {
   const [first] = momentsIn(parseLog(SHOW), DATE);
   expect(momentKey(first!)).toBe(`${STAMP}:first:0`);
+});
+
+// Volleyfall, 2026-09-04: seven qualified and seven went out on the same tick, and the pass over
+// that window decoded all 315 frames of it twice for nothing while the board waited behind it.
+const ALL_AT_ONCE = `
+20:00:00.000: [HandleSuccessfulLogin] Selected show is playlist_a IsUltimatePartyEpisode: False
+20:00:05.000: [StateGameLoading] Finished loading game level, assumed to be first_round_normal. Duration: 1s
+20:00:40.000: ClientGameManager::HandleServerPlayerProgress PlayerId=1 is succeeded=True
+20:00:44.000: ClientGameManager::HandleServerPlayerProgress PlayerId=2 is succeeded=True
+20:01:00.000: [StateGameLoading] Finished loading game level, assumed to be round_two. Duration: 1s
+20:01:40.000: ClientGameManager::HandleServerPlayerProgress PlayerId=1 is succeeded=True
+20:01:40.000: ClientGameManager::HandleServerPlayerProgress PlayerId=2 is succeeded=False
+20:02:00.000: [StateGameLoading] Finished loading game level, assumed to be round_floor_fall_final. Duration: 1s
+20:02:30.000: ClientGameManager::HandleServerPlayerProgress PlayerId=1 is succeeded=True
+20:02:32.000: ClientGameManager::HandleServerPlayerProgress PlayerId=3 is succeeded=False
+20:02:35.000: VictoryScene::winnerPlayerId:1 squadId:0 teamId:-1
+`;
+
+test("a round whose whole result set landed on one tick yields no first moment", () => {
+  const moments = momentsIn(parseLog(ALL_AT_ONCE), DATE);
+  expect(moments.filter((m) => m.kind === "first").map((m) => m.roundNumber)).toEqual([1, 3]);
+});
+
+test("the board of a round that qualified nobody individually is still captured", () => {
+  const board = momentsIn(parseLog(ALL_AT_ONCE), DATE).find((m) => m.kind === "finalists");
+  expect([board!.roundNumber, board!.at]).toEqual([2, at("20:01:40")]);
 });
