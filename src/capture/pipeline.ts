@@ -1,9 +1,9 @@
 import { mkdir, readdir, rm, utimes } from "node:fs/promises";
 import { dirname } from "node:path";
-import { concatList, cutArgv, extractArgv } from "./command";
+import { CLASSIFY_HEIGHT, concatList, cutArgv, extractArgv } from "./command";
 import { captureFile } from "./layout";
 import { clipKey, momentKey, type Moment, type MomentKind, type ShowClip } from "./moments";
-import { pick } from "./pick";
+import { pick, type Candidate } from "./pick";
 import { coverage, offsetIn, type Segment } from "./segments";
 import { toWindows } from "./win-path";
 import type { Ledger } from "./ledger";
@@ -43,6 +43,59 @@ export interface CaptureDeps {
 const SETTLE_MS = 90_000;
 
 /**
+ * The full-size frames behind what the search settled on. The search reads a scaled copy — decoding
+ * 4K is most of what a pass costs — so what it kept has to be pulled again at full size.
+ *
+ * Pulled as one span per segment rather than a seek each: opening a 4K segment costs far more than
+ * the handful of extra frames between the first kept instant and the last.
+ *
+ * A frame that will not come out leaves the scaled one in its place. A smaller picture of the
+ * moment is worth more than none, and the winner screen and the toast cannot be re-shot.
+ */
+async function fullFrames(
+  chosen: Candidate[],
+  scratch: string,
+  fps: number,
+  deps: CaptureDeps,
+): Promise<string[]> {
+  const full = new Map<number, string>();
+  const parts = new Map<string, Candidate[]>();
+  for (const candidate of chosen) {
+    if (!candidate.part) continue;
+    const key = `${candidate.part.dir}/${candidate.part.file}`;
+    parts.set(key, [...(parts.get(key) ?? []), candidate]);
+  }
+
+  let group = 0;
+  for (const [segment, members] of parts) {
+    const part = members[0]!.part!;
+    const from = Math.min(...members.map((one) => one.at));
+    const to = Math.max(...members.map((one) => one.at));
+    const prefix = `keep-${group++}`;
+    const result = await deps.run(
+      extractArgv({
+        ffmpeg: deps.ffmpeg,
+        segment: toWindows(segment),
+        offset: offsetIn(part, from),
+        // A span of one frame still has to ask for one frame's worth of time.
+        duration: (to - from) / 1000 + 1 / fps,
+        fps,
+        pattern: toWindows(`${scratch}/${prefix}-%04d.jpg`),
+      }),
+    );
+    if (!result.ok) continue;
+
+    const names = (await readdir(scratch)).filter((name) => name.startsWith(`${prefix}-`)).sort();
+    for (const candidate of members) {
+      const name = names[Math.round(((candidate.at - from) * fps) / 1000)];
+      if (name !== undefined) full.set(candidate.at, `${scratch}/${name}`);
+    }
+  }
+
+  return chosen.map((candidate) => full.get(candidate.at) ?? candidate.path);
+}
+
+/**
  * Pulls one moment's frames, keeps the few showing the screen it wanted, and files them under the
  * mtime of the instant each shows — which is what lets `placeShots` treat them as captures.
  *
@@ -73,7 +126,7 @@ export async function captureMoment(
   await mkdir(`${deps.showsDir}/${showDir}`, { recursive: true });
 
   try {
-    const candidates: { path: string; at: number }[] = [];
+    const candidates: Candidate[] = [];
 
     for (const [index, part] of parts.entries()) {
       const from = Math.max(moment.from, part.from);
@@ -86,6 +139,7 @@ export async function captureMoment(
           duration: (to - from) / 1000,
           fps: moment.fps,
           pattern: toWindows(`${scratch}/p${index}-%04d.jpg`),
+          height: CLASSIFY_HEIGHT,
         }),
       );
       if (!result.ok) continue;
@@ -93,23 +147,35 @@ export async function captureMoment(
       const names = (await readdir(scratch)).filter((name) => name.startsWith(`p${index}-`)).sort();
       names.forEach((name, frame) => {
         // ffmpeg numbers from 1, and each frame is one tick of the requested rate past the seek.
-        candidates.push({ path: `${scratch}/${name}`, at: from + (frame * 1000) / moment.fps });
+        candidates.push({ path: `${scratch}/${name}`, part, at: from + (frame * 1000) / moment.fps });
       });
     }
 
     const kept: string[] = [];
-    const chosen = await pick(candidates, WANTED[moment.kind], KEEP, deps.frameOf, deps.screenOf);
+    const { kept: chosen, classified } = await pick(
+      candidates,
+      WANTED[moment.kind],
+      KEEP,
+      deps.frameOf,
+      deps.screenOf,
+    );
 
-    for (const candidate of chosen) {
+    const fulls = await fullFrames(chosen, scratch, moment.fps, deps);
+
+    for (const [index, candidate] of chosen.entries()) {
       const relative = `${showDir}/${captureFile(moment.kind, moment.roundNumber, kept.length + 1)}`;
-      await Bun.write(`${deps.showsDir}/${relative}`, Bun.file(candidate.path));
+      await Bun.write(`${deps.showsDir}/${relative}`, Bun.file(fulls[index]!));
       const seconds = candidate.at / 1000;
       await utimes(`${deps.showsDir}/${relative}`, seconds, seconds);
       kept.push(relative);
     }
 
-    if (kept.length === 0) ledger.failed(key);
-    else ledger.done(key);
+    // A pass that read frames and found none of what it wanted has its answer: the screen is not in
+    // this footage, and re-reading the same frames cannot change that. Only a pass that got no
+    // frames to read — extraction failed, or they were still being written — is worth another go.
+    if (kept.length > 0) ledger.done(key);
+    else if (classified > 0) ledger.exhausted(key);
+    else ledger.failed(key);
     return kept;
   } finally {
     await rm(scratch, { recursive: true, force: true });

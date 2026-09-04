@@ -7,19 +7,23 @@ export const MAX_ATTEMPTS = 3;
 export interface LedgerState {
   captured: string[];
   attempts: Record<string, number>;
+  exhausted?: string[];
 }
 
 export class Ledger {
   private readonly captured: Set<string>;
   private readonly attempts: Map<string, number>;
+  private readonly searched: Set<string>;
 
   constructor(state?: LedgerState) {
     this.captured = new Set(state?.captured ?? []);
     this.attempts = new Map(Object.entries(state?.attempts ?? {}));
+    this.searched = new Set(state?.exhausted ?? []);
   }
 
   pending(key: string): boolean {
-    return !this.captured.has(key) && (this.attempts.get(key) ?? 0) < MAX_ATTEMPTS;
+    if (this.captured.has(key) || this.searched.has(key)) return false;
+    return (this.attempts.get(key) ?? 0) < MAX_ATTEMPTS;
   }
 
   done(key: string): void {
@@ -31,10 +35,20 @@ export class Ledger {
     this.attempts.set(key, (this.attempts.get(key) ?? 0) + 1);
   }
 
+  /**
+   * The moment's footage was read through and did not hold what it wanted. Reading the same frames
+   * again cannot reach a different answer, so this spends every remaining attempt at once.
+   */
+  exhausted(key: string): void {
+    this.searched.add(key);
+    this.attempts.delete(key);
+  }
+
   state(): LedgerState {
     return {
       captured: [...this.captured],
       attempts: Object.fromEntries(this.attempts),
+      exhausted: [...this.searched],
     };
   }
 }

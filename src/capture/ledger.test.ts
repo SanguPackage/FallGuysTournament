@@ -28,3 +28,16 @@ test("what a ledger knows survives being written out and read back", () => {
   expect(reloaded.pending("0:first:0")).toBe(false);
   expect(reloaded.pending("0:first:1")).toBe(true);
 });
+
+test("a moment whose footage was searched and held nothing is never tried again", () => {
+  const ledger = new Ledger();
+  ledger.exhausted("0:first:2");
+  expect(ledger.pending("0:first:2")).toBe(false);
+});
+
+test("giving up survives being written out and read back", () => {
+  const ledger = new Ledger();
+  ledger.exhausted("0:first:2");
+  const reloaded = new Ledger(JSON.parse(JSON.stringify(ledger.state())));
+  expect(reloaded.pending("0:first:2")).toBe(false);
+});

@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { mkdir, mkdtemp, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { Ledger, MAX_ATTEMPTS } from "./ledger";
+import { CLASSIFY_HEIGHT } from "./command";
 import { captureMoment, cutShowClip } from "./pipeline";
 import { momentKey, type Moment } from "./moments";
 
@@ -36,13 +37,20 @@ async function harness() {
       showsDir: `${dir}/shows`,
       // Stands in for ffmpeg. The argv carries Windows paths, which this process cannot write to,
       // so the frames go where the pipeline will look for them instead.
+      // Stands in for ffmpeg twice over: the scaled search pull, and the full-size still of one
+      // frame the search kept. A tmpdir path is not a WSL mount, so `toWindows` left it alone.
       run: async (argv: string[]) => {
         ran.push(argv);
         const folder = `${scratchDir}/2026-09-05-0-first-2`;
         await mkdir(folder, { recursive: true });
-        for (const n of [1, 2]) {
-          await writeFile(`${folder}/p0-000${n}.jpg`, "x");
+        const pattern = argv.at(-1)!;
+        if (pattern.includes("keep-")) {
+          for (const n of [1, 2]) {
+            await writeFile(pattern.replace("%04d", `000${n}`), `full size ${n}`);
+          }
+          return { ok: true, stderr: "" };
         }
+        for (const n of [1, 2]) await writeFile(`${folder}/p0-000${n}.jpg`, `scaled ${n}`);
         return { ok: true, stderr: "" };
       },
       frameOf: async () => ({ width: 2, height: 2, at: () => [0, 0, 0] as const }),
@@ -69,7 +77,8 @@ test("kept frames land in the show's own folder with the mtime of the instant th
   const ledger = new Ledger();
   try {
     const kept = await captureMoment(MOMENT, SHOW_DIR, SEGMENTS, ledger, deps);
-    expect(ran.length).toBe(1);
+    // One pull of the whole window, then one full-size pull of what it kept.
+    expect(ran.length).toBe(2);
     expect(ran[0]![0]).toBe("ff");
     expect(kept).toEqual([
       "show-2026-09-05T20h00-solos-1/round-03-first-race-finisher-01.jpg",
@@ -84,13 +93,43 @@ test("kept frames land in the show's own folder with the mtime of the instant th
   }
 });
 
-test("a moment whose frames all fail the classifier is counted as an attempt, not a success", async () => {
+test("a moment whose footage was read and held nothing is given up on rather than retried", async () => {
   const { dir, deps } = await harness();
   const ledger = new Ledger();
   try {
     const kept = await captureMoment(MOMENT, SHOW_DIR, SEGMENTS, ledger, {
       ...deps,
       screenOf: () => undefined,
+    });
+    expect(kept).toEqual([]);
+    expect(ledger.pending("2026-09-05:0:first:2")).toBe(false);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("a moment whose frames could not be read at all is retried, not given up on", async () => {
+  const { dir, deps } = await harness();
+  const ledger = new Ledger();
+  try {
+    const kept = await captureMoment(MOMENT, SHOW_DIR, SEGMENTS, ledger, {
+      ...deps,
+      frameOf: () => Promise.reject(new Error("half written")),
+    });
+    expect(kept).toEqual([]);
+    expect(ledger.pending("2026-09-05:0:first:2")).toBe(true);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("a moment whose extraction produced no frames is retried, not given up on", async () => {
+  const { dir, deps } = await harness();
+  const ledger = new Ledger();
+  try {
+    const kept = await captureMoment(MOMENT, SHOW_DIR, SEGMENTS, ledger, {
+      ...deps,
+      run: async () => ({ ok: true, stderr: "" }),
     });
     expect(kept).toEqual([]);
     expect(ledger.pending("2026-09-05:0:first:2")).toBe(true);
@@ -228,4 +267,54 @@ test("waiting on a segment still being written costs no attempt", async () => {
   expect(ledger.pending(key)).toBe(false);
 
   await rm(dir, { recursive: true, force: true });
+});
+
+test("the search reads scaled frames while the frame kept is pulled at full size", async () => {
+  const { dir, deps, ran } = await harness();
+  const read: string[] = [];
+  try {
+    const kept = await captureMoment(MOMENT, SHOW_DIR, SEGMENTS, new Ledger(), {
+      ...deps,
+      frameOf: async (path: string) => {
+        read.push(path);
+        return { width: 2, height: 2, at: () => [0, 0, 0] as const };
+      },
+    });
+    expect(ran[0]).toContain(`fps=30,scale=-2:${CLASSIFY_HEIGHT}`);
+    expect(read.length).toBe(2);
+    expect(await Bun.file(`${dir}/shows/${kept[0]!}`).text()).toBe("full size 1");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("the frames kept are pulled at full size in one go, not one seek each", async () => {
+  const { dir, deps, ran } = await harness();
+  try {
+    await captureMoment(MOMENT, SHOW_DIR, SEGMENTS, new Ledger(), deps);
+    // One scaled pull of the window, one full-size pull of the span the kept frames fall in.
+    expect(ran.length).toBe(2);
+    expect(ran[0]).toContain(`fps=30,scale=-2:${CLASSIFY_HEIGHT}`);
+    expect(ran[1]).toContain("fps=30");
+    expect(ran[1]).not.toContain(`fps=30,scale=-2:${CLASSIFY_HEIGHT}`);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("a still that will not come out leaves the scaled frame rather than losing the moment", async () => {
+  const { dir, deps } = await harness();
+  try {
+    const kept = await captureMoment(MOMENT, SHOW_DIR, SEGMENTS, new Ledger(), {
+      ...deps,
+      run: async (argv: string[]) =>
+        argv.at(-1)!.includes("keep-")
+          ? { ok: false, stderr: "no such frame" }
+          : deps.run(argv),
+    });
+    expect(kept.length).toBe(2);
+    expect(await Bun.file(`${dir}/shows/${kept[0]!}`).text()).toBe("scaled 1");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });

@@ -51,6 +51,13 @@ export function recordArgv(o: RecordOptions): string[] {
   ];
 }
 
+/**
+ * What the recognisers were measured at. They read positions as a share of the frame, so they scale
+ * — but `toast.ts` counts pixels rather than shares, and below this the trophy pill stops being
+ * found at all. `fixtures.test.ts` holds the line.
+ */
+export const CLASSIFY_HEIGHT = 1080;
+
 export interface ExtractOptions {
   ffmpeg: string;
   segment: string;
@@ -60,6 +67,8 @@ export interface ExtractOptions {
   fps: number;
   /** An ffmpeg number pattern, e.g. `C:\scratch\f-%04d.jpg`. */
   pattern: string;
+  /** Scale every frame to this height. Omitted, they come out at the recording's own size. */
+  height?: number;
 }
 
 export function extractArgv(o: ExtractOptions): string[] {
@@ -73,7 +82,7 @@ export function extractArgv(o: ExtractOptions): string[] {
     "-t",
     String(o.duration),
     "-vf",
-    `fps=${o.fps}`,
+    o.height === undefined ? `fps=${o.fps}` : `fps=${o.fps},scale=-2:${o.height}`,
     "-q:v",
     "2",
     o.pattern,

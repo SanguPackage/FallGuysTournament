@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { concatList, cutArgv, extractArgv, recordArgv, thumbArgv } from "./command";
+import { CLASSIFY_HEIGHT, concatList, cutArgv, extractArgv, recordArgv, thumbArgv } from "./command";
 
 // The binary is launched by Bun, so it stays in WSL form. Every path handed *to* ffmpeg has been
 // through toWindows by the time it reaches here.
@@ -93,4 +93,17 @@ test("a thumbnail is one scaled frame out of a segment", () => {
   expect(argv[argv.indexOf("-frames:v") + 1]).toBe("1");
   expect(argv[argv.indexOf("-vf") + 1]).toBe("scale=480:-1");
   expect(argv.at(-1)).toBe("C:\\caps\\scratch\\recording.jpg");
+});
+
+test("frames can be pulled scaled, which is how the search reads them", () => {
+  const argv = extractArgv({
+    ffmpeg: FFMPEG,
+    segment: "C:\\seg\\seg-00003.mkv",
+    offset: 0,
+    duration: 2,
+    fps: 30,
+    pattern: "C:\\scratch\\s-%04d.jpg",
+    height: CLASSIFY_HEIGHT,
+  });
+  expect(argv).toContain(`fps=30,scale=-2:${CLASSIFY_HEIGHT}`);
 });
