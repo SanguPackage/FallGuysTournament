@@ -399,3 +399,47 @@ test("segments past the one that filled the quota are never opened", async () =>
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+test("a moment filed under two kinds pulls the footage once and names both", async () => {
+  const { dir, deps, ran } = await harness();
+  const ledger = new Ledger();
+  const board = { ...BOARD, kind: "field" as const, also: ["finalists" as const] };
+  let read = 0;
+  try {
+    const kept = await captureMoment(board, SHOW_DIR, TENS, ledger, {
+      ...deps,
+      // The board as it plays: REMAIN for the first few frames, QUALIFIED once it settles.
+      screenOf: () => (++read <= 2 ? ("field" as const) : ("grid" as const)),
+    });
+    expect(kept).toEqual([
+      "show-2026-09-05T20h00-solos-1/round-01-whole-field-01.jpg",
+      "show-2026-09-05T20h00-solos-1/round-01-whole-field-02.jpg",
+      "show-2026-09-05T20h00-solos-1/round-01-finalists-board-01.jpg",
+      "show-2026-09-05T20h00-solos-1/round-01-finalists-board-02.jpg",
+      "show-2026-09-05T20h00-solos-1/round-01-finalists-board-03.jpg",
+      "show-2026-09-05T20h00-solos-1/round-01-finalists-board-04.jpg",
+      "show-2026-09-05T20h00-solos-1/round-01-finalists-board-05.jpg",
+    ]);
+    // One full-size pull per segment the seven frames fell across, not one set of pulls per kind.
+    expect(ran.filter((argv) => argv.at(-1)!.includes("keep-")).length).toBe(4);
+    expect(ledger.pending(`${STAMP}:field:0`)).toBe(false);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("a short window that has only found one of a moment's two screens waits for the rest", async () => {
+  const { dir, deps } = await harness();
+  const ledger = new Ledger();
+  const board = { ...BOARD, kind: "field" as const, also: ["finalists" as const] };
+  try {
+    const kept = await captureMoment(board, SHOW_DIR, TENS.slice(0, 2), ledger, {
+      ...deps,
+      screenOf: () => "field" as const,
+    });
+    expect(kept).toEqual([]);
+    expect(ledger.pending(`${STAMP}:field:0`)).toBe(true);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});

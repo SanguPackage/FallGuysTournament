@@ -13,6 +13,11 @@ export interface Moment {
   roundIndex?: number;
   /** The round the file is named for, from 1. A winner takes the final's. */
   roundNumber: number;
+  /**
+   * Other screens to file out of the same pass, under their own kind. One board settles from one
+   * screen into another, and pulling the footage twice to find them is the pull that costs.
+   */
+  also?: MomentKind[];
   /** Epoch ms the log stamped the moment. */
   at: number;
   /** Epoch ms of the first and last frame worth pulling. */
@@ -50,7 +55,9 @@ const WINDOW: Record<MomentKind, { from: number; to: number; fps: number }> = {
   first: { from: -500, to: 10_000, fps: 30 },
   finalists: { from: 1000, to: 30_000, fps: 2 },
   winner: { from: 2000, to: 20_000, fps: 2 },
-  field: { from: 2000, to: 20_000, fps: 5 },
+  // The board's own window, at the rate the REMAIN phase needs: it is over in a second or two,
+  // where the settled board stands for many.
+  field: { from: 1000, to: 30_000, fps: 5 },
 };
 
 /** How far past the last thing that happened a clip runs, so the screen that follows is in it. */
@@ -64,6 +71,7 @@ function moment(
   stamp: string,
   at: number,
   round: { index: number } | { final: number },
+  also?: MomentKind[],
 ): Moment {
   const window = WINDOW[kind];
   const roundIndex = "index" in round ? round.index : undefined;
@@ -74,6 +82,7 @@ function moment(
     stamp,
     ...(roundIndex === undefined ? {} : { roundIndex }),
     roundNumber,
+    ...(also === undefined ? {} : { also }),
     at,
     from: at + window.from,
     to: at + window.to,
@@ -101,17 +110,19 @@ export function momentsIn(shows: ParsedShow[], date: string): Moment[] {
 
     // Round one is the only board that has the whole field on it, and only while it still reads
     // REMAIN — `pick` keeps earliest first, so the frames it takes are the ones with the fewest
-    // cards flipped.
+    // cards flipped. The same board settles into the qualifiers a moment later, so one pass over
+    // it is filed as both rather than opening the footage twice.
     //
     // Held back until the round after it has loaded: `ends[0]` is the last result *so far*, so
     // while round one is still being played it walks forward with every qualifier.
     const opened = show.rounds.length > 1 ? span.ends[0] : undefined;
-    if (opened !== undefined) moments.push(moment("field", showIndex, stamp, opened, { index: 0 }));
+    if (opened !== undefined)
+      moments.push(moment("field", showIndex, stamp, opened, { index: 0 }, ["finalists"]));
 
     // The board comes up after every round, so it only names finalists after the one before the
-    // final. Same placement the capture panel uses.
+    // final. Same placement the capture panel uses. Round one's came off the field pass above.
     const before = show.rounds.length - 2;
-    const boardAt = before >= 0 ? span.ends[before] : undefined;
+    const boardAt = before >= 1 ? span.ends[before] : undefined;
     if (boardAt !== undefined)
       moments.push(moment("finalists", showIndex, stamp, boardAt, { index: before }));
 

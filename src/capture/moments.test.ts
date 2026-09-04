@@ -54,12 +54,14 @@ test("every round with a qualifier yields a first moment, windowed around it", (
 });
 
 test("the finalists moment follows the round before the final, not the final", () => {
-  const [finalists] = momentsIn(parseLog(SHOW), DATE).filter((m) => m.kind === "finalists");
-  expect(finalists!.roundIndex).toBe(0);
-  expect(finalists!.at).toBe(at("20:00:44"));
+  const [finalists] = momentsIn(parseLog(THREE_ROUND_SHOW), DATE).filter(
+    (m) => m.kind === "finalists",
+  );
+  expect(finalists!.roundIndex).toBe(1);
+  expect(finalists!.at).toBe(at("20:01:24"));
   expect([finalists!.from, finalists!.to, finalists!.fps]).toEqual([
-    at("20:00:44") + 1000,
-    at("20:00:44") + 30_000,
+    at("20:01:24") + 1000,
+    at("20:01:24") + 30_000,
     2,
   ]);
 });
@@ -67,8 +69,21 @@ test("the finalists moment follows the round before the final, not the final", (
 test("the field moment follows round one, wherever the final happens to be", () => {
   const fields = momentsIn(parseLog(SHOW), DATE).filter((m) => m.kind === "field");
   expect(fields.map((m) => [m.roundIndex, m.at, m.from, m.to, m.fps])).toEqual([
-    [0, at("20:00:44"), at("20:00:44") + 2000, at("20:00:44") + 20_000, 5],
+    [0, at("20:00:44"), at("20:00:44") + 1000, at("20:00:44") + 30_000, 5],
   ]);
+});
+
+// The board that follows round one is the whole field while it still reads REMAIN and the
+// qualifiers once it settles. Two moments over it meant opening the same 4K footage twice.
+test("round one's board is one pass, filed as the field and as the board both", () => {
+  const moments = momentsIn(parseLog(SHOW), DATE).filter((m) => m.roundIndex === 0);
+  expect(moments.map((m) => m.kind)).toEqual(["first", "field"]);
+  expect(moments.find((m) => m.kind === "field")!.also).toEqual(["finalists"]);
+});
+
+test("a later round's board is only ever the board", () => {
+  const board = momentsIn(parseLog(THREE_ROUND_SHOW), DATE).find((m) => m.roundIndex === 1 && m.kind === "finalists");
+  expect(board!.also).toBeUndefined();
 });
 
 test("no field moment until the round after it loads, so its stamp has stopped moving", () => {
@@ -197,7 +212,6 @@ test("every moment carries the round number its file will be named for", () => {
   expect(moments.map((m) => [m.kind, m.roundNumber])).toEqual([
     ["first", 1],
     ["field", 1],
-    ["finalists", 1],
     ["first", 2],
     ["winner", 2],
   ]);

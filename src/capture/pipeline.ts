@@ -137,7 +137,8 @@ export async function captureMoment(
   await mkdir(`${deps.showsDir}/${showDir}`, { recursive: true });
 
   try {
-    const chosen: Candidate[] = [];
+    const wants = [moment.kind, ...(moment.also ?? [])];
+    const chosen = new Map<MomentKind, Candidate[]>(wants.map((kind) => [kind, []]));
     let classified = 0;
 
     // A segment at a time, reading each before opening the next: `pick` takes frames in order, so
@@ -169,26 +170,38 @@ export async function captureMoment(
 
       const searched = await pick(
         candidates,
-        WANTED[moment.kind],
-        KEEP - chosen.length,
+        new Map(wants.map((kind) => [WANTED[kind], KEEP - chosen.get(kind)!.length])),
         deps.frameOf,
         deps.screenOf,
       );
-      chosen.push(...searched.kept);
+      for (const kind of wants) chosen.get(kind)!.push(...searched.kept.get(WANTED[kind])!);
       classified += searched.classified;
-      if (chosen.length >= KEEP) break;
+      if (wants.every((kind) => chosen.get(kind)!.length >= KEEP)) break;
     }
 
     // A pass over part of a window keeps what it found: the frames `pick` takes are the earliest,
-    // so a short pass returns a prefix of what the whole window would have given. Only a pass that
-    // found nothing has to wait — the screen may be past where the recording has closed.
-    if (chosen.length === 0 && !complete) return [];
+    // so a short pass returns a prefix of what the whole window would have given. Only a screen
+    // this pass never saw has to wait — it may be past where the recording has closed.
+    if (!complete && wants.some((kind) => chosen.get(kind)!.length === 0)) return [];
+
+    // One full-size pull for the lot: the screens a moment files under two kinds sit seconds apart
+    // in the same segment, and the pull is per segment.
+    const order = wants.flatMap((kind) =>
+      chosen.get(kind)!.map((candidate) => ({ kind, candidate })),
+    );
+    const fulls = await fullFrames(
+      order.map((one) => one.candidate),
+      scratch,
+      moment.fps,
+      deps,
+    );
 
     const kept: string[] = [];
-    const fulls = await fullFrames(chosen, scratch, moment.fps, deps);
-
-    for (const [index, candidate] of chosen.entries()) {
-      const relative = `${showDir}/${captureFile(moment.kind, moment.roundNumber, kept.length + 1)}`;
+    const counted = new Map<MomentKind, number>();
+    for (const [index, { kind, candidate }] of order.entries()) {
+      const number = (counted.get(kind) ?? 0) + 1;
+      counted.set(kind, number);
+      const relative = `${showDir}/${captureFile(kind, moment.roundNumber, number)}`;
       await Bun.write(`${deps.showsDir}/${relative}`, Bun.file(fulls[index]!));
       const seconds = candidate.at / 1000;
       await utimes(`${deps.showsDir}/${relative}`, seconds, seconds);
