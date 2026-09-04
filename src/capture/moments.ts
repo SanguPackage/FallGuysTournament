@@ -1,4 +1,5 @@
 import { absoluteTimes } from "../screenshots";
+import { showStamp } from "./layout";
 import type { ParsedShow } from "../log";
 
 export type MomentKind = "first" | "finalists" | "winner" | "field";
@@ -6,12 +7,12 @@ export type MomentKind = "first" | "finalists" | "winner" | "field";
 export interface Moment {
   kind: MomentKind;
   showIndex: number;
+  /** Which show this is, in the form its folder is named for. See `showStamp`. */
+  stamp: string;
   /** The round the moment belongs to. Absent on a winner, which belongs to the show. */
   roundIndex?: number;
   /** The round the file is named for, from 1. A winner takes the final's. */
   roundNumber: number;
-  /** The event day. Without it a later event reads as already captured. */
-  date: string;
   /** Epoch ms the log stamped the moment. */
   at: number;
   /** Epoch ms of the first and last frame worth pulling. */
@@ -26,8 +27,8 @@ export interface Moment {
 
 export interface ShowClip {
   showIndex: number;
-  /** The event day. Without it a later event reads as already captured. */
-  date: string;
+  /** Which show this is, in the form its folder is named for. See `showStamp`. */
+  stamp: string;
   from: number;
   to: number;
 }
@@ -60,7 +61,7 @@ const CLIP_HEAD = 5_000;
 function moment(
   kind: MomentKind,
   showIndex: number,
-  date: string,
+  stamp: string,
   at: number,
   round: { index: number } | { final: number },
 ): Moment {
@@ -70,9 +71,9 @@ function moment(
   return {
     kind,
     showIndex,
+    stamp,
     ...(roundIndex === undefined ? {} : { roundIndex }),
     roundNumber,
-    date,
     at,
     from: at + window.from,
     to: at + window.to,
@@ -87,10 +88,15 @@ export function momentsIn(shows: ParsedShow[], date: string): Moment[] {
 
   shows.forEach((show, showIndex) => {
     const span = times[showIndex]!;
+    // A show whose first round has not loaded has nothing to be identified by — and no folder to
+    // put frames in either, so `sweepCaptures` was already holding its moments back.
+    const firstRound = span.rounds.find((start) => start !== undefined);
+    if (firstRound === undefined) return;
+    const stamp = showStamp(firstRound);
 
     span.firsts.forEach((at, roundIndex) => {
       if (at !== undefined)
-        moments.push(moment("first", showIndex, date, at, { index: roundIndex }));
+        moments.push(moment("first", showIndex, stamp, at, { index: roundIndex }));
     });
 
     // Round one is the only board that has the whole field on it, and only while it still reads
@@ -100,17 +106,17 @@ export function momentsIn(shows: ParsedShow[], date: string): Moment[] {
     // Held back until the round after it has loaded: `ends[0]` is the last result *so far*, so
     // while round one is still being played it walks forward with every qualifier.
     const opened = show.rounds.length > 1 ? span.ends[0] : undefined;
-    if (opened !== undefined) moments.push(moment("field", showIndex, date, opened, { index: 0 }));
+    if (opened !== undefined) moments.push(moment("field", showIndex, stamp, opened, { index: 0 }));
 
     // The board comes up after every round, so it only names finalists after the one before the
     // final. Same placement the capture panel uses.
     const before = show.rounds.length - 2;
     const boardAt = before >= 0 ? span.ends[before] : undefined;
     if (boardAt !== undefined)
-      moments.push(moment("finalists", showIndex, date, boardAt, { index: before }));
+      moments.push(moment("finalists", showIndex, stamp, boardAt, { index: before }));
 
     if (span.wonAt !== undefined)
-      moments.push(moment("winner", showIndex, date, span.wonAt, { final: show.rounds.length }));
+      moments.push(moment("winner", showIndex, stamp, span.wonAt, { final: show.rounds.length }));
   });
 
   return moments.sort((a, b) => a.at - b.at);
@@ -131,7 +137,7 @@ export function showClips(shows: ParsedShow[], date: string): ShowClip[] {
     const end = span.wonAt ?? (moved ? lastResult : undefined);
     if (end === undefined) return;
 
-    clips.push({ showIndex, date, from: from - CLIP_HEAD, to: end + CLIP_TAIL });
+    clips.push({ showIndex, stamp: showStamp(from), from: from - CLIP_HEAD, to: end + CLIP_TAIL });
   });
 
   return clips;
@@ -139,9 +145,9 @@ export function showClips(shows: ParsedShow[], date: string): ShowClip[] {
 
 /** What the ledger remembers a moment by, so a restart captures nothing twice. */
 export function momentKey(moment: Moment): string {
-  return `${moment.date}:${moment.showIndex}:${moment.kind}:${moment.roundIndex ?? "-"}`;
+  return `${moment.stamp}:${moment.kind}:${moment.roundIndex ?? "-"}`;
 }
 
 export function clipKey(clip: ShowClip): string {
-  return `${clip.date}:${clip.showIndex}:clip`;
+  return `${clip.stamp}:clip`;
 }

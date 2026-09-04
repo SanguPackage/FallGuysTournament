@@ -7,12 +7,13 @@ import { captureMoment, cutShowClip } from "./pipeline";
 import { momentKey, type Moment } from "./moments";
 
 const AT = Date.parse("2026-09-05T20:01:40Z");
+const STAMP = "2026-09-05T20h00";
 const MOMENT: Moment = {
   kind: "first",
   showIndex: 0,
+  stamp: STAMP,
   roundIndex: 2,
   roundNumber: 3,
-  date: "2026-09-05",
   at: AT,
   from: AT - 500,
   to: AT + 1500,
@@ -41,7 +42,7 @@ async function harness() {
       // frame the search kept. A tmpdir path is not a WSL mount, so `toWindows` left it alone.
       run: async (argv: string[]) => {
         ran.push(argv);
-        const folder = `${scratchDir}/2026-09-05-0-first-2`;
+        const folder = `${scratchDir}/${STAMP}-first-2`;
         await mkdir(folder, { recursive: true });
         const pattern = argv.at(-1)!;
         if (pattern.includes("keep-")) {
@@ -66,7 +67,7 @@ test("a moment nothing covers is left pending rather than half captured", async 
   try {
     expect(await captureMoment(MOMENT, SHOW_DIR, [], ledger, deps)).toEqual([]);
     expect(ran).toEqual([]);
-    expect(ledger.pending("2026-09-05:0:first:2")).toBe(true);
+    expect(ledger.pending(`${STAMP}:first:2`)).toBe(true);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -87,7 +88,7 @@ test("kept frames land in the show's own folder with the mtime of the instant th
     const info = await stat(`${dir}/shows/${kept[0]!}`);
     // Frame 1 of a 30fps pull that began at `from`.
     expect(Math.round(info.mtimeMs)).toBe(MOMENT.from);
-    expect(ledger.pending("2026-09-05:0:first:2")).toBe(false);
+    expect(ledger.pending(`${STAMP}:first:2`)).toBe(false);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -102,7 +103,7 @@ test("a moment whose footage was read and held nothing is given up on rather tha
       screenOf: () => undefined,
     });
     expect(kept).toEqual([]);
-    expect(ledger.pending("2026-09-05:0:first:2")).toBe(false);
+    expect(ledger.pending(`${STAMP}:first:2`)).toBe(false);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -117,7 +118,7 @@ test("a moment whose frames could not be read at all is retried, not given up on
       frameOf: () => Promise.reject(new Error("half written")),
     });
     expect(kept).toEqual([]);
-    expect(ledger.pending("2026-09-05:0:first:2")).toBe(true);
+    expect(ledger.pending(`${STAMP}:first:2`)).toBe(true);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -132,7 +133,7 @@ test("a moment whose extraction produced no frames is retried, not given up on",
       run: async () => ({ ok: true, stderr: "" }),
     });
     expect(kept).toEqual([]);
-    expect(ledger.pending("2026-09-05:0:first:2")).toBe(true);
+    expect(ledger.pending(`${STAMP}:first:2`)).toBe(true);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -162,7 +163,7 @@ test("a frame is pulled from the run folder its segment came from", async () => 
 
 test("a clip is cut with the streams copied, into the folder of the show it is", async () => {
   const { dir, deps, ran } = await harness();
-  const clip = { showIndex: 2, date: "2026-09-05", from: AT - 10_000, to: AT + 5_000 };
+  const clip = { showIndex: 2, stamp: STAMP, from: AT - 10_000, to: AT + 5_000 };
   const ledger = new Ledger();
   try {
     const cut = await cutShowClip(
@@ -185,7 +186,7 @@ test("a clip is cut with the streams copied, into the folder of the show it is",
     expect(await Bun.file(`${dir}/scratch/clip-2.txt`).text()).toBe(
       "file 'C:\\temp\\FallGuysCapture\\segments\\2026-09-05T20h00m00\\seg-00003.mkv'\n",
     );
-    expect(ledger.pending("2026-09-05:2:clip")).toBe(false);
+    expect(ledger.pending(`${STAMP}:clip`)).toBe(false);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -200,7 +201,7 @@ test("a clip whose recording died inside it is cut anyway, and says so", async (
   ];
   try {
     const cut = await cutShowClip(
-      { showIndex: 1, date: "2026-09-05", from: AT - 15_000, to: AT + 15_000 },
+      { showIndex: 1, stamp: STAMP, from: AT - 15_000, to: AT + 15_000 },
       "show-2026-09-05T20h00-x-1/show-02-x",
       split,
       new Ledger(),
@@ -222,7 +223,7 @@ test("a clip the segments do not cover yet is left pending", async () => {
   const ledger = new Ledger();
   try {
     const cut = await cutShowClip(
-      { showIndex: 0, date: "2026-09-05", from: AT - 60_000, to: AT },
+      { showIndex: 0, stamp: STAMP, from: AT - 60_000, to: AT },
       "show-2026-09-05T20h00-x-1/show-01-x",
       SEGMENTS,
       ledger,
@@ -234,7 +235,7 @@ test("a clip the segments do not cover yet is left pending", async () => {
       },
     );
     expect(cut).toBeUndefined();
-    expect(ledger.pending("2026-09-05:0:clip")).toBe(true);
+    expect(ledger.pending(`${STAMP}:clip`)).toBe(true);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

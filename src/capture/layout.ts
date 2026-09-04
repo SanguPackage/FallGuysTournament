@@ -19,14 +19,21 @@ export function captureFile(kind: MomentKind, roundNumber: number, index: number
 }
 
 /**
+ * What a show is, once and for both the things that have to agree on it: the clock its first round
+ * loaded at. Its position in the log is not an identity — Fall Guys rotates `Player.log` on launch
+ * and the parse starts again from show 0 — but the minute it began is, because two shows cannot
+ * start in the same one.
+ *
  * Local time, because the event is a local evening — the same reasoning `runFolder` is named by.
- * Minutes are enough: two shows cannot start in the same one.
  */
-export function showFolder(startedAt: number, slug: string): string {
+export function showStamp(startedAt: number): string {
   const date = new Date(startedAt);
   const day = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-  const clock = `${pad(date.getHours())}h${pad(date.getMinutes())}`;
-  return `show-${day}T${clock}-${slug}`;
+  return `${day}T${pad(date.getHours())}h${pad(date.getMinutes())}`;
+}
+
+export function showFolder(startedAt: number, slug: string): string {
+  return `show-${showStamp(startedAt)}-${slug}`;
 }
 
 export function slugOf(shows: ParsedShow[], showIndex: number): string {

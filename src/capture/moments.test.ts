@@ -3,6 +3,7 @@ process.env.TZ = "Europe/Brussels";
 
 import { expect, test } from "bun:test";
 import { parseLog } from "../log";
+import { showsOnDisk } from "./layout";
 import { clipKey, momentKey, momentsIn, showClips } from "./moments";
 
 const DATE = "2026-09-05";
@@ -16,6 +17,19 @@ const SHOW = `
 20:01:00.000: [StateGameLoading] Finished loading game level, assumed to be round_floor_fall_final. Duration: 1s
 20:01:30.000: ClientGameManager::HandleServerPlayerProgress PlayerId=1 is succeeded=True
 20:01:35.000: VictoryScene::winnerPlayerId:1 squadId:0 teamId:-1
+`;
+
+/** The clock `SHOW`'s first round loaded at, in Brussels time. */
+const STAMP = `${DATE}T22h00`;
+
+const EARLIER_SHOW = `
+19:00:00.000: [HandleSuccessfulLogin] Selected show is playlist_a IsUltimatePartyEpisode: False
+19:00:05.000: [StateGameLoading] Finished loading game level, assumed to be first_round_normal. Duration: 1s
+19:00:40.000: ClientGameManager::HandleServerPlayerProgress PlayerId=1 is succeeded=True
+19:00:44.000: ClientGameManager::HandleServerPlayerProgress PlayerId=2 is succeeded=True
+19:01:00.000: [StateGameLoading] Finished loading game level, assumed to be round_floor_fall_final. Duration: 1s
+19:01:30.000: ClientGameManager::HandleServerPlayerProgress PlayerId=1 is succeeded=True
+19:01:35.000: VictoryScene::winnerPlayerId:1 squadId:0 teamId:-1
 `;
 
 const THREE_ROUND_SHOW = `
@@ -129,20 +143,53 @@ test("a moment's key is stable and tells the three kinds apart", () => {
   const moments = momentsIn(parseLog(SHOW), DATE);
   const keys = moments.map(momentKey);
   expect(new Set(keys).size).toBe(keys.length);
-  expect(keys).toContain(`${DATE}:0:first:1`);
-  expect(keys).toContain(`${DATE}:0:winner:-`);
+  expect(keys).toContain(`${STAMP}:first:1`);
+  expect(keys).toContain(`${STAMP}:winner:-`);
 });
 
-test("a ledger key names the event, so a later one does not read as already captured", () => {
+test("a ledger key names the day, so a later event does not read as already captured", () => {
   const shows = parseLog(SHOW);
   const mine = momentKey(momentsIn(shows, DATE)[0]!);
-  expect(mine).toStartWith(`${DATE}:`);
+  expect(mine).toStartWith(`${DATE}T`);
   expect(momentKey(momentsIn(shows, "2026-09-12")[0]!)).not.toBe(mine);
 });
 
-test("a clip key names the event too", () => {
+test("a clip key names the show the same way a moment's does", () => {
   const [clip] = showClips(parseLog(SHOW), DATE);
-  expect(clipKey(clip!)).toBe(`${DATE}:0:clip`);
+  expect(clipKey(clip!)).toBe(`${STAMP}:clip`);
+});
+
+test("a moment's key is the prefix of the folder its frames land in", () => {
+  const shows = parseLog(SHOW);
+  const [show] = showsOnDisk(shows, DATE);
+  expect(show!.dir).toStartWith(`show-${momentKey(momentsIn(shows, DATE)[0]!).split(":")[0]}-`);
+});
+
+// The bug this key format exists for: Fall Guys rotates `Player.log` on launch, so the parse
+// starts again from show 0 and every entry the old show 0 wrote is read as the new one's.
+test("a game restart that renumbers the shows leaves their keys alone", () => {
+  const second = momentsIn(parseLog(`${EARLIER_SHOW}${SHOW}`), DATE).filter((m) => m.showIndex === 1);
+  const rotated = momentsIn(parseLog(SHOW), DATE);
+  expect(second.map(momentKey)).toEqual(rotated.map(momentKey));
+  expect(second.map(momentKey)).not.toContain(
+    momentKey(momentsIn(parseLog(EARLIER_SHOW), DATE)[0]!),
+  );
+});
+
+test("a clip key survives the same renumbering", () => {
+  const [second] = showClips(parseLog(`${EARLIER_SHOW}${SHOW}`), DATE).filter(
+    (clip) => clip.showIndex === 1,
+  );
+  expect(clipKey(second!)).toBe(clipKey(showClips(parseLog(SHOW), DATE)[0]!));
+});
+
+test("a show whose first round has not loaded has no identity yet, so it yields nothing", () => {
+  const unloaded = `
+20:00:00.000: [HandleSuccessfulLogin] Selected show is s IsUltimatePartyEpisode: False
+20:00:35.000: VictoryScene::winnerPlayerId:1 squadId:0 teamId:-1
+`;
+  expect(momentsIn(parseLog(unloaded), DATE)).toEqual([]);
+  expect(showClips(parseLog(unloaded), DATE)).toEqual([]);
 });
 
 test("every moment carries the round number its file will be named for", () => {
@@ -170,5 +217,5 @@ test("in a three-round show, finalists sits on the round before the final and wi
 
 test("the ledger's key does not change, so nothing already captured is pulled twice", () => {
   const [first] = momentsIn(parseLog(SHOW), DATE);
-  expect(momentKey(first!)).toBe(`${DATE}:0:first:0`);
+  expect(momentKey(first!)).toBe(`${STAMP}:first:0`);
 });
