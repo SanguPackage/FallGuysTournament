@@ -324,6 +324,55 @@ h2 {
 .pip.done { background: var(--cyan); }
 .pip.now { background: var(--yellow); box-shadow: 0 0 12px var(--yellow); }
 
+/* tabs */
+
+.tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+/* Kept in the page rather than removed from it: the label is a tab stop only while its radio is. */
+.tabs > input { position: absolute; width: 0; height: 0; opacity: 0; }
+
+.tabs > label {
+  order: 0;
+  cursor: pointer;
+  padding: 0.35rem 1.1rem;
+  border-radius: 999px;
+  border: 3px solid var(--edge);
+  background: var(--face);
+  font: 700 15px/1.6 "Baloo 2", system-ui, sans-serif;
+}
+
+.tabs > label:hover { border-color: var(--cyan); }
+
+.tabs > label:has(+ input:checked) {
+  background: var(--yellow);
+  color: var(--ink);
+  border-color: var(--ink);
+  box-shadow: 0 4px 0 var(--ink);
+}
+
+.tabs > label:has(+ input:focus-visible) { outline: 3px solid var(--cyan); outline-offset: 3px; }
+
+.tabs > .tabpanel { order: 1; flex: 1 0 100%; display: none; }
+.tabs > input:checked + .tabpanel { display: block; }
+
+/* prize podium */
+
+.podium.prizes { align-items: end; margin-top: 2rem; }
+
+.prize .figure img {
+  display: block;
+  width: 100%;
+  max-width: 190px;
+  height: 150px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 14px #0007);
+}
+
+.p1.prize .figure img { max-width: 230px; height: 190px; }
+
+.prize .nm { margin-top: 0.5rem; }
+.prize .block .pts { font-size: 24px; padding: 0.15rem 0.5rem; }
+
 /* podium */
 
 .podium { display: grid; grid-template-columns: 1fr 1.25fr 1fr; gap: 0.75rem; align-items: end; margin: 3rem 0 2.25rem; }

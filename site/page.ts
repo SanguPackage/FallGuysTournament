@@ -49,6 +49,29 @@ function lobbyBadge(code?: string): string {
       </div>`;
 }
 
+export interface Tab {
+  id: string;
+  label: string;
+  body: string;
+}
+
+/**
+ * Radio buttons rather than script: the pages that carry tabs load none, and each panel sits right
+ * behind its own radio so the stylesheet switches them without knowing what the tabs are called.
+ * The first is the one open on arrival.
+ */
+export function tabs(items: Tab[]): string {
+  const parts = items
+    .map(
+      ({ id, label, body }, index) => `
+      <label for="tab-${id}">${escapeHtml(label)}</label>
+      <input type="radio" name="tab" id="tab-${id}"${index === 0 ? " checked" : ""} />
+      <section class="tabpanel">${body}</section>`,
+    )
+    .join("");
+  return `<div class="tabs">${parts}\n      </div>`;
+}
+
 export function nav(current: string): string {
   const links = NAV.map(({ href, label }) =>
     href.endsWith(`/${current}`)

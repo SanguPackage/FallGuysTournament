@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { nav, page } from "./page";
+import { nav, page, tabs } from "./page";
 
 const RULES = { event: "FOM 2026", title: "Rules", heading: "Rules", current: "rules.html", body: "<p>Hi</p>" };
 
@@ -89,4 +89,27 @@ test("the join steps repeat the code, so it is on screen while reading them", ()
 
 test("a lobby code is escaped", () => {
   expect(page({ ...RULES, lobbyCode: "<b>" })).not.toContain("<B>");
+});
+
+test("the first tab is the one open on arrival", () => {
+  const html = tabs([
+    { id: "rules", label: "Rules", body: "<p>A</p>" },
+    { id: "prizes", label: "Prizes", body: "<p>B</p>" },
+  ]);
+  expect(html).toContain(`id="tab-rules" checked`);
+  expect(html).not.toContain(`id="tab-prizes" checked`);
+});
+
+test("each tab's label switches to its own panel", () => {
+  const html = tabs([
+    { id: "rules", label: "Rules", body: "<p>A</p>" },
+    { id: "prizes", label: "Prizes", body: "<p>B</p>" },
+  ]);
+  expect(html).toContain(`<label for="tab-prizes">Prizes</label>`);
+  expect(html).toContain("<p>B</p>");
+});
+
+test("a panel follows its own radio, which is what opens it without script", () => {
+  const html = tabs([{ id: "rules", label: "Rules", body: "<p>A</p>" }]);
+  expect(html).toMatch(/id="tab-rules"[^>]*>\s*<section class="tabpanel">/);
 });

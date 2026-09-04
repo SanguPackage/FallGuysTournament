@@ -37,6 +37,14 @@ export interface Penalty {
   reason: string;
 }
 
+export interface Prize {
+  /** Which step of the podium it sits on: 1, 2 or 3. */
+  place: number;
+  name: string;
+  /** File name under `site/img/prizes`. */
+  image: string;
+}
+
 export interface TournamentEvent {
   name: string;
   date: string;
@@ -45,6 +53,7 @@ export interface TournamentEvent {
   /** When play starts, with its offset. Absent for an event whose hour is not settled yet. */
   startsAt?: string;
   endsAt?: string;
+  prizes?: Prize[];
   shows: Show[];
   penalties: Penalty[];
 }

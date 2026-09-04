@@ -3,9 +3,10 @@ import { liveStatus } from "../src/live";
 import { score } from "../src/scoring";
 import type { Players, TournamentEvent } from "../src/types";
 import type { LivePage } from "../site/page";
-import { page } from "../site/page";
+import { page, tabs } from "../site/page";
 import { renderCountdown } from "../site/countdown";
 import { renderField, renderPodium, renderStandings, renderStatus } from "../site/render";
+import { renderPrizes } from "../site/prizes";
 import { renderResults } from "../site/results";
 import { renderShowNow } from "../site/show-field";
 import { parseShowOrder, renderMarkdown, renderShowOrder } from "../site/rules";
@@ -82,7 +83,10 @@ const PAGES: { file: string; heading: string; title: string; live?: LivePage; bo
     file: "rules.html",
     heading: "Rules",
     title: `Rules — ${TITLE}`,
-    body: `      <div class="doc">${renderMarkdown(rules)}</div>`,
+    body: `      ${tabs([
+      { id: "rules", label: "Rules", body: `<div class="doc">${renderMarkdown(rules)}</div>` },
+      { id: "prizes", label: "Prizes", body: renderPrizes(event.prizes ?? []) },
+    ])}`,
   },
   {
     file: "shows.html",

@@ -64,9 +64,9 @@ function podiumName(row: LeaderboardRow): string {
 }
 
 /** Second, first and third, so the tallest block sits in the middle. */
-const PODIUM_ORDER = [1, 0, 2];
+export const PODIUM_ORDER = [1, 0, 2];
 
-const CROWN = `<svg class="crown" viewBox="0 0 60 44" aria-hidden="true">
+export const CROWN = `<svg class="crown" viewBox="0 0 60 44" aria-hidden="true">
       <path d="M6 38 L2 10 l16 12 L30 4 l12 18 L58 10 l-4 28 Z"/>
       <circle class="jewel" cx="30" cy="30" r="3.5"/>
     </svg>`;
