@@ -21,11 +21,13 @@ import { captureFolders, captureSettings, runFolder, runsIn } from "../src/captu
 import { clipFile, showsOnDisk, slugOf, type ShowFolder } from "../src/capture/layout";
 import { toWindows } from "../src/capture/win-path";
 import { Recorder } from "../src/capture/recorder";
+import { onShutdown } from "../src/capture/shutdown";
+import { orphanPids, processList } from "../src/capture/orphans";
 import { Ledger, type LedgerState } from "../src/capture/ledger";
 import { Serial } from "../src/capture/serial";
 import { captureMoment, cutShowClip } from "../src/capture/pipeline";
 import { mkdir, readdir } from "node:fs/promises";
-import { existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { showNameNow, type LiveNow } from "../src/live";
 import type { ParsedShow } from "../src/log";
 import type { Players, TournamentEvent } from "../src/types";
@@ -422,7 +424,20 @@ async function sweepCaptures(): Promise<void> {
 
 if (RECORD && capture.ffmpeg) {
   for (const dir of Object.values(folders)) await mkdir(dir, { recursive: true });
+  for (const pid of orphanPids(processList(), toWindows(folders.segments), process.pid)) {
+    try {
+      process.kill(pid);
+      console.log(`Recording  ${pid} was still running from a server that is gone — stopped`);
+    } catch {}
+  }
   recorder.start();
+  onShutdown(
+    () => {
+      recorder.stop();
+      writeFileSync(LEDGER_PATH, `${JSON.stringify(ledger.state(), null, 2)}\n`);
+    },
+    () => process.exit(0),
+  );
   setInterval(() => void sweepCaptures().catch(() => {}), 5_000);
   setInterval(
     () => void Bun.write(LEDGER_PATH, `${JSON.stringify(ledger.state(), null, 2)}\n`),
