@@ -14,13 +14,17 @@ export function seededRoster(
   const registered = players.some((player) => !player.admin && player.ingame);
   if (registered) return undefined;
 
-  const board = shots.find(
+  const boards = shots.filter(
     (shot) =>
       shot.showIndex === 0 &&
       shot.roundIndex === 0 &&
       reads[shot.file]?.screen === "grid" &&
       (reads[shot.file]?.tokens.length ?? 0) > 0,
   );
+  // A capture caught before the plate settles has fewer cards green than one caught after it.
+  const board = boards.sort(
+    (a, b) => reads[b.file]!.tokens.length - reads[a.file]!.tokens.length || b.takenAt - a.takenAt,
+  )[0];
   if (!board) return undefined;
 
   return [...players, ...reads[board.file]!.tokens.map((ingame) => ({ ingame }))];

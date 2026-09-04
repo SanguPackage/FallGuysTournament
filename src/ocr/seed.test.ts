@@ -75,3 +75,25 @@ test("a board that read no names seeds nothing", () => {
   const reads: Record<string, ShotRead> = { "g.jpg": { screen: "grid", tokens: [] } };
   expect(seededRoster([], [shot("g.jpg")], reads)).toBeUndefined();
 });
+
+test("two captures of the same board give the roster the fuller read", () => {
+  const shots = [shot("early.jpg", { takenAt: 10 }), shot("late.jpg", { takenAt: 20 })];
+  const reads: Record<string, ShotRead> = {
+    "early.jpg": { screen: "grid", tokens: ["Diego_9942", "Serxav_9", "BigMooseLips"] },
+    "late.jpg": { screen: "grid", tokens: ["Diego_9942"] },
+  };
+  expect(seededRoster([], shots, reads)).toEqual([
+    { ingame: "Diego_9942" },
+    { ingame: "Serxav_9" },
+    { ingame: "BigMooseLips" },
+  ]);
+});
+
+test("two reads of the same size go with the later capture", () => {
+  const shots = [shot("early.jpg", { takenAt: 10 }), shot("late.jpg", { takenAt: 20 })];
+  const reads: Record<string, ShotRead> = {
+    "early.jpg": { screen: "grid", tokens: ["Diego_9942"] },
+    "late.jpg": { screen: "grid", tokens: ["Serxav_9"] },
+  };
+  expect(seededRoster([], shots, reads)).toEqual([{ ingame: "Serxav_9" }]);
+});
