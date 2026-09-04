@@ -1,4 +1,5 @@
 import { Jimp } from "jimp";
+import { cropBars } from "./letterbox";
 
 export interface Frame {
   width: number;
@@ -35,5 +36,5 @@ export function frameFromBitmap(bitmap: {
 
 export async function frameFrom(path: string): Promise<Frame> {
   const image = await Jimp.read(path);
-  return frameFromBitmap(image.bitmap);
+  return cropBars(frameFromBitmap(image.bitmap));
 }

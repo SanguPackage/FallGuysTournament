@@ -226,6 +226,11 @@
     "victory/FallGuys_client_game_fztlHOmQ8v.jpg": {
       "winner": "YaminDavid",
       "size": "3840x2160"
+    },
+    "victory/auto-1-winner-131321-01.jpg": {
+      "winner": "Bobbyno33",
+      "size": "3840x2400",
+      "note": "A 16:10 monitor: the game draws 16:9 inside 120px black bars."
     }
   }
 }
