@@ -27,5 +27,12 @@ export function seededRoster(
   )[0];
   if (!board) return undefined;
 
-  return [...players, ...reads[board.file]!.tokens.map((ingame) => ({ ingame }))];
+  const known = new Set(players.map((player) => player.ingame));
+  const fresh: Player[] = [];
+  for (const ingame of reads[board.file]!.tokens) {
+    if (known.has(ingame)) continue;
+    known.add(ingame);
+    fresh.push({ ingame });
+  }
+  return fresh.length === 0 ? undefined : [...players, ...fresh];
 }

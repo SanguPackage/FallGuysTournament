@@ -97,3 +97,27 @@ test("two reads of the same size go with the later capture", () => {
   };
   expect(seededRoster([], shots, reads)).toEqual([{ ingame: "Serxav_9" }]);
 });
+
+test("the admin read off the board keeps their own row rather than gaining a second", () => {
+  const shots = [shot("g.jpg")];
+  const reads: Record<string, ShotRead> = {
+    "g.jpg": { screen: "grid", tokens: ["AnotherAccount58", "Diego_9942"] },
+  };
+  expect(seededRoster([ADMIN], shots, reads)).toEqual([ADMIN, { ingame: "Diego_9942" }]);
+});
+
+test("a board that read one name twice seeds it once", () => {
+  const shots = [shot("g.jpg")];
+  const reads: Record<string, ShotRead> = {
+    "g.jpg": { screen: "grid", tokens: ["Diego_9942", "Diego_9942"] },
+  };
+  expect(seededRoster([], shots, reads)).toEqual([{ ingame: "Diego_9942" }]);
+});
+
+test("a board holding nobody new leaves the roster alone", () => {
+  const shots = [shot("g.jpg")];
+  const reads: Record<string, ShotRead> = {
+    "g.jpg": { screen: "grid", tokens: ["AnotherAccount58"] },
+  };
+  expect(seededRoster([ADMIN], shots, reads)).toBeUndefined();
+});
