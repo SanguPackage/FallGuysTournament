@@ -13,6 +13,7 @@ import {
   namesInShows,
   draftFromShow,
   candidatesFor,
+  canDeleteShow,
   canResyncWinners,
   everyPlayerNamed,
   suggestShowName,
@@ -911,4 +912,24 @@ test("the winners offer a resync once a capture names them, read or not", () => 
 
   applyFills(draft, FILLS, 0, memo);
   expect(canResyncWinners(draft, 0, memo, 0)).toBe(true);
+});
+
+const twoShows: TournamentEvent = {
+  name: "FOM",
+  date: "d",
+  shows: [
+    { name: "Solos 1", rounds: [], winners: ["Alpha"] },
+    { name: "Solos 2", rounds: [], winners: ["Bravo"] },
+  ],
+  penalties: [],
+};
+
+test("only the last recorded show can be deleted", () => {
+  expect(canDeleteShow(twoShows, 1)).toBe(true);
+  expect(canDeleteShow(twoShows, 0)).toBe(false);
+});
+
+test("a show the log has but nobody entered has nothing to delete", () => {
+  expect(canDeleteShow(twoShows, 2)).toBe(false);
+  expect(canDeleteShow({ name: "FOM", date: "d", shows: [], penalties: [] }, 0)).toBe(false);
 });

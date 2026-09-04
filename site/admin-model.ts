@@ -147,6 +147,17 @@ export function toShow(draft: ShowDraft): Show {
   };
 }
 
+/**
+ * Whether a misfired show can be taken back out of the board.
+ *
+ * The last one only: `event.shows[i]` is paired by index with the log's parsed show `i`, which the
+ * admin rows, the autofill slots, the re-read and the capture folders all read. Removing an
+ * earlier show would re-point every later one at the wrong log entry; popping the last cannot.
+ */
+export function canDeleteShow(event: TournamentEvent, index: number): boolean {
+  return index >= 0 && index === event.shows.length - 1;
+}
+
 /** What still has to be typed into a show, for the collapsed rows that have no fields on show. */
 export function missingFrom(show: Show | undefined, parsed: ParsedShow): string[] {
   // An unrecorded show is every gap at once, so it reads the same as one saved empty.
