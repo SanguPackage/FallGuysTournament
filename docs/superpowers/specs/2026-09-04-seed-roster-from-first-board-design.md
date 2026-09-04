@@ -55,6 +55,17 @@ they need no further cleaning here.
 No publish and no commit from the poll: publishing commits the whole of `data/`, and a GET must
 not push. The seeded file rides along on the next admin save.
 
+## The admin tab has to hear about it
+
+`watchLog` in `site/admin.ts` refreshes everything the poll returns except `players`, so that a
+name half typed in is not snatched away mid-edit. Ticking a show then saves that copy back with
+`PUT /api/players`, which replaces rather than merges — so a tab opened before the seed landed
+would write its empty roster over the top, and the next poll would seed again, all evening.
+
+The poll therefore adopts `next.players` when, and only when, the tab's own copy has nobody signed
+up. `anyoneRegistered` is exported from `src/ocr/seed.ts` so both sides ask the question the same
+way. A roster with anybody in it is still left alone, so an edit in progress is still safe.
+
 ## Out of scope
 
 - **Seeding twice.** After the write the roster is no longer bare, so a second show finds it full.
