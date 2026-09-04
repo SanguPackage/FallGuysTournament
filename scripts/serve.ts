@@ -126,12 +126,19 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
+/**
+ * `keep` lays the save over what is on disk rather than replacing it. The admin sends back the
+ * event it read when its tab was opened, so a field written since — the start hours, the prizes —
+ * would otherwise be dropped by a tab that never knew about it.
+ */
 async function writeJson(
   path: string,
   request: Request,
   describe: (body: never) => string,
+  keep = false,
 ): Promise<Response> {
-  const body = await request.json();
+  const sent = (await request.json()) as Record<string, unknown>;
+  const body = keep ? { ...((await Bun.file(path).json()) as object), ...sent } : sent;
   await Bun.write(path, `${JSON.stringify(body, null, 2)}\n`);
 
   // Publishing commits the whole of data/, so a save that another is about to follow asks with
@@ -521,7 +528,7 @@ const server = Bun.serve({
       return writeJson(PLAYERS_PATH, request, () => "data: update players");
     }
     if (request.method === "PUT" && pathname === "/api/event") {
-      return writeJson(EVENT_PATH, request, (saved: TournamentEvent) => defaultMessage(saved));
+      return writeJson(EVENT_PATH, request, (saved: TournamentEvent) => defaultMessage(saved), true);
     }
 
     /**
