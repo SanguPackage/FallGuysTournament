@@ -293,7 +293,10 @@ const recorder = new Recorder({
       ...(audio && capture.audioDevice ? { audioDevice: capture.audioDevice } : {}),
       dir: toWindows(runDir),
       fps: 30,
-      segmentSeconds: 30,
+      // A moment cannot be cut until the segment holding the end of its window closes, so this is
+      // dead wait on every capture — half a segment on average. Short enough to keep that under ten
+      // seconds, long enough that the muxer is not opening a file every breath.
+      segmentSeconds: 10,
     }),
   newRun,
   spawn: (argv) => {
