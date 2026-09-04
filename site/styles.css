@@ -319,7 +319,7 @@ h2 {
 .crown .jewel { fill: var(--pink); }
 
 /*
- * Clipped to the winner's column so paper never rains over the standings below, and stacked
+ * Clipped to the winner's column so glitter never drifts over the standings below, and stacked
  * between the block and the bean: it passes in front of the podium but behind the champion.
  */
 .confetti {
@@ -328,7 +328,6 @@ h2 {
   z-index: 1;
   overflow: hidden;
   pointer-events: none;
-  perspective: 500px;
   --drop: 420px;
 }
 
@@ -337,50 +336,29 @@ h2 {
   top: 0;
   left: var(--x);
   width: var(--w);
-  height: var(--h);
-  transform-style: preserve-3d;
-  animation: fall var(--d) linear var(--delay) infinite;
-}
-
-/* The paper turns on its own clock inside the falling box, so a piece can go edge-on mid-drop. */
-.confetti i::before {
-  content: "";
-  display: block;
-  width: 100%;
-  height: 100%;
+  height: var(--w);
+  border-radius: 50%;
   background: var(--c);
-  border-radius: var(--r);
-  animation: flutter var(--f) linear var(--delay) infinite;
+  box-shadow: 0 0 6px var(--c);
+  animation:
+    drop var(--d) linear var(--delay) infinite,
+    twinkle var(--f) ease-in-out var(--delay) infinite alternate;
 }
 
-@keyframes fall {
-  0% { transform: translate(0, -2rem); opacity: 0; }
-  6% { opacity: 1; }
-  25% { transform: translate(var(--sway), calc(var(--drop) * 0.25)); }
-  50% { transform: translate(0, calc(var(--drop) * 0.5)); }
-  75% { transform: translate(calc(var(--sway) * -1), calc(var(--drop) * 0.75)); }
-  92% { opacity: 1; }
-  100% { transform: translate(0, var(--drop)); opacity: 0; }
+/* Drifts one way then the other on the way down, so the fall never reads as a straight line. */
+@keyframes drop {
+  0% { transform: translate(0, -2rem); }
+  33% { transform: translate(var(--sway), calc(var(--drop) * 0.33)); }
+  66% { transform: translate(calc(var(--sway) * -1), calc(var(--drop) * 0.66)); }
+  100% { transform: translate(0, var(--drop)); }
 }
 
-@keyframes flutter {
-  to { transform: rotateY(1080deg) rotateX(540deg) rotateZ(var(--spin)); }
+@keyframes twinkle {
+  from { opacity: 0.15; filter: brightness(0.7); }
+  to { opacity: 1; filter: brightness(1.6); }
 }
 
-.p .nm { display: block; width: 100%; font-size: 19px; font-weight: 800; line-height: 1.1; }
-
-button.nm {
-  font-family: inherit;
-  color: inherit;
-  background: none;
-  border: 0;
-  padding: 0.1rem 0.3rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: color 0.15s, background 0.15s;
-}
-
-button.nm:hover, button.nm:focus-visible { color: var(--yellow); background: #ffffff1f; }
+.p .nm { font-size: 19px; font-weight: 800; line-height: 1.1; }
 /* Reserves its line so a player with no FOM name does not sit a row shorter than the rest. */
 .p .ig { font-size: 13px; opacity: 0.7; font-weight: 600; min-height: 1.3em; }
 

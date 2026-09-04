@@ -1,6 +1,7 @@
 import type { LiveStatus } from "../src/live";
 import type { LeaderboardRow } from "../src/types";
 import { beanColours, beanSvg } from "./bean";
+import { confettiHtml } from "./confetti";
 import { crownTitle } from "./crown";
 import type { ShowInOrder } from "./rules";
 
@@ -63,11 +64,6 @@ const CROWN = `<svg class="crown" viewBox="0 0 60 44" aria-hidden="true">
       <circle class="jewel" cx="30" cy="30" r="3.5"/>
     </svg>`;
 
-/** Six strips, each on its own delay, so the fall reads as a scatter rather than a curtain. */
-const CONFETTI = `<div class="confetti" aria-hidden="true">${[6, 22, 42, 62, 80, 92]
-  .map((left, index) => `<i style="left:${left}%;animation-delay:${(index * 0.47).toFixed(2)}s"></i>`)
-  .join("")}</div>`;
-
 export function renderPodium(rows: LeaderboardRow[]): string {
   if (rows.length === 0) return EMPTY;
 
@@ -79,7 +75,7 @@ export function renderPodium(rows: LeaderboardRow[]): string {
       const row = rows[index]!;
       return `
       <div class="p p${index + 1}">
-        ${index === 0 ? CONFETTI : ""}
+        ${index === 0 ? confettiHtml() : ""}
         <div class="figure">
           ${index === 0 ? CROWN : ""}
           ${beanSvg(colours[index]!)}
