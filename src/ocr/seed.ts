@@ -11,6 +11,9 @@ export function seededRoster(
   shots: PlacedShot[],
   reads: Record<string, ShotRead>,
 ): Player[] | undefined {
+  const registered = players.some((player) => !player.admin && player.ingame);
+  if (registered) return undefined;
+
   const board = shots.find(
     (shot) =>
       shot.showIndex === 0 &&

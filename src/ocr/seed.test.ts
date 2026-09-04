@@ -26,3 +26,25 @@ test("the admin keeps their row and their fields", () => {
   const reads: Record<string, ShotRead> = { "g.jpg": { screen: "grid", tokens: ["Diego_9942"] } };
   expect(seededRoster([ADMIN], shots, reads)).toEqual([ADMIN, { ingame: "Diego_9942" }]);
 });
+
+test("one registered player is enough to leave the roster alone", () => {
+  const shots = [shot("g.jpg")];
+  const reads: Record<string, ShotRead> = { "g.jpg": { screen: "grid", tokens: ["Diego_9942"] } };
+  expect(seededRoster([{ ingame: "BigMooseLips" }], shots, reads)).toBeUndefined();
+});
+
+test("a player who registered and then withdrew still counts as a roster", () => {
+  const shots = [shot("g.jpg")];
+  const reads: Record<string, ShotRead> = { "g.jpg": { screen: "grid", tokens: ["Diego_9942"] } };
+  expect(seededRoster([{ ingame: "BigMooseLips", joined: false }], shots, reads)).toBeUndefined();
+});
+
+test("a row still being typed in is not a registered player", () => {
+  const shots = [shot("g.jpg")];
+  const reads: Record<string, ShotRead> = { "g.jpg": { screen: "grid", tokens: ["Diego_9942"] } };
+  expect(seededRoster([ADMIN, { ingame: "" }], shots, reads)).toEqual([
+    ADMIN,
+    { ingame: "" },
+    { ingame: "Diego_9942" },
+  ]);
+});
