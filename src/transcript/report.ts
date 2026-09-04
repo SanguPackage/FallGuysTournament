@@ -78,7 +78,12 @@ export class Reporter {
         }
 
         const ended = at.ends[roundIndex];
-        if (ended !== undefined && this.fresh(`over:${index}:${roundIndex}`)) {
+        // `ends[i]` is the last result *so far*: while the round is being played it walks forward
+        // with every qualifier, and the outcome walks with it — a round that will end 22 qualified
+        // reads as timed out from its first elimination. Neither stands until the round is done,
+        // which is when the next one has loaded or the show has been won.
+        const over = roundIndex < show.rounds.length - 1 || show.wonAt !== undefined;
+        if (ended !== undefined && over && this.fresh(`over:${index}:${roundIndex}`)) {
           const outcome = round.timedOut
             ? "timed out · nobody qualified"
             : `${round.qualified.length} qualified, ${round.eliminated.length} out`;

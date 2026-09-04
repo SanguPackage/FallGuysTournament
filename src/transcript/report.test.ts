@@ -61,8 +61,34 @@ test("a race reports someone across the line, anything else reports them through
 });
 
 test("a round over says what it cost", () => {
-  const lines = new Reporter().observe({ shows: [show()], date: DATE, shots: [], reads: {}, fills: [] });
+  const won = show({ wonAt: "23:33:04", winnerId: 17 });
+  const lines = new Reporter().observe({ shows: [won], date: DATE, shots: [], reads: {}, fills: [] });
   expect(texts(lines).join()).toContain("round over · 2 qualified, 0 out");
+});
+
+// `endedAt` is the last result *so far*. Reported the moment the first one lands, a round that
+// will end 22 qualified reads as timed out, stamped a minute and a half before it was.
+test("a round still being played is not called over yet", () => {
+  const playing = new Reporter().observe({
+    shows: [show({ rounds: [{ ...show().rounds[0]!, qualified: [], eliminated: [9] }] })],
+    date: DATE,
+    shots: [],
+    reads: {},
+    fills: [],
+  });
+  expect(texts(playing).join()).not.toContain("round over");
+});
+
+test("a round the show has moved on from is called over, on the result that ended it", () => {
+  const first = show().rounds[0]!;
+  const moved = show({
+    rounds: [first, { ...first, startedAt: "23:28:00", endedAt: "23:29:30", qualified: [17] }],
+  });
+  const lines = new Reporter().observe({ shows: [moved], date: DATE, shots: [], reads: {}, fills: [] });
+  const over = lines.filter((line) => JSON.stringify(line).includes("round over"));
+  expect(over).toHaveLength(1);
+  expect(texts(over).join()).toContain("2 qualified, 0 out");
+  expect(over[0]!).toMatchObject({ at: Date.parse(`${DATE}T23:27:04Z`) });
 });
 
 test("a won show is starred and then closed", () => {
