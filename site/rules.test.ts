@@ -44,6 +44,7 @@ test("the show order carries each show's player limits", () => {
   expect(shows).toEqual([
     { position: 1, show: "Solos", tier: "Opening", min: 2, max: 32 },
     { position: 2, show: "Roll Call", tier: "Advanced", min: 5, max: 16 },
+    { position: 3, show: "Thin Ice", tier: "Hardest", min: 2, max: 20, dividedBy: "if time allows" },
   ]);
 });
 
@@ -76,6 +77,8 @@ const SAMPLE = `## 2. Format
 |----|-----------|----------|-----|-----|
 | 1  | Solos     | Opening  | 2   | 32  |
 | 2  | Roll Call | Advanced | 5   | 16  |
+|    | if time allows |     |     |     |
+| 3  | Thin Ice  | Hardest  | 2   | 20  |
 
 | Achievement | Points |
 |-------------|--------|
@@ -97,7 +100,7 @@ test("the rules table and the fetched wiki limits agree", async () => {
     Object.entries(wiki).find(([key]) => key.toLowerCase() === name.toLowerCase())?.[1];
 
   const order = parseShowOrder(rules);
-  expect(order).toHaveLength(10);
+  expect(order).toHaveLength(15);
   for (const show of order) {
     expect({ show: show.show, ...lookup(show.show) }).toEqual({
       show: show.show,
@@ -105,4 +108,21 @@ test("the rules table and the fetched wiki limits agree", async () => {
       max: show.max,
     });
   }
+});
+
+test("a divider row is not a show of its own", () => {
+  expect(parseShowOrder(SAMPLE).map((show) => show.show)).not.toContain("if time allows");
+});
+
+test("the divider renders above the show it precedes", () => {
+  const html = renderShowOrder(parseShowOrder(SAMPLE));
+  expect(html).toMatch(/if time allows[\s\S]*?Thin Ice/);
+  expect(html).toMatch(/Roll Call[\s\S]*?if time allows/);
+  expect(html).toContain(`class="odiv"`);
+});
+
+test("shows after the divider keep counting up, so the pips cover them", () => {
+  const shows = parseShowOrder(SAMPLE);
+  expect(shows).toHaveLength(3);
+  expect(shows.at(-1)!.position).toBe(3);
 });

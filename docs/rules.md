@@ -32,6 +32,12 @@ FOM attendees only.
 | 8  | Roll Call             | Advanced | 5   | 32  |
 | 9  | X-Treme Solos         | Hardest  | 5   | 32  |
 | 10 | Button Basher Royale  | Hardest  | 2   | 16  |
+|    | if time allows        |          |     |     |
+| 11 | Solos                 | Opening  | 2   | 32  |
+| 12 | Fan Favourites        | Opening  | 5   | 32  |
+| 13 | Fall Ball Cup         | Middle   | 2   | 32  |
+| 14 | Roll Call             | Advanced | 5   | 32  |
+| 15 | X-Treme Solos         | Hardest  | 5   | 32  |
 
 Min and Max are the player counts the game itself allows for that show.
 

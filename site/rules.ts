@@ -7,6 +7,8 @@ export interface ShowInOrder {
   /** Player counts the game allows for this show. */
   min: number;
   max: number;
+  /** Label of the divider that opens a new stretch of the plan just above this show. */
+  dividedBy?: string;
 }
 
 function cells(line: string): string[] {
@@ -79,17 +81,24 @@ export function parseShowOrder(markdown: string): ShowInOrder[] {
   if (start === -1) return [];
 
   const shows: ShowInOrder[] = [];
+  let pending: string | undefined;
   for (const line of rows.slice(start + 1)) {
     if (!isTableRow(line)) break;
     if (isDivider(line)) continue;
     const [position, show, tier, min, max] = cells(line);
+    if (position === "") {
+      pending = show;
+      continue;
+    }
     shows.push({
       position: Number(position),
       show: show!,
       tier: tier!,
       min: Number(min),
       max: Number(max),
+      ...(pending ? { dividedBy: pending } : {}),
     });
+    pending = undefined;
   }
   return shows;
 }
@@ -99,7 +108,10 @@ export function renderShowOrder(shows: ShowInOrder[], currentIndex = -1): string
     .map((show, index) => {
       const state = index < currentIndex ? "o done" : index === currentIndex ? "o now" : "o";
       const label = index < currentIndex ? "Played" : index === currentIndex ? "Playing now" : "";
-      return `
+      const divider = show.dividedBy
+        ? `\n      <div class="odiv"><span>${escapeHtml(show.dividedBy)}</span></div>`
+        : "";
+      return `${divider}
       <div class="${state}">
         <span class="n">${show.position}</span>
         <span class="nm">${escapeHtml(show.show)} <span class="tag ${show.tier.toLowerCase()}">${escapeHtml(show.tier)}</span></span>

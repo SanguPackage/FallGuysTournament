@@ -1,5 +1,7 @@
 # FOM Fall Guys Tournament
 
+Next up: [docs/handoff-capture-perf.md](docs/handoff-capture-perf.md) — the capture pipeline stalls the admin server; three changes, measured.
+
 Admin: I-36
 
 🥇 1st: NH-D15 G2
@@ -199,13 +201,13 @@ bun run dev     # serve dist/ on http://localhost:3000, admin on /admin
 
 Five pages, all built from `data/` and `docs/rules.md`:
 
-| Page       | What it shows                                                                        |
-|------------|--------------------------------------------------------------------------------------|
-| Dashboard  | Which show and round is on, who is left in it, the podium, and the rest of the field |
-| Standings  | Every player with their races, finals, wins and penalties                            |
-| Results    | Every show round by round, newest first, with the field coloured                     |
-| Rules      | `docs/rules.md`                                                                      |
-| Show order | The ten shows, marked played / playing now / upcoming                                |
+| Page       | What it shows                                                                         |
+|------------|---------------------------------------------------------------------------------------|
+| Dashboard  | Which show and round is on, who is left in it, the podium, and the rest of the field  |
+| Standings  | Every player with their races, finals, wins and penalties                             |
+| Results    | Every show round by round, newest first, with the field coloured                      |
+| Rules      | `docs/rules.md`                                                                       |
+| Show order | The ten shows plus the if-time-allows replays, marked played / playing now / upcoming |
 
 Every show carries its field: gold won it, green got through the last board read, grey is still in
 the round on screen, red is out with the round number that did it. The field is the roster —
