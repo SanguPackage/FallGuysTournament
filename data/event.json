@@ -105,6 +105,18 @@
       "winners": [
         "OOpman ツ"
       ]
+    },
+    {
+      "name": "event_fan_favourites_template 1",
+      "rounds": [
+        {
+          "map": "Blast Ball",
+          "type": "final"
+        }
+      ],
+      "winners": [
+        "Mylo007"
+      ]
     }
   ],
   "penalties": [],
