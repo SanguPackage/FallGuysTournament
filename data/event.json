@@ -279,6 +279,36 @@
         "OOpman ツ"
       ],
       "checked": true
+    },
+    {
+      "name": "event_only_button_bashers_template 1",
+      "rounds": [
+        {
+          "map": "Button Bashers",
+          "type": "hunt",
+          "qualified": [
+            "puppynamer",
+            "General_Whisky89",
+            "Mylo007",
+            "SHARPPENGUIN649"
+          ],
+          "survivors": 4
+        },
+        {
+          "map": "Button Bashers",
+          "type": "hunt",
+          "qualified": [
+            "puppynamer",
+            "SHARPPENGUIN649"
+          ],
+          "survivors": 2
+        },
+        {
+          "map": "Button Bashers",
+          "type": "final"
+        }
+      ],
+      "winners": []
     }
   ],
   "penalties": [],
