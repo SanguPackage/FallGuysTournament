@@ -164,6 +164,11 @@
         {
           "map": "circleoslime_only_finals_v3_normal",
           "type": "unknown",
+          "qualified": [
+            "Cityhaunter8340",
+            "Mylo007",
+            "OOpman ツ"
+          ],
           "survivors": 3
         },
         {
@@ -171,7 +176,9 @@
           "type": "final"
         }
       ],
-      "winners": []
+      "winners": [
+        "Mylo007"
+      ]
     }
   ],
   "penalties": [],
