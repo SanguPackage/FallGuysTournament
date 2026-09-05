@@ -145,6 +145,33 @@
         "OOpman ツ"
       ],
       "checked": true
+    },
+    {
+      "name": "event_only_finals_v3_template 1",
+      "rounds": [
+        {
+          "map": "hopadrome_only_finals_v3_normal",
+          "type": "unknown",
+          "qualified": [
+            "OOpman ツ",
+            "General_Whisky89",
+            "SHARPPENGUIN649",
+            "Mylo007",
+            "Cityhaunter8340"
+          ],
+          "survivors": 5
+        },
+        {
+          "map": "circleoslime_only_finals_v3_normal",
+          "type": "unknown",
+          "survivors": 3
+        },
+        {
+          "map": "Jump Showdown",
+          "type": "final"
+        }
+      ],
+      "winners": []
     }
   ],
   "penalties": [],
