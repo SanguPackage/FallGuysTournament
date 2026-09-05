@@ -20,7 +20,36 @@
       "image": "nh-d12l.png"
     }
   ],
-  "shows": [],
+  "shows": [
+    {
+      "name": "Solos 1",
+      "rounds": [
+        {
+          "map": "Roll Out",
+          "type": "survival",
+          "qualified": [
+            "Cityhaunter8340",
+            "SHARPPENGUIN649",
+            "Mylo007",
+            "OOpman ツ",
+            "JOKKE93",
+            "GROLFIE",
+            "CEMEN14",
+            "BO0NDOCK",
+            "CAPITALB1789"
+          ],
+          "survivors": 9
+        },
+        {
+          "map": "Fall Mountain",
+          "type": "final"
+        }
+      ],
+      "winners": [
+        "OOpman ツ"
+      ]
+    }
+  ],
   "penalties": [],
   "lobbyCode": "6UDT8"
 }
