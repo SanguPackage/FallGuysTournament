@@ -15,26 +15,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - run: bun install --frozen-lockfile
-      - run: bun run typecheck
-      - run: bun test
-      - run: bun run build
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-  deploy:
-    needs: build
+  publish:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+
+      # A publish writes only data/, which checkData guards before the push and no test covers,
+      # so the suite runs when code moved. A base commit outside the fetch depth runs it too.
+      - id: scope
+        run: |
+          base='${{ github.event.before }}'
+          if ! git cat-file -e "$base^{commit}" 2>/dev/null \
+             || git diff --name-only "$base" '${{ github.sha }}' | grep -qv '^data/'; then
+            echo code=true >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.scope.outputs.code == 'true'
+        run: bun run typecheck
+      - if: steps.scope.outputs.code == 'true'
+        run: bun test
+
+      - run: bun run build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
       - id: deployment
         uses: actions/deploy-pages@v4
