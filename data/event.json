@@ -193,6 +193,29 @@
         "SHARPPENGUIN649"
       ],
       "checked": true
+    },
+    {
+      "name": "event_only_roll_out_custom_lobby 1",
+      "rounds": [
+        {
+          "map": "Roll On",
+          "type": "race",
+          "first": "OOpman ツ",
+          "qualified": [
+            "Mylo007",
+            "OOpman ツ",
+            "puppynamer",
+            "SHARPPENGUIN649",
+            "SADFINDER"
+          ],
+          "survivors": 5
+        },
+        {
+          "map": "Roll Out",
+          "type": "survival"
+        }
+      ],
+      "winners": []
     }
   ],
   "penalties": [],
