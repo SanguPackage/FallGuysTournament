@@ -5,7 +5,7 @@ import { findLog, findScreenshotDir } from "../src/windows-path";
 import { checkData } from "../src/data-check";
 import { publish } from "../src/publish";
 import { EVENT_PATH, PLAYERS_PATH, loadEvent, saveEvent } from "../src/storage";
-import { setLobbyCode } from "../src/event";
+import { setAlert, setLobbyCode } from "../src/event";
 import { parseShowOrder } from "../site/rules";
 import { canDeleteShow, defaultMessage, suggestShowName } from "../site/admin-model";
 import { ReadQueue } from "../src/ocr/queue";
@@ -644,15 +644,17 @@ const server = Bun.serve({
     }
 
     if (request.method === "POST" && pathname === "/api/publish") {
-      const { message, lobbyCode } = (await request.json()) as {
+      const { message, lobbyCode, alert } = (await request.json()) as {
         message?: string;
         lobbyCode?: string;
+        alert?: string;
       };
       try {
-        // Written before the commit, so the code the board shows is the one this push carries.
-        if (lobbyCode !== undefined) {
+        // Written before the commit, so what the board shows is what this push carries.
+        if (lobbyCode !== undefined || alert !== undefined) {
           const event = await loadEvent();
-          setLobbyCode(event, lobbyCode);
+          if (lobbyCode !== undefined) setLobbyCode(event, lobbyCode);
+          if (alert !== undefined) setAlert(event, alert);
           await saveEvent(event);
         }
         return json(await publish(message ?? ""));

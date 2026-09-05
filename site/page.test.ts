@@ -113,3 +113,22 @@ test("a panel follows its own radio, which is what opens it without script", () 
   const html = tabs([{ id: "rules", label: "Rules", body: "<p>A</p>" }]);
   expect(html).toMatch(/id="tab-rules"[^>]*>\s*<section class="tabpanel">/);
 });
+
+test("an alert is shown as a banner on every page", () => {
+  const html = page({ ...RULES, alert: "Doors close at 19:00" });
+  expect(html).toContain("Doors close at 19:00");
+  expect(html).not.toContain(`class="alert" hidden`);
+});
+
+test("the alert banner is in the page but hidden when there is no message", () => {
+  expect(page(RULES)).toContain(`class="alert" hidden`);
+});
+
+test("the alert sits above the masthead, so it is read before the page", () => {
+  const html = page({ ...RULES, alert: "Doors close at 19:00" });
+  expect(html.indexOf(`id="alert"`)).toBeLessThan(html.indexOf(`class="masthead"`));
+});
+
+test("an alert is escaped", () => {
+  expect(page({ ...RULES, alert: "<b>x</b>" })).not.toContain("<b>x</b>");
+});

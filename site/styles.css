@@ -131,6 +131,24 @@ nav [aria-current] {
   box-shadow: 0 4px 0 var(--ink);
 }
 
+.alert {
+  margin: 1rem 0 0;
+  padding: 0.7rem 1rem;
+  background: linear-gradient(160deg, var(--yellow), #ffb03f);
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 0 5px 0 var(--ink);
+}
+
+.alert[hidden] { display: none; }
+
+.alert p {
+  margin: 0;
+  color: var(--ink);
+  font: 700 clamp(17px, 2.4vw, 22px)/1.25 "Baloo 2", system-ui, sans-serif;
+  text-align: center;
+}
+
 .masthead { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 
 .lobby {

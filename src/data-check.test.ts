@@ -139,3 +139,8 @@ test("a lobby code that is not a string is caught", () => {
   expect(checkEvent({ ...event, lobbyCode: 1234 })).toContain("lobbyCode is not a string");
   expect(checkEvent({ ...event, lobbyCode: "ABC123" })).toEqual([]);
 });
+
+test("an alert that is not a string is caught", () => {
+  expect(checkEvent({ ...event, alert: 1234 })).toContain("alert is not a string");
+  expect(checkEvent({ ...event, alert: "Doors close at 19:00" })).toEqual([]);
+});

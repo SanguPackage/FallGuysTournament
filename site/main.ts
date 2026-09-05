@@ -88,6 +88,14 @@ function paintLobby(lobby: HTMLElement | null, code?: string): void {
   });
 }
 
+/** The banner sits outside `#data` too, so the poll paints it the way it paints the lobby badge. */
+function paintAlert(banner: HTMLElement | null, message?: string): void {
+  if (!banner) return;
+  banner.hidden = !message;
+  const text = banner.querySelector<HTMLElement>("[data-alert]");
+  if (text) text.textContent = message ?? "";
+}
+
 /**
  * A beat of its own: the poll is far too slow to move a second hand, and it repaints the panel
  * wholesale, so the ticker finds the clock again each time rather than holding on to one.
@@ -107,6 +115,7 @@ function main(): void {
   const target = document.querySelector<HTMLElement>("#data");
   const badge = document.querySelector<HTMLElement>("#live");
   const lobby = document.querySelector<HTMLElement>("#lobby");
+  const alert = document.querySelector<HTMLElement>("#alert");
   if (!page || !target) return;
 
   const dialog = attachPlayerDialog();
@@ -119,6 +128,7 @@ function main(): void {
     target.innerHTML = render(page, data, rows, movers);
     dialog?.refresh(data.event, data.players);
     paintLobby(lobby, data.event.lobbyCode);
+    paintAlert(alert, data.event.alert);
   };
 
   const poll = async (): Promise<void> => {

@@ -23,6 +23,16 @@ export interface PageOptions {
   live?: LivePage;
   /** The custom lobby's join code. Absent whenever the lobby is not a custom one. */
   lobbyCode?: string;
+  /** A notice for everyone watching. Absent whenever there is nothing to say. */
+  alert?: string;
+}
+
+/**
+ * Always in the markup, like the lobby badge: the poll fills it in, so a notice written after the
+ * build reaches the board without one.
+ */
+function alertBanner(message?: string): string {
+  return `<div class="alert"${message ? "" : " hidden"} id="alert"><p data-alert>${message ? escapeHtml(message) : ""}</p></div>`;
 }
 
 /**
@@ -109,7 +119,7 @@ function playerDialog(): string {
     </dialog>`;
 }
 
-export function page({ event, title, heading, current, body, live, lobbyCode }: PageOptions): string {
+export function page({ event, title, heading, current, body, live, lobbyCode, alert }: PageOptions): string {
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -134,6 +144,7 @@ export function page({ event, title, heading, current, body, live, lobbyCode }: 
         <span class="fom">${escapeHtml(event)}</span>
         ${live ? `<span class="live" id="live"><i class="dot"></i> Live</span>` : ""}
       </div>
+      ${alertBanner(alert)}
       <div class="masthead">
         <div>
           <h1>${escapeHtml(heading)}</h1>

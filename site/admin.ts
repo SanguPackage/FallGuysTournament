@@ -29,7 +29,7 @@ import {
   type ShowDraft,
 } from "./admin-model";
 import type { DataProblem } from "../src/data-check";
-import { setLobbyCode } from "../src/event";
+import { setAlert, setLobbyCode } from "../src/event";
 import type { SlotFill } from "../src/ocr/autofill";
 import type { PublishResult } from "../src/publish";
 import type { ShowInOrder } from "./rules";
@@ -1010,6 +1010,9 @@ function renderPublish(): void {
   const lobby = document.querySelector<HTMLInputElement>("#lobby-code")!;
   if (!lobby.dataset.edited) lobby.value = state.event.lobbyCode ?? "";
 
+  const alert = document.querySelector<HTMLInputElement>("#site-alert")!;
+  if (!alert.dataset.edited) alert.value = state.event.alert ?? "";
+
   const badge = document.querySelector<HTMLElement>("#publish-badge")!;
   badge.textContent = state.autoPublish ? "publishing on" : "publishing off";
   badge.className = state.autoPublish ? "badge on" : "badge off";
@@ -1166,6 +1169,11 @@ async function main(): Promise<void> {
     lobby.dataset.edited = "yes";
   });
 
+  const alert = document.querySelector<HTMLInputElement>("#site-alert")!;
+  alert.addEventListener("input", () => {
+    alert.dataset.edited = "yes";
+  });
+
   const publish = document.querySelector<HTMLButtonElement>("#publish")!;
   publish.addEventListener("click", async () => {
     publish.disabled = true;
@@ -1174,15 +1182,21 @@ async function main(): Promise<void> {
       const response = await fetch("/api/publish", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ message: message.value, lobbyCode: lobby.value }),
+        body: JSON.stringify({
+          message: message.value,
+          lobbyCode: lobby.value,
+          alert: alert.value,
+        }),
       });
       const result = (await response.json()) as { pushed: boolean; message: string };
       status("publish-status", result.message, result.pushed);
       if (result.pushed) {
         // The next poll is what brings the saved code back; without this the box would blank until then.
         setLobbyCode(state.event, lobby.value);
+        setAlert(state.event, alert.value);
         delete message.dataset.edited;
         delete lobby.dataset.edited;
+        delete alert.dataset.edited;
         renderPublish();
       }
     } catch (error) {

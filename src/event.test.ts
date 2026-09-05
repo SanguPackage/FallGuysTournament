@@ -6,6 +6,7 @@ import {
   closeShow,
   currentShow,
   resolvePlayer,
+  setAlert,
   setLobbyCode,
   ValidationError,
 } from "./event";
@@ -132,4 +133,16 @@ test("setLobbyCode clears the code when nothing is typed", () => {
   const event = { ...emptyEvent(), lobbyCode: "ABC123" };
   setLobbyCode(event, "   ");
   expect("lobbyCode" in event).toBe(false);
+});
+
+test("setAlert stores a trimmed message", () => {
+  const event = emptyEvent();
+  setAlert(event, "  Round 3 starts at 16:00 ");
+  expect(event.alert).toBe("Round 3 starts at 16:00");
+});
+
+test("setAlert clears the message when nothing is typed", () => {
+  const event = { ...emptyEvent(), alert: "Paused" };
+  setAlert(event, "   ");
+  expect("alert" in event).toBe(false);
 });

@@ -29,6 +29,10 @@ export function checkEvent(value: unknown): string[] {
     problems.push("lobbyCode is not a string");
   }
 
+  if (value.alert !== undefined && typeof value.alert !== "string") {
+    problems.push("alert is not a string");
+  }
+
   if (!Array.isArray(value.shows)) problems.push("shows is not an array");
   else {
     value.shows.forEach((show, index) => {

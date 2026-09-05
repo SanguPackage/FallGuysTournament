@@ -25,6 +25,13 @@ export function setLobbyCode(event: TournamentEvent, code: string): void {
   else delete event.lobbyCode;
 }
 
+/** Taken down the same way as the lobby code: an empty box means there is no notice. */
+export function setAlert(event: TournamentEvent, message: string): void {
+  const trimmed = message.trim();
+  if (trimmed) event.alert = trimmed;
+  else delete event.alert;
+}
+
 export function currentShow(event: TournamentEvent): Show {
   const show = event.shows.at(-1);
   if (!show) throw new ValidationError("No show started yet. Run `bun run cli show` first.");
