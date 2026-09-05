@@ -180,6 +180,18 @@
         "OOpman ツ"
       ],
       "checked": true
+    },
+    {
+      "name": "event_only_blast_ball_trials_template 1",
+      "rounds": [
+        {
+          "map": "Blast Ball",
+          "type": "final"
+        }
+      ],
+      "winners": [
+        "SHARPPENGUIN649"
+      ]
     }
   ],
   "penalties": [],
