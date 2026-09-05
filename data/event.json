@@ -120,6 +120,30 @@
         "Mylo007"
       ],
       "checked": true
+    },
+    {
+      "name": "event_only_fall_ball_template 1",
+      "rounds": [
+        {
+          "map": "Fall Ball",
+          "type": "team",
+          "qualified": [
+            "Mylo007",
+            "PartyMain69",
+            "elio055",
+            "OOpman ツ",
+            "Cityhaunter8340"
+          ],
+          "survivors": 5
+        },
+        {
+          "map": "Hex-A-Ring",
+          "type": "final"
+        }
+      ],
+      "winners": [
+        "OOpman ツ"
+      ]
     }
   ],
   "penalties": [],
