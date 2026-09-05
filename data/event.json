@@ -306,6 +306,9 @@
         {
           "map": "Button Bashers",
           "type": "hunt",
+          "qualified": [
+            "puppynamer"
+          ],
           "survivors": 1
         }
       ],
