@@ -212,10 +212,23 @@
         },
         {
           "map": "Roll Out",
-          "type": "survival"
+          "type": "survival",
+          "qualified": [
+            "puppynamer",
+            "SADFINDER",
+            "OOpman ツ",
+            "Mylo007"
+          ],
+          "survivors": 4
+        },
+        {
+          "map": "Roll Out",
+          "type": "final"
         }
       ],
-      "winners": []
+      "winners": [
+        "OOpman ツ"
+      ]
     }
   ],
   "penalties": [],
