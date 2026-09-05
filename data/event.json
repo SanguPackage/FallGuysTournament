@@ -72,6 +72,21 @@
         },
         {
           "map": "Space Race",
+          "type": "race",
+          "first": "OOpman ツ",
+          "qualified": [
+            "OOpman ツ",
+            "GROLFIE",
+            "Mylo007",
+            "SHARPPENGUIN649",
+            "General_Whisky89",
+            "JOKKE93",
+            "CAPITALB1789"
+          ],
+          "survivors": 7
+        },
+        {
+          "map": "The Slimescraper",
           "type": "race"
         }
       ],
