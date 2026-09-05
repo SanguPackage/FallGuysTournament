@@ -48,6 +48,34 @@
       "winners": [
         "OOpman ツ"
       ]
+    },
+    {
+      "name": "event_day_at_the_races_ltm 1",
+      "rounds": [
+        {
+          "map": "Pipe Dream",
+          "type": "race",
+          "first": "Mylo007",
+          "qualified": [
+            "OOpman ツ",
+            "Mylo007",
+            "CAPITALB1789",
+            "BO0NDOCK",
+            "General_Whisky89",
+            "JOKKE93",
+            "Cityhaunter8340",
+            "GROLFIE",
+            "SHARPPENGUIN649",
+            "ZULLIZAN"
+          ],
+          "survivors": 10
+        },
+        {
+          "map": "Space Race",
+          "type": "race"
+        }
+      ],
+      "winners": []
     }
   ],
   "penalties": [],
