@@ -230,6 +230,41 @@
         "OOpman ツ"
       ],
       "checked": true
+    },
+    {
+      "name": "event_xtreme_fall_guys_template 1",
+      "rounds": [
+        {
+          "map": "Big Fans",
+          "type": "race",
+          "first": "Mylo007",
+          "qualified": [
+            "OOpman ツ",
+            "SADFINDER",
+            "puppynamer",
+            "SHARPPENGUIN649",
+            "Mylo007"
+          ],
+          "survivors": 5
+        },
+        {
+          "map": "Gate Crash",
+          "type": "race",
+          "first": "OOpman ツ",
+          "qualified": [
+            "SHARPPENGUIN649",
+            "OOpman ツ",
+            "puppynamer",
+            "SADFINDER"
+          ],
+          "survivors": 4
+        },
+        {
+          "map": "The Slimescraper",
+          "type": "race"
+        }
+      ],
+      "winners": []
     }
   ],
   "penalties": [],
