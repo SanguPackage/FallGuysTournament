@@ -298,17 +298,20 @@
           "map": "Button Bashers",
           "type": "hunt",
           "qualified": [
-            "puppynamer",
-            "SHARPPENGUIN649"
+            "Mylo007",
+            "puppynamer"
           ],
           "survivors": 2
         },
         {
           "map": "Button Bashers",
-          "type": "final"
+          "type": "hunt",
+          "survivors": 1
         }
       ],
-      "winners": []
+      "winners": [
+        "Mylo007"
+      ]
     }
   ],
   "penalties": [],
