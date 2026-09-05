@@ -87,7 +87,19 @@
         },
         {
           "map": "The Slimescraper",
-          "type": "race"
+          "type": "race",
+          "first": "Mylo007",
+          "qualified": [
+            "Mylo007",
+            "SHARPPENGUIN649",
+            "GROLFIE",
+            "OOpman ツ"
+          ],
+          "survivors": 4
+        },
+        {
+          "map": "Fall Mountain",
+          "type": "final"
         }
       ],
       "winners": []
